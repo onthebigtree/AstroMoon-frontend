@@ -4,7 +4,7 @@ import LifeKLineChart from './components/LifeKLineChart';
 import AnalysisResult from './components/AnalysisResult';
 import ImportDataMode from './components/ImportDataMode';
 import { LifeDestinyResult } from './types';
-import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown } from 'lucide-react';
+import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon } from 'lucide-react';
 
 const App: React.FC = () => {
   const [result, setResult] = useState<LifeDestinyResult | null>(null);
@@ -211,8 +211,8 @@ const App: React.FC = () => {
       <header className="w-full bg-white border-b border-gray-200 py-6 sticky top-0 z-50 no-print">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-black text-white p-2 rounded-lg">
-              <Sparkles className="w-6 h-6" />
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-2 rounded-lg shadow-lg">
+              <Moon className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-2xl font-serif-sc font-bold text-gray-900 tracking-wide">Astro Moon</h1>
