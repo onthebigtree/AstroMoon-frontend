@@ -13,8 +13,11 @@ interface GenerateRequest {
  * @returns 星盘计算结果
  */
 export const calculateChart = async (request: ChartCalculationRequest): Promise<ChartCalculationResponse> => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782';
-    const url = `${backendUrl}/api/calculate-chart`;
+    // 🔥 使用相对路径，在 Vercel 上会自动使用 Serverless Function 代理
+    // 这样可以避免 CORS 问题（同源请求）
+    const isDev = import.meta.env.DEV;
+    const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782') : '';
+    const url = backendUrl ? `${backendUrl}/api/calculate-chart` : '/api/calculate-chart';
 
     console.log('🔮 计算星盘数据:', url);
     console.log('📊 出生信息:', request);
@@ -44,9 +47,9 @@ export const calculateChart = async (request: ChartCalculationRequest): Promise<
 
 export const generateWithAPI = async ({ userPrompt, systemPrompt }: GenerateRequest): Promise<string> => {
     // 🔥 安全策略：通过后端服务调用 AI API，隐藏 API Key
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782';
-
-    // 如果 backendUrl 为空（生产环境），使用相对路径（Vercel 同域名）
+    // 🔥 在 Vercel 上使用相对路径，自动路由到 Serverless Function 代理，避免 CORS
+    const isDev = import.meta.env.DEV;
+    const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782') : '';
     const url = backendUrl ? `${backendUrl}/api/generate` : '/api/generate';
 
     console.log('🔐 使用后端代理（API Key 安全隐藏）:', url);
