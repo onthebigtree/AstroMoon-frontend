@@ -65,6 +65,11 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [jsonInput, setJsonInput] = useState('');
     const [copied, setCopied] = useState(false);
 
+    // 验证弹窗相关状态
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
+    const [hasClickedFollow, setHasClickedFollow] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+
     // API 配置已在后端服务器，前端不需要配置
 
     // 调用后端 API 计算基础星盘信息
@@ -304,8 +309,34 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
         }
     };
 
-    // 自动生成
-    const handleAutoGenerate = async () => {
+    // 点击生成按钮 - 显示验证弹窗
+    const handleAutoGenerate = () => {
+        setShowVerifyModal(true);
+        setHasClickedFollow(false);
+        setIsVerifying(false);
+    };
+
+    // 点击"前往关注"按钮
+    const handleClickFollow = () => {
+        window.open('https://t.me/themoon_dojo', '_blank');
+        setHasClickedFollow(true);
+    };
+
+    // 点击"验证"按钮
+    const handleVerify = async () => {
+        setIsVerifying(true);
+
+        // 假加载 2 秒
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // 关闭弹窗并开始真正的 AI 生成
+        setShowVerifyModal(false);
+        setIsVerifying(false);
+        executeAIGeneration();
+    };
+
+    // 真正执行 AI 生成的函数
+    const executeAIGeneration = async () => {
         setError(null);
         setIsLoading(true);
         setLoadingTime(0);
@@ -912,6 +943,85 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                             <CheckCircle className="w-5 h-5" />
                             <span>导入并生成报告</span>
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 验证弹窗 */}
+            {showVerifyModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+                        <div className="text-center mb-6">
+                            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
+                                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                                </svg>
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-800 mb-2">免费获取完整分析</h3>
+                            <p className="text-gray-600 text-sm">
+                                请先关注我们的 Telegram 频道，获取更多占星知识与更新通知
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* 前往关注按钮 */}
+                            <button
+                                onClick={handleClickFollow}
+                                className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                                    hasClickedFollow
+                                        ? 'bg-green-100 text-green-700 border-2 border-green-500'
+                                        : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg'
+                                }`}
+                            >
+                                {hasClickedFollow ? (
+                                    <>
+                                        <CheckCircle className="w-5 h-5" />
+                                        <span>已前往关注</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                                        </svg>
+                                        <span>前往关注频道</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* 验证按钮 */}
+                            <button
+                                onClick={handleVerify}
+                                disabled={!hasClickedFollow || isVerifying}
+                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {isVerifying ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>验证中...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle className="w-5 h-5" />
+                                        <span>验证并继续</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* 取消按钮 */}
+                            <button
+                                onClick={() => setShowVerifyModal(false)}
+                                disabled={isVerifying}
+                                className="w-full text-gray-500 hover:text-gray-700 font-medium py-2 transition-all disabled:opacity-50"
+                            >
+                                取消
+                            </button>
+                        </div>
+
+                        <div className="mt-6 pt-6 border-t border-gray-200">
+                            <p className="text-xs text-gray-500 text-center">
+                                💡 关注频道后可获取最新占星分析技巧和行运提醒
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}
