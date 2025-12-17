@@ -4,6 +4,7 @@ import { LifeDestinyResult } from '../types';
 import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
 import { generateWithAPI } from '../services/apiService';
+import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 
 interface ImportDataModeProps {
     onDataImport: (data: LifeDestinyResult) => void;
@@ -237,46 +238,21 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
         // 3. 移除可能的注释
         content = content.replace(/\/\/.*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
 
-        console.log('🔧 修复后尝试解析 JSON...');
+        console.log('🔧 开始解析 JSON...');
 
+        // 使用健壮的 JSON 解析工具
         let data;
         try {
-            data = JSON.parse(content);
+            data = robustParseJSON(content);
             console.log('✅ JSON 解析成功');
         } catch (err: any) {
-            console.error('❌ JSON 解析失败:', err.message);
-            console.error('❌ 错误位置附近的内容:', content.slice(Math.max(0, err.message.match(/\d+/)?.[0] - 100), err.message.match(/\d+/)?.[0] + 100));
-
-            // 尝试修复被截断的 JSON
-            console.log('🔧 尝试修复被截断的 JSON...');
-
-            // 如果是数组未闭合，尝试添加 ]
-            if (content.lastIndexOf('[') > content.lastIndexOf(']')) {
-                content += ']';
-            }
-
-            // 如果是对象未闭合，尝试添加 }
-            const openBraces = (content.match(/\{/g) || []).length;
-            const closeBraces = (content.match(/\}/g) || []).length;
-            if (openBraces > closeBraces) {
-                content += '}'.repeat(openBraces - closeBraces);
-            }
-
-            try {
-                data = JSON.parse(content);
-                console.log('✅ 修复后 JSON 解析成功');
-            } catch (err2) {
-                throw new Error(`JSON 解析失败：${err.message}\n\n建议：请将完整内容复制到 JSON 验证工具检查格式`);
-            }
+            throw new Error(err.message);
         }
 
-        // 校验数据
-        if (!data.chartPoints || !Array.isArray(data.chartPoints)) {
-            throw new Error('数据格式不正确：缺少 chartPoints 数组');
-        }
-
-        if (data.chartPoints.length < 10) {
-            throw new Error('数据不完整：chartPoints 数量太少');
+        // 校验数据结构
+        const validation = validateAstroData(data);
+        if (!validation.valid) {
+            throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
         }
 
         // 转换为应用所需格式
@@ -370,35 +346,45 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                 systemPrompt,
             });
 
-            // 简单解析 JSON
+            // 使用健壮的 JSON 解析工具
             try {
-                const data = JSON.parse(content.trim());
+                const data = robustParseJSON(content);
+
+                // 校验数据结构
+                const validation = validateAstroData(data);
+                if (!validation.valid) {
+                    throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
+                }
+
+                // 转换为应用所需格式
                 const result = {
                     chartData: data.chartPoints,
                     analysis: {
                         birthChart: data.birthChart || "星盘信息未提供",
                         summary: data.summary || "人生格局总评",
                         summaryScore: data.summaryScore || 85,
-                        traderVitality: data.traderVitality || "生命力分析",
-                        traderVitalityScore: data.traderVitalityScore || 88,
-                        wealthPotential: data.wealthPotential || "财富潜力分析",
-                        wealthPotentialScore: data.wealthPotentialScore || 82,
-                        fortuneLuck: data.fortuneLuck || "运势分析",
-                        fortuneLuckScore: data.fortuneLuckScore || 90,
-                        leverageRisk: data.leverageRisk || "风险管理分析",
-                        leverageRiskScore: data.leverageRiskScore || 75,
-                        platformTeam: data.platformTeam || "支持系统分析",
-                        platformTeamScore: data.platformTeamScore || 80,
-                        tradingStyle: data.tradingStyle || "风格建议",
-                        tradingStyleScore: data.tradingStyleScore || 85,
+                        traderVitality: data.traderVitality || data.personality || "生命力分析",
+                        traderVitalityScore: data.traderVitalityScore || data.personalityScore || 88,
+                        wealthPotential: data.wealthPotential || data.wealth || "财富潜力分析",
+                        wealthPotentialScore: data.wealthPotentialScore || data.wealthScore || 82,
+                        fortuneLuck: data.fortuneLuck || data.marriage || "运势分析",
+                        fortuneLuckScore: data.fortuneLuckScore || data.marriageScore || 90,
+                        leverageRisk: data.leverageRisk || data.industry || "风险管理分析",
+                        leverageRiskScore: data.leverageRiskScore || data.industryScore || 75,
+                        platformTeam: data.platformTeam || data.family || "支持系统分析",
+                        platformTeamScore: data.platformTeamScore || data.familyScore || 80,
+                        tradingStyle: data.tradingStyle || data.health || "风格建议",
+                        tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
                         keyYears: data.keyYears,
                         peakPeriods: data.peakPeriods,
                         riskPeriods: data.riskPeriods,
                     },
                 };
+
+                console.log('✅ 数据解析和转换成功');
                 onDataImport(result);
-            } catch (parseErr) {
-                throw new Error('JSON 解析失败，请检查返回格式');
+            } catch (parseErr: any) {
+                throw new Error(parseErr.message || 'JSON 解析失败，请检查返回格式');
             }
         } catch (err: any) {
             setError(`生成失败：${err.message}`);
