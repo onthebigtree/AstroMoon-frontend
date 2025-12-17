@@ -216,15 +216,24 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
   ...其他分析字段
 }
 
-字段说明：
-- age：1~100，连续不缺。
-- phase：10 年一变的阶段行运标签。
-- yearTransit：该年的行运/推运/回归简要说明。
-- score：0~100，当年整体生活状态评分。
-- trend：与前一年评分相比：up / down / flat。
-- theme：2–5 个关键词数组。
-- open/close/high/low：模拟 K 线的四个价格点，制造视觉波动。
-- reason：60–150 字，详细说明该年的星象影响与建议。
+字段说明（⚠️ 所有字段都是必填项，缺一不可）：
+- age：1~100，连续不缺。【必填】
+- phase：10 年一变的阶段行运标签。【必填 - 字符串】
+- yearTransit：该年的行运/推运/回归简要说明。【必填 - 字符串】
+- score：0~100，当年整体生活状态评分。【必填 - 数字】
+- trend：与前一年评分相比：up / down / flat。【必填 - 只能是这三个值之一】
+- theme：2–5 个关键词数组，例如 ["事业发展", "学习成长"]。【必填 - 数组】
+- open：K线开盘价（0~100）。【必填 - 数字】
+- close：K线收盘价（0~100），通常等于 score。【必填 - 数字】
+- high：K线最高价（0~100），应 >= max(open, close)。【必填 - 数字】
+- low：K线最低价（0~100），应 <= min(open, close)。【必填 - 数字】
+- reason：60–150 字，详细说明该年的星象影响与建议。【必填 - 字符串】
+
+⚠️ 重要提醒：
+1. chartPoints 数组必须包含 100 个元素（age 1~100），一个都不能少
+2. 每个元素必须包含上述所有 11 个字段，不能遗漏任何字段
+3. 如果遗漏任何字段，前端验证将失败，用户无法看到报告
+4. 请严格按照示例格式输出，确保每一年的数据都完整
 
 ====================
 【综合报告字段要求】
@@ -276,16 +285,70 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
 - ✅ 数字类型不要加引号
 - ✅ 布尔值使用 true/false（小写，不加引号）
 
-**输出示例：**
+**完整输出示例（必须严格遵循此结构）：**
 {
-  "chartPoints": [...],
-  "summary": "...",
+  "chartPoints": [
+    {
+      "age": 1,
+      "phase": "木星主导扩张期",
+      "yearTransit": "本年推运月亮进入第一宫，太阳回归盘强调自我成长...",
+      "score": 75,
+      "trend": "up",
+      "theme": ["成长期", "基础建立", "家庭呵护"],
+      "open": 70,
+      "close": 75,
+      "high": 80,
+      "low": 68,
+      "reason": "这一年在家庭的呵护下健康成长，生命力旺盛，是奠定人格基础的重要时期。"
+    },
+    {
+      "age": 2,
+      "phase": "木星主导扩张期",
+      "yearTransit": "小限走到第二宫，推运月亮与本命金星形成和谐相位...",
+      "score": 72,
+      "trend": "down",
+      "theme": ["调整期", "情感发展"],
+      "open": 75,
+      "close": 72,
+      "high": 78,
+      "low": 70,
+      "reason": "本年重点在情感依附关系的建立，可能有小的健康波动，但整体平稳。"
+    },
+    ... (必须包含 age 1 到 100，共 100 个元素)
+  ],
+  "summary": "整体人生格局总评...",
   "summaryScore": 85,
-  ...
+  "birthChart": "星盘基本配置说明...",
+  "traderVitality": "生命力与抗压能力分析...",
+  "traderVitalityScore": 88,
+  "wealthPotential": "财富与物质安全感分析...",
+  "wealthPotentialScore": 82,
+  "fortuneLuck": "情感与关系运势分析...",
+  "fortuneLuckScore": 90,
+  "leverageRisk": "事业发展潜力分析...",
+  "leverageRiskScore": 75,
+  "platformTeam": "家庭与社会支持分析...",
+  "platformTeamScore": 80,
+  "tradingStyle": "健康与生活方式建议...",
+  "tradingStyleScore": 85,
+  "keyYears": [18, 28, 35, 45, 60],
+  "peakPeriods": ["28-38岁", "50-65岁"],
+  "riskPeriods": ["40-45岁", "55-60岁"]
 }
 
+⚠️ 最后检查清单（输出前必须确认）：
+1. ✅ chartPoints 数组有 100 个元素（age 1~100）
+2. ✅ 每个 chartPoint 包含全部 11 个字段：age, phase, yearTransit, score, trend, theme, open, close, high, low, reason
+3. ✅ trend 只能是 "up"、"down" 或 "flat"
+4. ✅ theme 是字符串数组，不是字符串
+5. ✅ open/close/high/low 都是数字，符合 K 线逻辑（high >= max(open,close), low <= min(open,close)）
+6. ✅ 没有 markdown 代码块标记
+7. ✅ 所有字符串使用双引号
+8. ✅ 没有尾随逗号
+9. ✅ JSON 结构完整闭合
+
 请严格按照以上标准作业程序（SOP）生成：
-1）包含 1–100 岁行运 K 线数据的 chartPoints 数组；
+1）包含 1–100 岁行运 K 线数据的 chartPoints 数组（每个元素必须包含全部 11 个字段）；
 2）六大人生领域的深度分析与评分；
 3）整体格局总评与关键建议。
 `;
@@ -490,15 +553,24 @@ export const TRADER_SYSTEM_INSTRUCTION = `
   ...其他分析字段
 }
 
-字段说明：
-- age：1~100，连续不缺。
-- phase：10 年一变的阶段行运标签，体现财富与人生背景。
-- yearTransit：该年的行运/推运/回归总览，重点聚焦财富与交易。
-- score：0~100，表示当年交易员财富与职业表现的综合评分。
-- trend：与前一年评分相比的走势：up / down / flat。
-- theme：2–5 个关键词，例如「高波动」「平台加持」「策略调整」「休整期」等。
-- open/close/high/low：模拟 K 线的四个价格点，制造视觉波动。
-- reason：约 60–150 字，详细说明该年的星象结构对交易风格、收益波动与风险的影响。
+字段说明（⚠️ 所有字段都是必填项，缺一不可）：
+- age：1~100，连续不缺。【必填】
+- phase：10 年一变的阶段行运标签，体现财富与人生背景。【必填 - 字符串】
+- yearTransit：该年的行运/推运/回归总览，重点聚焦财富与交易。【必填 - 字符串】
+- score：0~100，表示当年交易员财富与职业表现的综合评分。【必填 - 数字】
+- trend：与前一年评分相比的走势：up / down / flat。【必填 - 只能是这三个值之一】
+- theme：2–5 个关键词数组，例如 ["高波动", "平台加持", "策略调整"]。【必填 - 数组】
+- open：K线开盘价（0~100）。【必填 - 数字】
+- close：K线收盘价（0~100），通常等于 score。【必填 - 数字】
+- high：K线最高价（0~100），应 >= max(open, close)。【必填 - 数字】
+- low：K线最低价（0~100），应 <= min(open, close)。【必填 - 数字】
+- reason：约 60–150 字，详细说明该年的星象结构对交易风格、收益波动与风险的影响。【必填 - 字符串】
+
+⚠️ 重要提醒：
+1. chartPoints 数组必须包含 100 个元素（age 1~100），一个都不能少
+2. 每个元素必须包含上述所有 11 个字段，不能遗漏任何字段
+3. 如果遗漏任何字段，前端验证将失败，用户无法看到报告
+4. 请严格按照示例格式输出，确保每一年的数据都完整
 
 ====================
 【综合报告字段要求】
@@ -550,18 +622,70 @@ export const TRADER_SYSTEM_INSTRUCTION = `
 - ✅ 数字类型不要加引号
 - ✅ 布尔值使用 true/false（小写，不加引号）
 
-**输出示例：**
+**完整输出示例（必须严格遵循此结构）：**
 {
-  "chartPoints": [...],
-  "summary": "...",
+  "chartPoints": [
+    {
+      "age": 1,
+      "phase": "木星主导扩张期",
+      "yearTransit": "本年行运木星与本命太阳形成和谐相位...",
+      "score": 75,
+      "trend": "up",
+      "theme": ["成长期", "基础建立"],
+      "open": 70,
+      "close": 75,
+      "high": 80,
+      "low": 68,
+      "reason": "这一年..."
+    },
+    {
+      "age": 2,
+      "phase": "木星主导扩张期",
+      "yearTransit": "推运月亮进入第二宫...",
+      "score": 72,
+      "trend": "down",
+      "theme": ["调整期", "积累"],
+      "open": 75,
+      "close": 72,
+      "high": 78,
+      "low": 70,
+      "reason": "本年..."
+    },
+    ... (必须包含 age 1 到 100，共 100 个元素)
+  ],
+  "summary": "整体财富格局总评...",
   "summaryScore": 85,
-  "traderVitality": "...",
+  "birthChart": "星盘基本配置说明...",
+  "traderVitality": "交易生命力分析...",
   "traderVitalityScore": 88,
-  ...
+  "wealthPotential": "财富量级分析...",
+  "wealthPotentialScore": 82,
+  "fortuneLuck": "运气分析...",
+  "fortuneLuckScore": 90,
+  "leverageRisk": "风险管理分析...",
+  "leverageRiskScore": 75,
+  "platformTeam": "平台红利分析...",
+  "platformTeamScore": 80,
+  "tradingStyle": "交易风格分析...",
+  "tradingStyleScore": 85,
+  "keyYears": [25, 30, 45, 60],
+  "peakPeriods": ["25-35岁", "50-60岁"],
+  "riskPeriods": ["40-45岁"]
 }
 
+⚠️ 最后检查清单（输出前必须确认）：
+1. ✅ chartPoints 数组有 100 个元素（age 1~100）
+2. ✅ 每个 chartPoint 包含全部 11 个字段：age, phase, yearTransit, score, trend, theme, open, close, high, low, reason
+3. ✅ trend 只能是 "up"、"down" 或 "flat"
+4. ✅ theme 是字符串数组，不是字符串
+5. ✅ open/close/high/low 都是数字，符合 K 线逻辑（high >= max(open,close), low <= min(open,close)）
+6. ✅ 没有 markdown 代码块标记
+7. ✅ 所有字符串使用双引号
+8. ✅ 没有尾随逗号
+9. ✅ JSON 结构完整闭合
+
 请严格按照以上标准作业程序（SOP）生成：
-1）包含 1–100 岁行运 K 线数据的 chartPoints 数组；
+1）包含 1–100 岁行运 K 线数据的 chartPoints 数组（每个元素必须包含全部 11 个字段）；
 2）专注于交易员财富格局与运势的星象分析报告。
 `;
 
