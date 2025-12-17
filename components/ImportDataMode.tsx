@@ -62,6 +62,8 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [loadingTime, setLoadingTime] = useState(0);
+    const [jsonInput, setJsonInput] = useState('');
+    const [copied, setCopied] = useState(false);
 
     // API 配置已在后端服务器，前端不需要配置
 
@@ -193,7 +195,8 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
 
     // 复制完整提示词
     const copyFullPrompt = async () => {
-        const fullPrompt = `=== 系统指令 (System Prompt) ===\n\n${ASTRO_TRADER_SYSTEM_INSTRUCTION}\n\n=== 用户提示词 (User Prompt) ===\n\n${generateUserPrompt()}`;
+        const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
+        const fullPrompt = `=== 系统指令 (System Prompt) ===\n\n${systemPrompt}\n\n=== 用户提示词 (User Prompt) ===\n\n${generateUserPrompt()}`;
 
         try {
             await navigator.clipboard.writeText(fullPrompt);
@@ -205,7 +208,7 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
     };
 
     // 解析 JSON 内容的辅助函数
-    const parseJSONContent = (jsonContent: string): LifeDestinyResult => {
+    const parseJSONContent = (jsonContent: string, currentMode: Mode): LifeDestinyResult => {
         // 尝试从可能包含 markdown 的内容中提取 JSON
         let content = jsonContent.trim();
 
@@ -255,25 +258,28 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
             throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
         }
 
+        // 根据模式设置不同的默认文案
+        const isTrader = currentMode === 'trader';
+
         // 转换为应用所需格式
         return {
             chartData: data.chartPoints,
             analysis: {
                 birthChart: data.birthChart || "星盘信息未提供",
-                summary: data.summary || "交易员财富格局总评",
+                summary: data.summary || (isTrader ? "交易员财富格局总评" : "人生格局总评"),
                 summaryScore: data.summaryScore || 85,
-                traderVitality: data.traderVitality || "交易生命力与抗压指数分析",
-                traderVitalityScore: data.traderVitalityScore || 88,
-                wealthPotential: data.wealthPotential || "财富量级与来源结构分析",
-                wealthPotentialScore: data.wealthPotentialScore || 82,
-                fortuneLuck: data.fortuneLuck || "运气与天选财富分析",
-                fortuneLuckScore: data.fortuneLuckScore || 90,
-                leverageRisk: data.leverageRisk || "杠杆与风险管理能力",
-                leverageRiskScore: data.leverageRiskScore || 75,
-                platformTeam: data.platformTeam || "平台与团队红利",
-                platformTeamScore: data.platformTeamScore || 80,
-                tradingStyle: data.tradingStyle || "适合的交易风格与策略",
-                tradingStyleScore: data.tradingStyleScore || 85,
+                traderVitality: data.traderVitality || data.personality || (isTrader ? "交易生命力与抗压指数" : "性格特质与生命力"),
+                traderVitalityScore: data.traderVitalityScore || data.personalityScore || 88,
+                wealthPotential: data.wealthPotential || data.wealth || (isTrader ? "财富量级与来源结构" : "财富与物质安全感"),
+                wealthPotentialScore: data.wealthPotentialScore || data.wealthScore || 82,
+                fortuneLuck: data.fortuneLuck || data.marriage || (isTrader ? "运气与天选财富潜力" : "情感婚姻与亲密关系"),
+                fortuneLuckScore: data.fortuneLuckScore || data.marriageScore || 90,
+                leverageRisk: data.leverageRisk || data.industry || (isTrader ? "杠杆与风险管理能力" : "事业发展与社会角色"),
+                leverageRiskScore: data.leverageRiskScore || data.industryScore || 75,
+                platformTeam: data.platformTeam || data.family || (isTrader ? "平台与团队红利潜力" : "家庭关系与社会支持"),
+                platformTeamScore: data.platformTeamScore || data.familyScore || 80,
+                tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配" : "健康状况与生活方式"),
+                tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
                 keyYears: data.keyYears,
                 peakPeriods: data.peakPeriods,
                 riskPeriods: data.riskPeriods,
@@ -291,7 +297,7 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
         }
 
         try {
-            const result = parseJSONContent(jsonInput);
+            const result = parseJSONContent(jsonInput, mode);
             onDataImport(result);
         } catch (err: any) {
             setError(`解析失败：${err.message}`);
@@ -356,24 +362,27 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                     throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
                 }
 
+                // 根据模式设置不同的默认文案
+                const isTrader = mode === 'trader';
+
                 // 转换为应用所需格式
                 const result = {
                     chartData: data.chartPoints,
                     analysis: {
                         birthChart: data.birthChart || "星盘信息未提供",
-                        summary: data.summary || "人生格局总评",
+                        summary: data.summary || (isTrader ? "交易员财富格局总评" : "人生格局总评"),
                         summaryScore: data.summaryScore || 85,
-                        traderVitality: data.traderVitality || data.personality || "生命力分析",
+                        traderVitality: data.traderVitality || data.personality || (isTrader ? "交易生命力与抗压指数" : "性格特质与生命力"),
                         traderVitalityScore: data.traderVitalityScore || data.personalityScore || 88,
-                        wealthPotential: data.wealthPotential || data.wealth || "财富潜力分析",
+                        wealthPotential: data.wealthPotential || data.wealth || (isTrader ? "财富量级与来源结构" : "财富与物质安全感"),
                         wealthPotentialScore: data.wealthPotentialScore || data.wealthScore || 82,
-                        fortuneLuck: data.fortuneLuck || data.marriage || "运势分析",
+                        fortuneLuck: data.fortuneLuck || data.marriage || (isTrader ? "运气与天选财富潜力" : "情感婚姻与亲密关系"),
                         fortuneLuckScore: data.fortuneLuckScore || data.marriageScore || 90,
-                        leverageRisk: data.leverageRisk || data.industry || "风险管理分析",
+                        leverageRisk: data.leverageRisk || data.industry || (isTrader ? "杠杆与风险管理能力" : "事业发展与社会角色"),
                         leverageRiskScore: data.leverageRiskScore || data.industryScore || 75,
-                        platformTeam: data.platformTeam || data.family || "支持系统分析",
+                        platformTeam: data.platformTeam || data.family || (isTrader ? "平台与团队红利潜力" : "家庭关系与社会支持"),
                         platformTeamScore: data.platformTeamScore || data.familyScore || 80,
-                        tradingStyle: data.tradingStyle || data.health || "风格建议",
+                        tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配" : "健康状况与生活方式"),
                         tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
                         keyYears: data.keyYears,
                         peakPeriods: data.peakPeriods,

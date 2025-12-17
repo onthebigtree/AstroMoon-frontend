@@ -219,10 +219,6 @@ const App: React.FC = () => {
               <p className="text-xs text-gray-500 uppercase tracking-widest">Astrology & Life Analysis</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1.5 rounded-full">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            基于 AI 大模型驱动
-          </div>
         </div>
       </header>
 
@@ -241,17 +237,6 @@ const App: React.FC = () => {
                 结合<strong>西方占星学</strong>与<strong>金融交易心理学</strong>，
                 为交易员提供专业的财富格局分析与行运K线图。
               </p>
-
-              {/* 使用说明 */}
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-xl border border-indigo-100 mb-6 text-left w-full max-w-lg">
-                <h3 className="font-bold text-indigo-800 mb-2">📝 使用方法</h3>
-                <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
-                  <li>填写出生日期时间与地点信息</li>
-                  <li>复制专属提示词到任意 AI（ChatGPT、Claude、Gemini 等）</li>
-                  <li>将 AI 返回的占星分析 JSON 数据粘贴回来</li>
-                </ol>
-              </div>
-
             </div>
 
             {/* 导入模式组件 */}
