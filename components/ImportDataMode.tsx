@@ -273,18 +273,32 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                 birthChart: data.birthChart || "星盘信息未提供",
                 summary: data.summary || (isTrader ? "交易员财富格局总评" : "人生格局总评"),
                 summaryScore: data.summaryScore || 85,
-                traderVitality: data.traderVitality || data.personality || (isTrader ? "交易生命力与抗压指数" : "性格特质与生命力"),
+
+                // 设置标题和内容
+                traderVitalityTitle: isTrader ? "交易生命力与抗压指数" : "性格特质与生命力",
+                traderVitality: data.traderVitality || data.personality || (isTrader ? "交易生命力与抗压指数分析" : "性格特质与生命力分析"),
                 traderVitalityScore: data.traderVitalityScore || data.personalityScore || 88,
-                wealthPotential: data.wealthPotential || data.wealth || (isTrader ? "财富量级与来源结构" : "财富与物质安全感"),
+
+                wealthPotentialTitle: isTrader ? "财富量级与来源结构" : "财富与物质安全感",
+                wealthPotential: data.wealthPotential || data.wealth || (isTrader ? "财富量级与来源结构分析" : "财富与物质安全感分析"),
                 wealthPotentialScore: data.wealthPotentialScore || data.wealthScore || 82,
-                fortuneLuck: data.fortuneLuck || data.marriage || (isTrader ? "运气与天选财富潜力" : "情感婚姻与亲密关系"),
+
+                fortuneLuckTitle: isTrader ? "运气与天选财富" : "情感婚姻与亲密关系",
+                fortuneLuck: data.fortuneLuck || data.marriage || (isTrader ? "运气与天选财富潜力分析" : "情感婚姻与亲密关系分析"),
                 fortuneLuckScore: data.fortuneLuckScore || data.marriageScore || 90,
-                leverageRisk: data.leverageRisk || data.industry || (isTrader ? "杠杆与风险管理能力" : "事业发展与社会角色"),
+
+                leverageRiskTitle: isTrader ? "杠杆与风险管理能力" : "事业发展与社会角色",
+                leverageRisk: data.leverageRisk || data.industry || (isTrader ? "杠杆与风险管理能力分析" : "事业发展与社会角色分析"),
                 leverageRiskScore: data.leverageRiskScore || data.industryScore || 75,
-                platformTeam: data.platformTeam || data.family || (isTrader ? "平台与团队红利潜力" : "家庭关系与社会支持"),
+
+                platformTeamTitle: isTrader ? "平台与团队红利" : "家庭关系与社会支持",
+                platformTeam: data.platformTeam || data.family || (isTrader ? "平台与团队红利潜力分析" : "家庭关系与社会支持分析"),
                 platformTeamScore: data.platformTeamScore || data.familyScore || 80,
-                tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配" : "健康状况与生活方式"),
+
+                tradingStyleTitle: isTrader ? "适合的交易风格与策略" : "健康状况与生活方式",
+                tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配分析" : "健康状况与生活方式分析"),
                 tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
+
                 keyYears: data.keyYears,
                 peakPeriods: data.peakPeriods,
                 riskPeriods: data.riskPeriods,
@@ -403,18 +417,32 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                         birthChart: data.birthChart || "星盘信息未提供",
                         summary: data.summary || (isTrader ? "交易员财富格局总评" : "人生格局总评"),
                         summaryScore: data.summaryScore || 85,
-                        traderVitality: data.traderVitality || data.personality || (isTrader ? "交易生命力与抗压指数" : "性格特质与生命力"),
+
+                        // 设置标题和内容
+                        traderVitalityTitle: isTrader ? "交易生命力与抗压指数" : "性格特质与生命力",
+                        traderVitality: data.traderVitality || data.personality || (isTrader ? "交易生命力与抗压指数分析" : "性格特质与生命力分析"),
                         traderVitalityScore: data.traderVitalityScore || data.personalityScore || 88,
-                        wealthPotential: data.wealthPotential || data.wealth || (isTrader ? "财富量级与来源结构" : "财富与物质安全感"),
+
+                        wealthPotentialTitle: isTrader ? "财富量级与来源结构" : "财富与物质安全感",
+                        wealthPotential: data.wealthPotential || data.wealth || (isTrader ? "财富量级与来源结构分析" : "财富与物质安全感分析"),
                         wealthPotentialScore: data.wealthPotentialScore || data.wealthScore || 82,
-                        fortuneLuck: data.fortuneLuck || data.marriage || (isTrader ? "运气与天选财富潜力" : "情感婚姻与亲密关系"),
+
+                        fortuneLuckTitle: isTrader ? "运气与天选财富" : "情感婚姻与亲密关系",
+                        fortuneLuck: data.fortuneLuck || data.marriage || (isTrader ? "运气与天选财富潜力分析" : "情感婚姻与亲密关系分析"),
                         fortuneLuckScore: data.fortuneLuckScore || data.marriageScore || 90,
-                        leverageRisk: data.leverageRisk || data.industry || (isTrader ? "杠杆与风险管理能力" : "事业发展与社会角色"),
+
+                        leverageRiskTitle: isTrader ? "杠杆与风险管理能力" : "事业发展与社会角色",
+                        leverageRisk: data.leverageRisk || data.industry || (isTrader ? "杠杆与风险管理能力分析" : "事业发展与社会角色分析"),
                         leverageRiskScore: data.leverageRiskScore || data.industryScore || 75,
-                        platformTeam: data.platformTeam || data.family || (isTrader ? "平台与团队红利潜力" : "家庭关系与社会支持"),
+
+                        platformTeamTitle: isTrader ? "平台与团队红利" : "家庭关系与社会支持",
+                        platformTeam: data.platformTeam || data.family || (isTrader ? "平台与团队红利潜力分析" : "家庭关系与社会支持分析"),
                         platformTeamScore: data.platformTeamScore || data.familyScore || 80,
-                        tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配" : "健康状况与生活方式"),
+
+                        tradingStyleTitle: isTrader ? "适合的交易风格与策略" : "健康状况与生活方式",
+                        tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配分析" : "健康状况与生活方式分析"),
                         tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
+
                         keyYears: data.keyYears,
                         peakPeriods: data.peakPeriods,
                         riskPeriods: data.riskPeriods,
@@ -477,7 +505,7 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                             </div>
                         </button>
 
-                        {/* 普通人生模式 */}
+                        {/* 综合人生模式 */}
                         <button
                             onClick={() => { setMode('normal'); setStep(1); }}
                             className="group relative bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white p-6 rounded-2xl shadow-lg transition-all transform hover:scale-105 hover:shadow-2xl"
@@ -489,7 +517,7 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                                         <Heart className="w-10 h-10" />
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold mb-2">🌟 普通人生</h3>
+                                <h3 className="text-xl font-bold mb-2">🌟 综合人生</h3>
                                 <p className="text-sm text-white/90 mb-4">
                                     全面分析性格、情感、事业、健康等人生领域
                                 </p>

@@ -70,24 +70,30 @@ export interface AnalysisData {
   summary: string;           // 交易员财富格局总评
   summaryScore: number;      // 0-100 综合评分
 
-  // 核心交易员财富分析模块
-  traderVitality: string;          // 交易生命力与抗压指数分析
-  traderVitalityScore: number;     // 0-100
+  // 核心分析模块（标题根据模式动态设置）
+  traderVitalityTitle?: string;        // 维度标题
+  traderVitality: string;              // 内容分析
+  traderVitalityScore: number;         // 0-100
 
-  wealthPotential: string;         // 财富量级与来源结构分析
-  wealthPotentialScore: number;    // 0-100
+  wealthPotentialTitle?: string;       // 维度标题
+  wealthPotential: string;             // 内容分析
+  wealthPotentialScore: number;        // 0-100
 
-  fortuneLuck: string;             // 运气与天选财富 (福点相关)
-  fortuneLuckScore: number;        // 0-100
+  fortuneLuckTitle?: string;           // 维度标题
+  fortuneLuck: string;                 // 内容分析
+  fortuneLuckScore: number;            // 0-100
 
-  leverageRisk: string;            // 杠杆与风险管理能力
-  leverageRiskScore: number;       // 0-100
+  leverageRiskTitle?: string;          // 维度标题
+  leverageRisk: string;                // 内容分析
+  leverageRiskScore: number;           // 0-100
 
-  platformTeam: string;            // 平台与团队红利 (11宫相关)
-  platformTeamScore: number;       // 0-100
+  platformTeamTitle?: string;          // 维度标题
+  platformTeam: string;                // 内容分析
+  platformTeamScore: number;           // 0-100
 
-  tradingStyle: string;            // 适合的交易风格与策略
-  tradingStyleScore: number;       // 0-100
+  tradingStyleTitle?: string;          // 维度标题
+  tradingStyle: string;                // 内容分析
+  tradingStyleScore: number;           // 0-100
 
   // 关键年份与周期
   keyYears?: string;              // 关键财富年份列表

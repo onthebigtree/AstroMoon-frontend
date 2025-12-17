@@ -129,9 +129,9 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
       {/* Grid for categorical analysis with Scores */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        {/* Core Trader Analysis Cards */}
+        {/* Core Analysis Cards - 标题根据模式动态显示 */}
         <Card
-          title="交易生命力与抗压指数"
+          title={analysis.traderVitalityTitle || "交易生命力与抗压指数"}
           icon={Zap}
           content={analysis.traderVitality}
           score={analysis.traderVitalityScore}
@@ -139,7 +139,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         />
 
         <Card
-          title="财富量级与来源结构"
+          title={analysis.wealthPotentialTitle || "财富量级与来源结构"}
           icon={DollarSign}
           content={analysis.wealthPotential}
           score={analysis.wealthPotentialScore}
@@ -147,7 +147,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         />
 
         <Card
-          title="运气与天选财富"
+          title={analysis.fortuneLuckTitle || "运气与天选财富"}
           icon={Sparkles}
           content={analysis.fortuneLuck}
           score={analysis.fortuneLuckScore}
@@ -155,7 +155,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         />
 
         <Card
-          title="杠杆与风险管理能力"
+          title={analysis.leverageRiskTitle || "杠杆与风险管理能力"}
           icon={Shield}
           content={analysis.leverageRisk}
           score={analysis.leverageRiskScore}
@@ -163,7 +163,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         />
 
         <Card
-          title="平台与团队红利"
+          title={analysis.platformTeamTitle || "平台与团队红利"}
           icon={Users}
           content={analysis.platformTeam}
           score={analysis.platformTeamScore}
@@ -171,7 +171,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         />
 
         <Card
-          title="适合的交易风格与策略"
+          title={analysis.tradingStyleTitle || "适合的交易风格与策略"}
           icon={Target}
           content={analysis.tradingStyle}
           score={analysis.tradingStyleScore}
