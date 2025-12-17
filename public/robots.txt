@@ -1,0 +1,11 @@
+# robots.txt for Astro Moon
+# https://astromoon.vercel.app/
+
+User-agent: *
+Allow: /
+
+# Disallow private API routes
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://astromoon.vercel.app/sitemap.xml
