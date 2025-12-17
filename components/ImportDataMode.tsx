@@ -88,7 +88,9 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
         try {
             // 调用后端星盘计算 API
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+            // 🔥 在生产环境使用相对路径（通过 Vercel Serverless Function 代理），避免 CORS
+            const isDev = import.meta.env.DEV;
+            const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782') : '';
             const url = backendUrl ? `${backendUrl}/api/calculate-chart` : '/api/calculate-chart';
 
             console.log('🔮 调用后端星盘计算 API:', url);
