@@ -1,0 +1,17 @@
+node_modules
+.git
+.DS_Store
+*.log
+.env
+.env.local
+dist
+
+# Backend code (not deployed to Vercel)
+backend/
+
+# Test files
+test-api.html
+
+# Documentation
+*.md
+!README.md

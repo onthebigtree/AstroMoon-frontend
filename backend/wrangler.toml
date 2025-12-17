@@ -1,0 +1,21 @@
+name = "astromoon-backend"
+main = "src/index.ts"
+compatibility_date = "2024-12-17"
+node_compat = true
+
+# Workers 配置
+workers_dev = true
+
+# 环境变量配置（通过命令行设置敏感信息）
+# wrangler secret put OPENAI_API_KEY
+# wrangler secret put GEMINI_API_KEY
+
+# 自定义域名配置
+# routes = [
+#   { pattern = "api.astromoon.xyz", custom_domain = true }
+# ]
+
+# 或者使用 workers.dev 子域名
+# [env.production]
+# name = "astromoon-backend"
+# route = "https://astromoon-backend.your-subdomain.workers.dev/*"

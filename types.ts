@@ -1,0 +1,150 @@
+
+export enum Gender {
+  MALE = 'Male',
+  FEMALE = 'Female',
+}
+
+export interface UserInput {
+  name?: string;
+  gender: Gender;
+
+  // 出生日期时间 (阳历/公历)
+  birthYear: string;        // 出生年份 (如 1990)
+  birthMonth: string;       // 出生月份 (1-12)
+  birthDay: string;         // 出生日 (1-31)
+  birthHour: string;        // 出生时 (0-23)
+  birthMinute: string;      // 出生分 (0-59)
+
+  // 出生地点信息
+  birthPlace?: string;      // 出生城市/地区 (可选)
+  birthLongitude?: string;  // 出生地经度 (可选)
+  birthLatitude?: string;   // 出生地纬度 (可选)
+  timezone?: string;        // 时区 (可选，系统可自动判定)
+
+  // 占星盘核心数据 (可选，如果用户已有星盘数据)
+  sunSign?: string;         // 太阳星座
+  sunHouse?: string;        // 太阳宫位
+  sunDegree?: string;       // 太阳度数
+  moonSign?: string;        // 月亮星座
+  moonHouse?: string;       // 月亮宫位
+  moonDegree?: string;      // 月亮度数
+  ascSign?: string;         // 上升星座
+  ascDegree?: string;       // 上升度数
+
+  // 行运参数 (类似大运的长周期概念)
+  startAge: string;         // 起运年龄 (虚岁)
+  firstPhaseLabel: string;  // 第一阶段行运标签 (如 "木星主导扩张期")
+  phaseDirection?: 'forward' | 'backward'; // 阶段方向：顺行/逆行
+
+  // API Configuration Fields
+  modelName: string;        // 使用的模型名称
+  apiBaseUrl: string;
+  apiKey: string;
+}
+
+export interface KLinePoint {
+  age: number;             // 年龄 (虚岁 1-100)
+  year: number;            // 公历年份
+  phase: string;           // 阶段行运标签 (10年一变，类似大运)
+  yearTransit?: string;    // 当年的行运概述 (推运/过运/回归等综合)
+  open: number;            // K线开盘价
+  close: number;           // K线收盘价
+  high: number;            // K线最高价
+  low: number;             // K线最低价
+  score: number;           // 当年综合评分 (0-100)
+  trend?: 'up' | 'down' | 'flat'; // 与前一年相比的趋势
+  theme?: string[];        // 关键词标签 (如 ["资金放大", "高波动"])
+  reason: string;          // 详细的流年分析与建议 (60-150字)
+
+  // 为了向后兼容保留 ganZhi 和 daYun (可选)
+  ganZhi?: string;         // 流年干支 (八字系统遗留)
+  daYun?: string;          // 大运干支 (八字系统遗留)
+}
+
+export interface AnalysisData {
+  // 基础信息 (可保留 bazi 以便向后兼容，或改为 birthChart 星盘信息)
+  bazi?: string[];           // [太阳, 月亮, 上升, ...] 或保留八字四柱
+  birthChart?: string;       // 星盘简要描述
+
+  // 综合分析
+  summary: string;           // 交易员财富格局总评
+  summaryScore: number;      // 0-100 综合评分
+
+  // 核心交易员财富分析模块
+  traderVitality: string;          // 交易生命力与抗压指数分析
+  traderVitalityScore: number;     // 0-100
+
+  wealthPotential: string;         // 财富量级与来源结构分析
+  wealthPotentialScore: number;    // 0-100
+
+  fortuneLuck: string;             // 运气与天选财富 (福点相关)
+  fortuneLuckScore: number;        // 0-100
+
+  leverageRisk: string;            // 杠杆与风险管理能力
+  leverageRiskScore: number;       // 0-100
+
+  platformTeam: string;            // 平台与团队红利 (11宫相关)
+  platformTeamScore: number;       // 0-100
+
+  tradingStyle: string;            // 适合的交易风格与策略
+  tradingStyleScore: number;       // 0-100
+
+  // 关键年份与周期
+  keyYears?: string;              // 关键财富年份列表
+  peakPeriods?: string;           // 潜在高速盈利期
+  riskPeriods?: string;           // 高风险波动期
+
+  // 为向后兼容保留的字段 (可选)
+  personality?: string;
+  personalityScore?: number;
+  industry?: string;
+  industryScore?: number;
+  fengShui?: string;
+  fengShuiScore?: number;
+  wealth?: string;
+  wealthScore?: number;
+  marriage?: string;
+  marriageScore?: number;
+  health?: string;
+  healthScore?: number;
+  family?: string;
+  familyScore?: number;
+  crypto?: string;
+  cryptoScore?: number;
+  cryptoYear?: string;
+  cryptoStyle?: string;
+}
+
+export interface LifeDestinyResult {
+  chartData: KLinePoint[];
+  analysis: AnalysisData;
+}
+
+// 星盘计算相关类型
+export interface ChartCalculationRequest {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  latitude: number;
+  longitude: number;
+}
+
+export interface ChartCalculationResponse {
+  isDiurnal: boolean;          // 是否为昼盘
+  sunSign: string;             // 太阳星座
+  moonSign: string;            // 月亮星座
+  ascendant: string;           // 上升星座
+  mc: string;                  // 天顶星座
+  sunHouse: number;            // 太阳宫位 (1-12)
+  sunStatus: string;           // 太阳状态
+  sunDegree: number;           // 太阳黄道度数
+  moonDegree: number;          // 月亮黄道度数
+  _debug?: {
+    julianDay: number;
+    houseCusps: number[];
+    sunLongitude: number;
+    moonLongitude: number;
+  };
+}
