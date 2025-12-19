@@ -95,6 +95,14 @@ export interface AnalysisData {
   tradingStyle: string;                // 内容分析
   tradingStyleScore: number;           // 0-100
 
+  intimacyEnergyTitle?: string;        // 维度标题
+  intimacyEnergy?: string;             // 亲密能量与深度连接能力分析
+  intimacyEnergyScore?: number;        // 0-100
+
+  sexualCharmTitle?: string;           // 维度标题
+  sexualCharm?: string;                // 性魅力与吸引力分析
+  sexualCharmScore?: number;           // 0-100
+
   // 关键年份与周期
   keyYears?: string;              // 关键财富年份列表
   peakPeriods?: string;           // 潜在高速盈利期

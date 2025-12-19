@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AnalysisData } from '../types';
-import { ScrollText, TrendingUp, Zap, Sparkles, Shield, Users, Star, Info, Target, DollarSign, BarChart3 } from 'lucide-react';
+import { ScrollText, TrendingUp, Zap, Sparkles, Shield, Users, Star, Info, Target, DollarSign, BarChart3, Heart, Flame } from 'lucide-react';
 
 interface AnalysisResultProps {
   analysis: AnalysisData;
@@ -177,6 +177,28 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           score={analysis.tradingStyleScore}
           colorClass="text-indigo-600"
         />
+
+        {/* 新增维度：亲密能量 */}
+        {analysis.intimacyEnergy && (
+          <Card
+            title={analysis.intimacyEnergyTitle || "亲密能量与深度连接能力"}
+            icon={Heart}
+            content={analysis.intimacyEnergy}
+            score={analysis.intimacyEnergyScore}
+            colorClass="text-pink-600"
+          />
+        )}
+
+        {/* 新增维度：性魅力 */}
+        {analysis.sexualCharm && (
+          <Card
+            title={analysis.sexualCharmTitle || "性魅力与吸引力"}
+            icon={Flame}
+            content={analysis.sexualCharm}
+            score={analysis.sexualCharmScore}
+            colorClass="text-rose-600"
+          />
+        )}
 
         {/* Key Years and Periods - if available */}
         {analysis.keyYears && (

@@ -185,14 +185,38 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
         // 如果有基础星盘信息，包含到 prompt 中
         const chartInfo = basicChart ? `
-【基础星盘信息（已计算）】
-盘性 (Sect)：${basicChart.isDiurnal ? '昼盘 (Day Chart) - 太阳在地平线以上' : '夜盘 (Night Chart) - 太阳在地平线以下'}
-太阳 (Sun)：${basicChart.sunSign}，第 ${basicChart.sunHouse} 宫，${basicChart.sunStatus}
-月亮 (Moon)：${basicChart.moonSign}
-上升点 (Ascendant)：${basicChart.ascendant}
-天顶 (MC)：${basicChart.mc}
+【星盘基础信息（由专业天文算法计算）】
 
-💡 以上信息为初步计算结果，请结合出生日期时间${astroInfo.birthPlace ? '和地点' : ''}进行更精确的星盘推算和分析。
+📊 出生地理信息：
+- 纬度：${astroInfo.latitude}°
+- 经度：${astroInfo.longitude}°
+- 时区：UTC${parseFloat(astroInfo.timezone) >= 0 ? '+' : ''}${astroInfo.timezone}
+
+🌓 盘性 (Sect)：
+${basicChart.isDiurnal ? '昼盘 (Day Chart) - 太阳在地平线以上，时主光体为太阳' : '夜盘 (Night Chart) - 太阳在地平线以下，时主光体为月亮'}
+
+☀️ 太阳 (Sun)：
+- 星座：${basicChart.sunSign}
+- 宫位：第 ${basicChart.sunHouse} 宫
+- 状态：${basicChart.sunStatus}
+- 黄道度数：${basicChart.sunDegree.toFixed(2)}°
+
+🌙 月亮 (Moon)：
+- 星座：${basicChart.moonSign}
+- 黄道度数：${basicChart.moonDegree.toFixed(2)}°
+
+🎯 四轴点 (Angular Houses)：
+- 上升点 (ASC)：${basicChart.ascendant}
+- 天顶 (MC)：${basicChart.mc}
+
+💡 **重要提示**：以上星盘数据由专业占星天文算法计算得出，请严格基于这些数据进行分析，而不是重新推算。这些数据包含了精确的经纬度、时区、宫位系统等信息，是准确的星盘配置。
+
+请在分析时：
+1. 直接使用上述星盘数据作为分析基础
+2. 基于这些精确的行星位置、宫位配置进行深入解读
+3. 结合盘性（昼/夜盘）判断各行星的力量强弱
+4. 分析太阳、月亮的星座、宫位、度数对命主的影响
+5. 考虑四轴点（ASC、MC）对人格与人生方向的塑造
 ` : '';
 
         return `请根据以下出生信息进行${analysisType}占星分析。
@@ -206,8 +230,9 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 出生月份：${astroInfo.birthMonth} 月
 出生日：${astroInfo.birthDay} 日
 出生时间：${astroInfo.birthHour} 时 ${astroInfo.birthMinute || "00"} 分
+${astroInfo.birthPlace ? `出生地点：${astroInfo.birthPlace}` : ''}
 
-${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.birthPlace}\n` : ''}${chartInfo}
+${chartInfo}
 【行运阶段参数】
 1. 起运年龄：1 岁 (虚岁)。
 2. 第一阶段行运标签：木星主导扩张期。
@@ -316,6 +341,15 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                 tradingStyleTitle: isTrader ? "适合的交易风格与策略" : "健康状况与生活方式",
                 tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配分析" : "健康状况与生活方式分析"),
                 tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
+
+                // 新增的两个维度（仅普通盘）
+                intimacyEnergyTitle: "亲密能量与深度连接能力",
+                intimacyEnergy: data.intimacyEnergy || (isTrader ? undefined : "亲密能量与深度连接能力分析"),
+                intimacyEnergyScore: data.intimacyEnergyScore || (isTrader ? undefined : 85),
+
+                sexualCharmTitle: "性魅力与吸引力",
+                sexualCharm: data.sexualCharm || (isTrader ? undefined : "性魅力与吸引力分析"),
+                sexualCharmScore: data.sexualCharmScore || (isTrader ? undefined : 85),
 
                 keyYears: data.keyYears,
                 peakPeriods: data.peakPeriods,
@@ -460,6 +494,15 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                         tradingStyleTitle: isTrader ? "适合的交易风格与策略" : "健康状况与生活方式",
                         tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配分析" : "健康状况与生活方式分析"),
                         tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
+
+                        // 新增的两个维度（仅普通盘）
+                        intimacyEnergyTitle: "亲密能量与深度连接能力",
+                        intimacyEnergy: data.intimacyEnergy || (isTrader ? undefined : "亲密能量与深度连接能力分析"),
+                        intimacyEnergyScore: data.intimacyEnergyScore || (isTrader ? undefined : 85),
+
+                        sexualCharmTitle: "性魅力与吸引力",
+                        sexualCharm: data.sexualCharm || (isTrader ? undefined : "性魅力与吸引力分析"),
+                        sexualCharmScore: data.sexualCharmScore || (isTrader ? undefined : 85),
 
                         keyYears: data.keyYears,
                         peakPeriods: data.peakPeriods,
