@@ -26,23 +26,28 @@ interface BasicChartInfo {
     moonDegree: number; // 月亮度数
 }
 
-// 常用城市坐标映射表
-const CITY_COORDINATES: Record<string, { latitude: number; longitude: number }> = {
-    '北京': { latitude: 39.9042, longitude: 116.4074 },
-    '上海': { latitude: 31.2304, longitude: 121.4737 },
-    '广州': { latitude: 23.1291, longitude: 113.2644 },
-    '深圳': { latitude: 22.5431, longitude: 114.0579 },
-    '成都': { latitude: 30.5728, longitude: 104.0668 },
-    '杭州': { latitude: 30.2741, longitude: 120.1551 },
-    '重庆': { latitude: 29.4316, longitude: 106.9123 },
-    '西安': { latitude: 34.3416, longitude: 108.9398 },
-    '天津': { latitude: 39.0842, longitude: 117.2010 },
-    '南京': { latitude: 32.0603, longitude: 118.7969 },
-    '武汉': { latitude: 30.5928, longitude: 114.3055 },
-    '香港': { latitude: 22.3193, longitude: 114.1694 },
-    '台北': { latitude: 25.0330, longitude: 121.5654 },
-    // 默认坐标（如果找不到城市，使用广州）
-    'default': { latitude: 23.1291, longitude: 113.2644 }
+// 常用城市坐标和时区映射表
+const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; timezone: number }> = {
+    '北京': { latitude: 39.9042, longitude: 116.4074, timezone: 8.0 },
+    '上海': { latitude: 31.2304, longitude: 121.4737, timezone: 8.0 },
+    '广州': { latitude: 23.1291, longitude: 113.2644, timezone: 8.0 },
+    '深圳': { latitude: 22.5431, longitude: 114.0579, timezone: 8.0 },
+    '成都': { latitude: 30.5728, longitude: 104.0668, timezone: 8.0 },
+    '杭州': { latitude: 30.2741, longitude: 120.1551, timezone: 8.0 },
+    '重庆': { latitude: 29.4316, longitude: 106.9123, timezone: 8.0 },
+    '西安': { latitude: 34.3416, longitude: 108.9398, timezone: 8.0 },
+    '天津': { latitude: 39.0842, longitude: 117.2010, timezone: 8.0 },
+    '南京': { latitude: 32.0603, longitude: 118.7969, timezone: 8.0 },
+    '武汉': { latitude: 30.5928, longitude: 114.3055, timezone: 8.0 },
+    '香港': { latitude: 22.3193, longitude: 114.1694, timezone: 8.0 },
+    '台北': { latitude: 25.0330, longitude: 121.5654, timezone: 8.0 },
+    '纽约': { latitude: 40.7128, longitude: -74.0060, timezone: -5.0 },
+    '洛杉矶': { latitude: 34.0522, longitude: -118.2437, timezone: -8.0 },
+    '伦敦': { latitude: 51.5074, longitude: -0.1278, timezone: 0.0 },
+    '东京': { latitude: 35.6762, longitude: 139.6503, timezone: 9.0 },
+    '新加坡': { latitude: 1.3521, longitude: 103.8198, timezone: 8.0 },
+    // 默认坐标（如果找不到城市，使用北京）
+    'default': { latitude: 39.9042, longitude: 116.4074, timezone: 8.0 }
 };
 
 const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
@@ -57,7 +62,10 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
         birthDay: '15',
         birthHour: '14',
         birthMinute: '30',
-        birthPlace: '广州',
+        birthPlace: '北京',
+        latitude: '39.9042',
+        longitude: '116.4074',
+        timezone: '8.0',
     });
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +80,20 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
     // API 配置已在后端服务器，前端不需要配置
 
+    // 处理城市选择，自动填充经纬度和时区
+    const handleCitySelect = (cityName: string) => {
+        const city = CITY_COORDINATES[cityName];
+        if (city) {
+            setAstroInfo(prev => ({
+                ...prev,
+                birthPlace: cityName,
+                latitude: city.latitude.toString(),
+                longitude: city.longitude.toString(),
+                timezone: city.timezone.toString(),
+            }));
+        }
+    };
+
     // 调用后端 API 计算基础星盘信息
     const calculateBasicChart = async (): Promise<BasicChartInfo> => {
         const year = parseInt(astroInfo.birthYear);
@@ -79,27 +101,24 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
         const day = parseInt(astroInfo.birthDay);
         const hour = parseInt(astroInfo.birthHour);
         const minute = parseInt(astroInfo.birthMinute);
+        const latitude = parseFloat(astroInfo.latitude);
+        const longitude = parseFloat(astroInfo.longitude);
+        const timezone = parseFloat(astroInfo.timezone);
 
-        // 获取城市坐标
-        const cityName = astroInfo.birthPlace?.trim() || '';
-        let coordinates = CITY_COORDINATES[cityName] || CITY_COORDINATES['default'];
-
-        // 模糊匹配城市名（处理"广州市"、"北京"等）
-        if (!CITY_COORDINATES[cityName]) {
-            for (const city in CITY_COORDINATES) {
-                if (cityName.includes(city) || city.includes(cityName)) {
-                    coordinates = CITY_COORDINATES[city];
-                    break;
-                }
-            }
+        // 验证经纬度和时区
+        if (isNaN(latitude) || isNaN(longitude) || isNaN(timezone)) {
+            throw new Error('请输入有效的经纬度和时区信息');
         }
+
+        // 构造 ISO 格式的出生日期时间
+        const birthDatetime = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
 
         try {
             // 调用后端星盘计算 API
             // 🔥 在生产环境使用相对路径（通过 Vercel Serverless Function 代理），避免 CORS
             const isDev = import.meta.env.DEV;
-            const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782') : '';
-            const url = backendUrl ? `${backendUrl}/api/calculate-chart` : '/api/calculate-chart';
+            const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:8000') : '';
+            const url = backendUrl ? `${backendUrl}/chart/unified` : '/api/calculate-chart';
 
             console.log('🔮 调用后端星盘计算 API:', url);
 
@@ -109,13 +128,12 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    year,
-                    month,
-                    day,
-                    hour,
-                    minute,
-                    latitude: coordinates.latitude,
-                    longitude: coordinates.longitude,
+                    birth_datetime: birthDatetime,
+                    latitude: latitude,
+                    longitude: longitude,
+                    timezone_offset: timezone,
+                    house_system: 'B',  // Placidus 宫位系统
+                    gender: astroInfo.gender.toLowerCase(),
                 }),
             });
 
@@ -467,7 +485,7 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
         setAstroInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
-    const isStep1Valid = astroInfo.birthYear && astroInfo.birthMonth && astroInfo.birthDay && astroInfo.birthHour;
+    const isStep1Valid = astroInfo.birthYear && astroInfo.birthMonth && astroInfo.birthDay && astroInfo.birthHour && astroInfo.latitude && astroInfo.longitude && astroInfo.timezone;
     const isAutoValid = isStep1Valid; // API 配置已内置
 
     return (
@@ -680,17 +698,64 @@ ${astroInfo.birthPlace ? `【出生地点】\n出生城市/地区：${astroInfo.
                     <div className="bg-green-50 p-4 rounded-xl border border-green-100">
                         <div className="flex items-center gap-2 mb-3 text-green-800 text-sm font-bold">
                             <Sparkles className="w-4 h-4" />
-                            <span>出生地点 (可选)</span>
+                            <span>出生地点与坐标</span>
                         </div>
-                        <input
-                            type="text"
-                            name="birthPlace"
-                            value={astroInfo.birthPlace}
-                            onChange={handleAstroChange}
-                            placeholder="如：香港、上海、纽约"
-                            className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white"
-                        />
-                        <p className="text-xs text-green-600/70 mt-1">如果不提供，AI 将使用默认参数进行分析</p>
+
+                        {/* 城市快速选择 */}
+                        <div className="mb-3">
+                            <label className="block text-xs font-bold text-gray-600 mb-1">快速选择城市</label>
+                            <select
+                                value={astroInfo.birthPlace}
+                                onChange={(e) => handleCitySelect(e.target.value)}
+                                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white"
+                            >
+                                {Object.keys(CITY_COORDINATES).filter(city => city !== 'default').map(city => (
+                                    <option key={city} value={city}>{city}</option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-green-600/70 mt-1">选择城市将自动填充经纬度和时区</p>
+                        </div>
+
+                        {/* 经纬度和时区输入 */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">纬度</label>
+                                <input
+                                    type="number"
+                                    step="0.0001"
+                                    name="latitude"
+                                    value={astroInfo.latitude}
+                                    onChange={handleAstroChange}
+                                    placeholder="39.9042"
+                                    className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">经度</label>
+                                <input
+                                    type="number"
+                                    step="0.0001"
+                                    name="longitude"
+                                    value={astroInfo.longitude}
+                                    onChange={handleAstroChange}
+                                    placeholder="116.4074"
+                                    className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">时区 (UTC)</label>
+                                <input
+                                    type="number"
+                                    step="0.5"
+                                    name="timezone"
+                                    value={astroInfo.timezone}
+                                    onChange={handleAstroChange}
+                                    placeholder="8.0"
+                                    className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white text-sm"
+                                />
+                            </div>
+                        </div>
+                        <p className="text-xs text-green-600/70 mt-2">💡 也可以手动输入精确的经纬度和时区</p>
                     </div>
 
                     {error && (

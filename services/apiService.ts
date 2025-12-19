@@ -13,14 +13,14 @@ interface GenerateRequest {
  * @returns 星盘计算结果
  */
 export const calculateChart = async (request: ChartCalculationRequest): Promise<ChartCalculationResponse> => {
-    // 🔥 使用相对路径，在 Vercel 上会自动使用 Serverless Function 代理
-    // 这样可以避免 CORS 问题（同源请求）
+    // 🔥 使用新的统一 API 端点 /chart/unified
+    // 在开发环境直接调用，在生产环境使用 Vercel Serverless Function 代理
     const isDev = import.meta.env.DEV;
-    const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782') : '';
-    const url = backendUrl ? `${backendUrl}/api/calculate-chart` : '/api/calculate-chart';
+    const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:8000') : '';
+    const url = backendUrl ? `${backendUrl}/chart/unified` : '/api/calculate-chart';
 
-    console.log('🔮 计算星盘数据:', url);
-    console.log('📊 出生信息:', request);
+    console.log('🔮 计算星盘数据 (统一API):', url);
+    console.log('📊 请求参数:', request);
 
     try {
         const response = await fetch(url, {

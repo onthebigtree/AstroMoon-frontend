@@ -128,13 +128,12 @@ export interface LifeDestinyResult {
 
 // 星盘计算相关类型
 export interface ChartCalculationRequest {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
+  birth_datetime: string;      // ISO 格式: "1963-02-17T13:40:00"
   latitude: number;
   longitude: number;
+  timezone_offset: number;     // 时区偏移，如 -5.0 表示 UTC-5
+  house_system: string;        // 宫位系统，默认 "B" (Placidus)
+  gender: 'male' | 'female';
 }
 
 export interface ChartCalculationResponse {

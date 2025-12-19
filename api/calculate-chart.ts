@@ -1,10 +1,11 @@
 /**
  * Vercel Serverless Function - Chart Calculation Proxy
+ * 代理到新的统一 API 端点 /chart/unified
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const BACKEND_URL = 'http://43.134.98.27:3782';
+const BACKEND_URL = 'http://43.134.98.27:8000';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,7 +21,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/calculate-chart`, {
+    console.log('🔮 代理星盘计算请求到:', `${BACKEND_URL}/chart/unified`);
+    console.log('📊 请求体:', req.body);
+
+    const response = await fetch(`${BACKEND_URL}/chart/unified`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,8 +33,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     const data = await response.json();
+    console.log('✅ 响应状态:', response.status);
+
     res.status(response.status).json(data);
   } catch (error: any) {
+    console.error('❌ 星盘计算失败:', error);
     res.status(500).json({
       error: 'Chart calculation failed',
       message: error.message,
