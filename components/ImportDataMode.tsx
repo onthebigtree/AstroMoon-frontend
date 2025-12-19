@@ -877,7 +877,7 @@ ${chartInfo}
                             <div className="flex items-center justify-between mt-1">
                                 <p className="text-xs text-green-600/70">选择城市将自动填充经纬度和时区</p>
                                 <a
-                                    href="https://lbsyun.baidu.com/jsdemo/demo/yLngLatLocation.htm"
+                                    href="https://map.jiqrxx.com/jingweidu/"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
