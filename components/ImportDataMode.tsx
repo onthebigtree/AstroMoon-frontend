@@ -138,23 +138,59 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || '星盘计算失败');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || errorData.msg || '星盘计算失败');
             }
 
-            const result = await response.json();
-            console.log('✅ 星盘计算成功:', result);
+            const apiResponse = await response.json();
+            console.log('✅ 星盘计算成功（新API格式）:', apiResponse);
+
+            // 检查 API 响应格式
+            if (apiResponse.code !== 0 || !apiResponse.data) {
+                throw new Error(apiResponse.msg || '星盘计算失败');
+            }
+
+            const { data } = apiResponse;
+            const { meta, bodies, dignity_data } = data;
+
+            // 提取太阳状态（从 dignity_data 中获取）
+            const sunDignity = dignity_data?.Sun;
+            let sunStatus = '中性';
+            if (sunDignity) {
+                switch (sunDignity.dignity) {
+                    case 'domicile':
+                        sunStatus = '入庙 (Domicile)';
+                        break;
+                    case 'exaltation':
+                        sunStatus = '擢升 (Exaltation)';
+                        break;
+                    case 'detriment':
+                        sunStatus = '失势 (Detriment)';
+                        break;
+                    case 'fall':
+                        sunStatus = '落陷 (Fall)';
+                        break;
+                    case 'peregrine':
+                        sunStatus = '游离 (Peregrine)';
+                        break;
+                    default:
+                        sunStatus = sunDignity.dignity;
+                }
+            }
+
+            // 使用 alchabitius 宫位系统（effective 宫位）
+            const sunHouse = bodies.Sun.house_placement.alchabitius.effective;
 
             return {
-                isDiurnal: result.isDiurnal,
-                sunSign: result.sunSign,
-                moonSign: result.moonSign,
-                ascendant: result.ascendant,
-                mc: result.mc,
-                sunHouse: result.sunHouse,
-                sunStatus: result.sunStatus,
-                sunDegree: result.sunDegree,
-                moonDegree: result.moonDegree,
+                isDiurnal: meta.is_day_chart,
+                sunSign: bodies.Sun.sign,
+                moonSign: bodies.Moon.sign,
+                ascendant: bodies.ASC.sign,
+                mc: bodies.MC.sign,
+                sunHouse: sunHouse,
+                sunStatus: sunStatus,
+                sunDegree: bodies.Sun.sign_degree,
+                moonDegree: bodies.Moon.sign_degree,
             };
 
         } catch (error: any) {

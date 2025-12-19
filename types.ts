@@ -144,20 +144,102 @@ export interface ChartCalculationRequest {
   gender: 'male' | 'female';
 }
 
+// 新 API 返回的数据结构
 export interface ChartCalculationResponse {
-  isDiurnal: boolean;          // 是否为昼盘
-  sunSign: string;             // 太阳星座
-  moonSign: string;            // 月亮星座
-  ascendant: string;           // 上升星座
-  mc: string;                  // 天顶星座
-  sunHouse: number;            // 太阳宫位 (1-12)
-  sunStatus: string;           // 太阳状态
-  sunDegree: number;           // 太阳黄道度数
-  moonDegree: number;          // 月亮黄道度数
-  _debug?: {
-    julianDay: number;
-    houseCusps: number[];
-    sunLongitude: number;
-    moonLongitude: number;
+  code: number;
+  msg: string;
+  data: {
+    meta: {
+      is_day_chart: boolean;
+      calculation_engine: string;
+      gender: string;
+      case_id: string | null;
+      location: string | null;
+      birth_time: string;
+    };
+    bodies: {
+      Sun: PlanetData;
+      Moon: PlanetData;
+      Mercury: PlanetData;
+      Venus: PlanetData;
+      Mars: PlanetData;
+      Jupiter: PlanetData;
+      Saturn: PlanetData;
+      Uranus: PlanetData;
+      Neptune: PlanetData;
+      Pluto: PlanetData;
+      North_Node: PlanetData;
+      South_Node: PlanetData;
+      Lilith: PlanetData;
+      ASC: PlanetData;
+      MC: PlanetData;
+      DES: PlanetData;
+      IC: PlanetData;
+    };
+    aspects: AspectData[];
+    dignity_data: Record<string, DignityData>;
+    arabic_parts: {
+      Fortune: ArabicPartData;
+      Spirit: ArabicPartData;
+      Love: ArabicPartData;
+      Marriage: ArabicPartData;
+      Sickness: ArabicPartData;
+    };
+    houses: {
+      whole_sign_cusps: Record<string, number>;
+      alchabitius_cusps: Record<string, number>;
+    };
+  };
+}
+
+export interface PlanetData {
+  longitude: number;
+  sign: string;
+  sign_degree: number;
+  speed: number;
+  is_retrograde: boolean;
+  solar_status: string;
+  house_placement: {
+    whole_sign: number;
+    alchabitius: {
+      raw: number;
+      effective: number;
+      is_shifted: boolean;
+      note: string | null;
+    };
+  };
+  dignity_rulers: {
+    term: string;
+    face: string;
+  } | null;
+}
+
+export interface AspectData {
+  body_a: string;
+  body_b: string;
+  type: string;
+  orb: number;
+  is_applying: boolean;
+}
+
+export interface DignityData {
+  score: number;
+  dignity: string;
+  sign: number;
+}
+
+export interface ArabicPartData {
+  formula_used: string;
+  longitude: number;
+  sign: string;
+  sign_degree: number;
+  house_placement: {
+    whole_sign: number;
+    alchabitius: {
+      raw: number;
+      effective: number;
+      is_shifted: boolean;
+      note: string | null;
+    };
   };
 }
