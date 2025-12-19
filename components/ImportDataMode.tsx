@@ -28,24 +28,106 @@ interface BasicChartInfo {
 
 // 常用城市坐标和时区映射表
 const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; timezone: number }> = {
+    // === 直辖市 ===
     '北京': { latitude: 39.9042, longitude: 116.4074, timezone: 8.0 },
     '上海': { latitude: 31.2304, longitude: 121.4737, timezone: 8.0 },
+    '天津': { latitude: 39.0842, longitude: 117.2010, timezone: 8.0 },
+    '重庆': { latitude: 29.4316, longitude: 106.9123, timezone: 8.0 },
+
+    // === 广东省 ===
     '广州': { latitude: 23.1291, longitude: 113.2644, timezone: 8.0 },
     '深圳': { latitude: 22.5431, longitude: 114.0579, timezone: 8.0 },
-    '成都': { latitude: 30.5728, longitude: 104.0668, timezone: 8.0 },
+    '东莞': { latitude: 23.0209, longitude: 113.7518, timezone: 8.0 },
+    '佛山': { latitude: 23.0218, longitude: 113.1219, timezone: 8.0 },
+    '珠海': { latitude: 22.2711, longitude: 113.5767, timezone: 8.0 },
+    '惠州': { latitude: 23.1115, longitude: 114.4152, timezone: 8.0 },
+    '中山': { latitude: 22.5170, longitude: 113.3927, timezone: 8.0 },
+    '江门': { latitude: 22.5790, longitude: 113.0816, timezone: 8.0 },
+
+    // === 浙江省 ===
     '杭州': { latitude: 30.2741, longitude: 120.1551, timezone: 8.0 },
-    '重庆': { latitude: 29.4316, longitude: 106.9123, timezone: 8.0 },
-    '西安': { latitude: 34.3416, longitude: 108.9398, timezone: 8.0 },
-    '天津': { latitude: 39.0842, longitude: 117.2010, timezone: 8.0 },
+    '宁波': { latitude: 29.8683, longitude: 121.5440, timezone: 8.0 },
+    '温州': { latitude: 28.0006, longitude: 120.6725, timezone: 8.0 },
+    '绍兴': { latitude: 30.0365, longitude: 120.5821, timezone: 8.0 },
+    '嘉兴': { latitude: 30.7462, longitude: 120.7555, timezone: 8.0 },
+
+    // === 江苏省 ===
     '南京': { latitude: 32.0603, longitude: 118.7969, timezone: 8.0 },
+    '苏州': { latitude: 31.2989, longitude: 120.5853, timezone: 8.0 },
+    '无锡': { latitude: 31.4912, longitude: 120.3119, timezone: 8.0 },
+    '常州': { latitude: 31.8106, longitude: 119.9740, timezone: 8.0 },
+    '南通': { latitude: 32.0146, longitude: 120.8945, timezone: 8.0 },
+    '扬州': { latitude: 32.3912, longitude: 119.4215, timezone: 8.0 },
+
+    // === 四川省 ===
+    '成都': { latitude: 30.5728, longitude: 104.0668, timezone: 8.0 },
+    '绵阳': { latitude: 31.4677, longitude: 104.6793, timezone: 8.0 },
+    '德阳': { latitude: 31.1270, longitude: 104.3983, timezone: 8.0 },
+
+    // === 陕西省 ===
+    '西安': { latitude: 34.3416, longitude: 108.9398, timezone: 8.0 },
+
+    // === 湖北省 ===
     '武汉': { latitude: 30.5928, longitude: 114.3055, timezone: 8.0 },
+
+    // === 湖南省 ===
+    '长沙': { latitude: 28.2282, longitude: 112.9388, timezone: 8.0 },
+
+    // === 河南省 ===
+    '郑州': { latitude: 34.7466, longitude: 113.6253, timezone: 8.0 },
+
+    // === 山东省 ===
+    '济南': { latitude: 36.6512, longitude: 117.1205, timezone: 8.0 },
+    '青岛': { latitude: 36.0671, longitude: 120.3826, timezone: 8.0 },
+    '烟台': { latitude: 37.4638, longitude: 121.4478, timezone: 8.0 },
+
+    // === 福建省 ===
+    '福州': { latitude: 26.0745, longitude: 119.2965, timezone: 8.0 },
+    '厦门': { latitude: 24.4798, longitude: 118.0894, timezone: 8.0 },
+    '泉州': { latitude: 24.8741, longitude: 118.6758, timezone: 8.0 },
+
+    // === 辽宁省 ===
+    '沈阳': { latitude: 41.8057, longitude: 123.4328, timezone: 8.0 },
+    '大连': { latitude: 38.9140, longitude: 121.6147, timezone: 8.0 },
+
+    // === 吉林省 ===
+    '长春': { latitude: 43.8171, longitude: 125.3235, timezone: 8.0 },
+
+    // === 黑龙江省 ===
+    '哈尔滨': { latitude: 45.8038, longitude: 126.5340, timezone: 8.0 },
+
+    // === 云南省 ===
+    '昆明': { latitude: 25.0406, longitude: 102.7129, timezone: 8.0 },
+
+    // === 贵州省 ===
+    '贵阳': { latitude: 26.6470, longitude: 106.6302, timezone: 8.0 },
+
+    // === 广西壮族自治区 ===
+    '南宁': { latitude: 22.8170, longitude: 108.3665, timezone: 8.0 },
+
+    // === 海南省 ===
+    '海口': { latitude: 20.0444, longitude: 110.1999, timezone: 8.0 },
+    '三亚': { latitude: 18.2528, longitude: 109.5121, timezone: 8.0 },
+
+    // === 港澳台 ===
     '香港': { latitude: 22.3193, longitude: 114.1694, timezone: 8.0 },
+    '澳门': { latitude: 22.1987, longitude: 113.5439, timezone: 8.0 },
     '台北': { latitude: 25.0330, longitude: 121.5654, timezone: 8.0 },
+    '台中': { latitude: 24.1477, longitude: 120.6736, timezone: 8.0 },
+    '高雄': { latitude: 22.6273, longitude: 120.3014, timezone: 8.0 },
+
+    // === 国际城市 ===
     '纽约': { latitude: 40.7128, longitude: -74.0060, timezone: -5.0 },
     '洛杉矶': { latitude: 34.0522, longitude: -118.2437, timezone: -8.0 },
     '伦敦': { latitude: 51.5074, longitude: -0.1278, timezone: 0.0 },
+    '巴黎': { latitude: 48.8566, longitude: 2.3522, timezone: 1.0 },
     '东京': { latitude: 35.6762, longitude: 139.6503, timezone: 9.0 },
+    '首尔': { latitude: 37.5665, longitude: 126.9780, timezone: 9.0 },
     '新加坡': { latitude: 1.3521, longitude: 103.8198, timezone: 8.0 },
+    '悉尼': { latitude: -33.8688, longitude: 151.2093, timezone: 10.0 },
+    '温哥华': { latitude: 49.2827, longitude: -123.1207, timezone: -8.0 },
+    '多伦多': { latitude: 43.6532, longitude: -79.3832, timezone: -5.0 },
+
     // 默认坐标（如果找不到城市，使用北京）
     'default': { latitude: 39.9042, longitude: 116.4074, timezone: 8.0 }
 };
@@ -792,7 +874,18 @@ ${chartInfo}
                                     <option key={city} value={city}>{city}</option>
                                 ))}
                             </select>
-                            <p className="text-xs text-green-600/70 mt-1">选择城市将自动填充经纬度和时区</p>
+                            <div className="flex items-center justify-between mt-1">
+                                <p className="text-xs text-green-600/70">选择城市将自动填充经纬度和时区</p>
+                                <a
+                                    href="https://lbsyun.baidu.com/jsdemo/demo/yLngLatLocation.htm"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                                >
+                                    <span>🌍</span>
+                                    <span>查询城市经纬度</span>
+                                </a>
+                            </div>
                         </div>
 
                         {/* 经纬度和时区输入 */}
