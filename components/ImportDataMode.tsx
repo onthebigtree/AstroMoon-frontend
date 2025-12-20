@@ -877,32 +877,6 @@ ${chartInfo}
                             <span>出生地点与坐标</span>
                         </div>
 
-                        {/* 城市快速选择 */}
-                        <div className="mb-3">
-                            <label className="block text-xs font-bold text-gray-600 mb-1">快速选择城市</label>
-                            <select
-                                value={astroInfo.birthPlace}
-                                onChange={(e) => handleCitySelect(e.target.value)}
-                                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white"
-                            >
-                                {Object.keys(CITY_COORDINATES).filter(city => city !== 'default').map(city => (
-                                    <option key={city} value={city}>{city}</option>
-                                ))}
-                            </select>
-                            <div className="flex items-center justify-between mt-1">
-                                <p className="text-xs text-green-600/70">选择城市将自动填充经纬度和时区</p>
-                                <a
-                                    href="https://map.jiqrxx.com/jingweidu/"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                                >
-                                    <span>🌍</span>
-                                    <span>查询城市经纬度</span>
-                                </a>
-                            </div>
-                        </div>
-
                         {/* 地图选择按钮 */}
                         <div className="mb-3">
                             <button
