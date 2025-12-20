@@ -77,15 +77,15 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         const map = L.map(mapContainerRef.current).setView(center, initialZoom);
         console.log('✅ 地图实例创建成功');
 
-        // 添加地图图层 - 使用国内可访问的高德地图瓦片
+        // 添加地图图层 - 使用 OpenStreetMap（全球可用）
         console.log('🗺️ 添加地图图层...');
-        // 使用高德地图影像+标注图层，国内访问速度快
-        L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-          subdomains: ['1', '2', '3', '4'],
-          attribution: '&copy; <a href="https://www.amap.com/">高德地图</a>',
-          maxZoom: 18,
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          subdomains: ['a', 'b', 'c'],
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
+          crossOrigin: true,
         }).addTo(map);
-        console.log('✅ 地图图层添加成功（使用高德地图）');
+        console.log('✅ 地图图层添加成功');
 
         // 如果有初始位置，添加标记
         if (initialPosition) {
@@ -295,18 +295,17 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         <div className="relative p-4 bg-gray-100">
           <div className="h-[500px] w-full border-4 border-indigo-500 rounded-xl overflow-hidden shadow-2xl bg-white relative">
             {!mapLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 z-10">
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 z-[1000]">
                 <div className="text-center">
                   <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-2" />
                   <p className="text-gray-600 font-medium">加载地图中...</p>
-                  <p className="text-xs text-gray-500 mt-1">正在连接 OpenStreetMap 服务器</p>
+                  <p className="text-xs text-gray-500 mt-1">正在连接地图服务器</p>
                 </div>
               </div>
             )}
             <div
               ref={mapContainerRef}
               style={{ height: '100%', width: '100%' }}
-              className={mapLoaded ? 'opacity-100' : 'opacity-0'}
             />
           </div>
         </div>
