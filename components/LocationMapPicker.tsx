@@ -35,14 +35,29 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
   // 动态加载 Leaflet
   useEffect(() => {
-    if (!isOpen || mapLoaded) return;
+    if (!isOpen) return;
 
     const loadLeaflet = async () => {
       try {
+        console.log('🗺️ 开始加载 Leaflet...');
         // 动态导入 Leaflet
         const L = await import('leaflet');
+        console.log('✅ Leaflet 导入成功');
 
-        if (!mapContainerRef.current || mapInstanceRef.current) return;
+        if (!mapContainerRef.current) {
+          console.error('❌ 地图容器 ref 为空');
+          return;
+        }
+
+        if (mapInstanceRef.current) {
+          console.log('⚠️ 地图实例已存在，跳过初始化');
+          return;
+        }
+
+        console.log('📍 地图容器尺寸:', {
+          width: mapContainerRef.current.offsetWidth,
+          height: mapContainerRef.current.offsetHeight
+        });
 
         // 修复默认图标路径
         delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -58,13 +73,17 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
           : [35.0, 105.0]; // 默认中国中心位置
 
         const initialZoom = initialPosition ? 10 : 4; // 如果有初始位置，放大显示
+        console.log('🌍 初始化地图 - 中心点:', center, '缩放级别:', initialZoom);
         const map = L.map(mapContainerRef.current).setView(center, initialZoom);
+        console.log('✅ 地图实例创建成功');
 
         // 添加地图图层
+        console.log('🗺️ 添加地图图层...');
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
           maxZoom: 19,
         }).addTo(map);
+        console.log('✅ 地图图层添加成功');
 
         // 如果有初始位置，添加标记
         if (initialPosition) {
@@ -91,8 +110,9 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
         mapInstanceRef.current = map;
         setMapLoaded(true);
+        console.log('🎉 地图加载完成！mapLoaded 已设置为 true');
       } catch (error) {
-        console.error('加载地图失败:', error);
+        console.error('❌ 加载地图失败:', error);
       }
     };
 
@@ -100,11 +120,15 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
     // 清理函数
     return () => {
+      console.log('🧹 清理地图实例...');
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         markerRef.current = null;
         setMapLoaded(false);
+        console.log('✅ 地图实例已清理');
+      } else {
+        console.log('⚠️ 没有地图实例需要清理');
       }
     };
   }, [isOpen, initialPosition]);
