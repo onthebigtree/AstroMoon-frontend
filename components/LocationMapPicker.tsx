@@ -77,13 +77,15 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         const map = L.map(mapContainerRef.current).setView(center, initialZoom);
         console.log('✅ 地图实例创建成功');
 
-        // 添加地图图层
+        // 添加地图图层 - 使用国内可访问的高德地图瓦片
         console.log('🗺️ 添加地图图层...');
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          maxZoom: 19,
+        // 使用高德地图影像+标注图层，国内访问速度快
+        L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+          subdomains: ['1', '2', '3', '4'],
+          attribution: '&copy; <a href="https://www.amap.com/">高德地图</a>',
+          maxZoom: 18,
         }).addTo(map);
-        console.log('✅ 地图图层添加成功');
+        console.log('✅ 地图图层添加成功（使用高德地图）');
 
         // 如果有初始位置，添加标记
         if (initialPosition) {
