@@ -290,8 +290,8 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         </div>
 
         {/* Map */}
-        <div className="flex-1 relative min-h-[500px] p-4 bg-gray-100">
-          <div className="h-full w-full border-4 border-indigo-500 rounded-xl overflow-hidden shadow-2xl bg-white relative">
+        <div className="relative p-4 bg-gray-100">
+          <div className="h-[500px] w-full border-4 border-indigo-500 rounded-xl overflow-hidden shadow-2xl bg-white relative">
             {!mapLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 z-10">
                 <div className="text-center">
