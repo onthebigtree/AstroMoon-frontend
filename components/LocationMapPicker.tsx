@@ -266,20 +266,23 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         </div>
 
         {/* Map */}
-        <div className="flex-1 relative min-h-[400px] bg-gray-100">
-          {!mapLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-              <div className="text-center">
-                <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-2" />
-                <p className="text-gray-600">加载地图中...</p>
+        <div className="flex-1 relative min-h-[500px] p-4 bg-gray-100">
+          <div className="h-full w-full border-4 border-indigo-500 rounded-xl overflow-hidden shadow-2xl bg-white relative">
+            {!mapLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 z-10">
+                <div className="text-center">
+                  <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-2" />
+                  <p className="text-gray-600 font-medium">加载地图中...</p>
+                  <p className="text-xs text-gray-500 mt-1">正在连接 OpenStreetMap 服务器</p>
+                </div>
               </div>
-            </div>
-          )}
-          <div
-            ref={mapContainerRef}
-            style={{ height: '100%', width: '100%' }}
-            className={mapLoaded ? 'opacity-100' : 'opacity-0'}
-          />
+            )}
+            <div
+              ref={mapContainerRef}
+              style={{ height: '100%', width: '100%' }}
+              className={mapLoaded ? 'opacity-100' : 'opacity-0'}
+            />
+          </div>
         </div>
 
         {/* Selected Location Info */}
