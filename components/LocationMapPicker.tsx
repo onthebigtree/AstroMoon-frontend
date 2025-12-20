@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { X, MapPin, Loader2, Search } from 'lucide-react';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
 // 修复 Leaflet 默认图标问题
 delete (L.Icon.Default.prototype as any)._getIconUrl;
