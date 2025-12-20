@@ -3,10 +3,13 @@ import React, { useState, useMemo } from 'react';
 import LifeKLineChart from './components/LifeKLineChart';
 import AnalysisResult from './components/AnalysisResult';
 import ImportDataMode from './components/ImportDataMode';
+import Login from './components/Login';
+import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
-import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon } from 'lucide-react';
+import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, LogOut } from 'lucide-react';
 
 const App: React.FC = () => {
+  const { currentUser, logout } = useAuth();
   const [result, setResult] = useState<LifeDestinyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
@@ -205,6 +208,20 @@ const App: React.FC = () => {
     return result.chartData.reduce((prev, current) => (prev.high > current.high) ? prev : current);
   }, [result]);
 
+  // 如果用户未登录，显示登录页面
+  if (!currentUser) {
+    return <Login />;
+  }
+
+  // 处理登出
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center">
       {/* Header */}
@@ -218,6 +235,19 @@ const App: React.FC = () => {
               <h1 className="text-2xl font-serif-sc font-bold text-gray-900 tracking-wide">Astro Moon</h1>
               <p className="text-xs text-gray-500 uppercase tracking-widest">Astrology & Life Analysis</p>
             </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-600">
+              {currentUser.email}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              title="退出登录"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">退出</span>
+            </button>
           </div>
         </div>
       </header>
