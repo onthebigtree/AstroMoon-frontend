@@ -55,9 +55,10 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         // 创建地图实例
         const center: [number, number] = initialPosition
           ? [initialPosition.lat, initialPosition.lng]
-          : [39.9042, 116.4074]; // 默认北京
+          : [35.0, 105.0]; // 默认中国中心位置
 
-        const map = L.map(mapContainerRef.current).setView(center, 4);
+        const initialZoom = initialPosition ? 10 : 4; // 如果有初始位置，放大显示
+        const map = L.map(mapContainerRef.current).setView(center, initialZoom);
 
         // 添加地图图层
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
