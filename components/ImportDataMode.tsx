@@ -1328,7 +1328,11 @@ ${chartInfo}
                 onSelect={handleMapLocationSelect}
                 initialPosition={
                     astroInfo.latitude && astroInfo.longitude
-                        ? { lat: parseFloat(astroInfo.latitude), lng: parseFloat(astroInfo.longitude) }
+                        ? {
+                            lat: parseFloat(astroInfo.latitude),
+                            lng: parseFloat(astroInfo.longitude),
+                            placeName: astroInfo.birthPlace
+                          }
                         : undefined
                 }
             />

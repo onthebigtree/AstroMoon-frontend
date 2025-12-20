@@ -12,7 +12,7 @@ interface LocationMapPickerProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (location: LocationData) => void;
-  initialPosition?: { lat: number; lng: number };
+  initialPosition?: { lat: number; lng: number; placeName?: string };
 }
 
 const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
@@ -27,7 +27,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isGeocodingAddress, setIsGeocodingAddress] = useState(false);
-  const [addressName, setAddressName] = useState<string>('');
+  const [addressName, setAddressName] = useState<string>(initialPosition?.placeName || '');
   const [mapLoaded, setMapLoaded] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -104,6 +104,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         map.on('click', (e: any) => {
           const { lat, lng } = e.latlng;
           setPosition({ lat, lng });
+          setAddressName(''); // 清空地址名称，触发反向地理编码
 
           // 移除旧标记
           if (markerRef.current) {
@@ -220,12 +221,12 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     }
   }, [searchQuery]);
 
-  // 当位置变化时，获取地址名称
+  // 当位置变化时，获取地址名称（但如果已有初始地址名称则跳过）
   useEffect(() => {
-    if (position) {
+    if (position && !addressName) {
       reverseGeocode(position.lat, position.lng);
     }
-  }, [position, reverseGeocode]);
+  }, [position, reverseGeocode, addressName]);
 
   // 确认选择
   const handleConfirm = () => {
