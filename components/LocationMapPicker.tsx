@@ -87,6 +87,12 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         }).addTo(map);
         console.log('✅ 地图图层添加成功');
 
+        // 延迟调用 invalidateSize 确保地图正确渲染
+        setTimeout(() => {
+          map.invalidateSize();
+          console.log('🔄 地图尺寸已刷新');
+        }, 100);
+
         // 如果有初始位置，添加标记
         if (initialPosition) {
           const marker = L.marker([initialPosition.lat, initialPosition.lng]).addTo(map);
