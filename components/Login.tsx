@@ -1,73 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, LogIn, AlertCircle, Moon } from 'lucide-react';
+import { Mail, LogIn, AlertCircle, Moon, CheckCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showResetPassword, setShowResetPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetMessage, setResetMessage] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
-  const { login, register, loginWithGoogle, resetPassword } = useAuth();
+  const { sendLoginLink, loginWithGoogle } = useAuth();
 
-  // 处理邮件登录/注册
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  // 倒计时逻辑
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  // 处理邮件登录
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      setError('请填写所有必填字段');
+    if (!email) {
+      setError('请输入邮箱地址');
       return;
     }
 
-    if (!isLogin && password !== confirmPassword) {
-      setError('两次输入的密码不一致');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('密码至少需要6个字符');
+    // 基本的邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('请输入有效的邮箱地址');
       return;
     }
 
     try {
       setError('');
       setLoading(true);
-
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        await register(email, password);
-      }
+      await sendLoginLink(email);
+      setEmailSent(true);
+      setCountdown(60); // 60秒倒计时
     } catch (err: any) {
-      console.error('Authentication error:', err);
+      console.error('Send login link error:', err);
 
       // Firebase 错误信息处理
       switch (err.code) {
-        case 'auth/user-not-found':
-          setError('用户不存在，请先注册');
-          break;
-        case 'auth/wrong-password':
-          setError('密码错误，请重试');
-          break;
-        case 'auth/email-already-in-use':
-          setError('该邮箱已被注册');
-          break;
         case 'auth/invalid-email':
           setError('邮箱格式不正确');
           break;
-        case 'auth/weak-password':
-          setError('密码强度太弱，请使用更复杂的密码');
+        case 'auth/missing-email':
+          setError('请输入邮箱地址');
           break;
-        case 'auth/network-request-failed':
-          setError('网络连接失败，请检查网络设置');
+        case 'auth/quota-exceeded':
+          setError('发送次数过多，请稍后再试');
+          break;
+        case 'auth/unauthorized-domain':
+          setError('当前域名未授权，请联系管理员配置 Firebase 授权域');
           break;
         default:
-          setError(err.message || '登录失败，请稍后重试');
+          setError(err.message || '发送登录链接失败，请稍后重试');
       }
     } finally {
       setLoading(false);
@@ -88,10 +80,16 @@ const Login: React.FC = () => {
           setError('登录窗口已关闭');
           break;
         case 'auth/popup-blocked':
-          setError('浏览器阻止了弹出窗口，请允许弹窗');
+          setError('浏览器阻止了弹出窗口，请允许弹窗后重试');
           break;
         case 'auth/cancelled-popup-request':
           setError('登录已取消');
+          break;
+        case 'auth/unauthorized-domain':
+          setError('当前域名未在 Firebase 授权域列表中，请按以下步骤配置：\n\n1. 访问 Firebase Console\n2. 进入 Authentication → Settings → Authorized domains\n3. 添加当前域名: ' + window.location.hostname);
+          break;
+        case 'auth/operation-not-allowed':
+          setError('Google 登录未启用，请在 Firebase Console 中启用');
           break;
         default:
           setError(err.message || 'Google 登录失败，请稍后重试');
@@ -101,42 +99,11 @@ const Login: React.FC = () => {
     }
   };
 
-  // 处理密码重置
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!resetEmail) {
-      setError('请输入邮箱地址');
-      return;
-    }
-
-    try {
-      setError('');
-      setResetMessage('');
-      setLoading(true);
-      await resetPassword(resetEmail);
-      setResetMessage('密码重置邮件已发送，请检查您的邮箱');
-      setResetEmail('');
-      setTimeout(() => {
-        setShowResetPassword(false);
-        setResetMessage('');
-      }, 3000);
-    } catch (err: any) {
-      console.error('Password reset error:', err);
-
-      switch (err.code) {
-        case 'auth/user-not-found':
-          setError('该邮箱未注册');
-          break;
-        case 'auth/invalid-email':
-          setError('邮箱格式不正确');
-          break;
-        default:
-          setError(err.message || '发送失败，请稍后重试');
-      }
-    } finally {
-      setLoading(false);
-    }
+  // 重新发送邮件
+  const handleResendEmail = async () => {
+    if (countdown > 0) return;
+    setEmailSent(false);
+    setError('');
   };
 
   return (
@@ -154,69 +121,62 @@ const Login: React.FC = () => {
             </div>
           </div>
           <p className="text-gray-600">
-            {showResetPassword ? '重置密码' : isLogin ? '登录您的账户' : '创建新账户'}
+            {emailSent ? '查看您的邮箱' : '登录您的账户'}
           </p>
         </div>
 
-        {/* Login/Register Card */}
+        {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          {/* 密码重置表单 */}
-          {showResetPassword ? (
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  邮箱地址
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="email"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="your@email.com"
-                    disabled={loading}
-                  />
-                </div>
+          {emailSent ? (
+            /* Email Sent Success Message */
+            <div className="text-center space-y-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">登录链接已发送！</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                我们已向 <strong className="text-indigo-600">{email}</strong> 发送了一封包含登录链接的邮件。
+              </p>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                请点击邮件中的链接完成登录。链接有效期为 60 分钟。
+              </p>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                <p className="text-sm text-blue-800 font-medium mb-2">💡 提示：</p>
+                <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                  <li>请检查您的垃圾邮件文件夹</li>
+                  <li>确保在同一浏览器中打开链接</li>
+                  <li>如果未收到邮件，请稍后重新发送</li>
+                </ul>
               </div>
 
-              {error && (
-                <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <p className="text-sm">{error}</p>
-                </div>
-              )}
-
-              {resetMessage && (
-                <div className="text-green-600 bg-green-50 px-4 py-3 rounded-lg border border-green-200 text-sm">
-                  {resetMessage}
-                </div>
-              )}
-
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleResendEmail}
+                disabled={countdown > 0}
+                className={`w-full py-3 rounded-lg transition-all font-medium ${
+                  countdown > 0
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
               >
-                {loading ? '发送中...' : '发送重置链接'}
+                {countdown > 0 ? `${countdown}秒后可重新发送` : '重新发送邮件'}
               </button>
 
               <button
-                type="button"
                 onClick={() => {
-                  setShowResetPassword(false);
+                  setEmailSent(false);
+                  setEmail('');
                   setError('');
-                  setResetMessage('');
                 }}
-                className="w-full text-gray-600 text-sm hover:text-gray-900 transition-colors"
+                className="w-full text-gray-600 text-sm hover:text-gray-900 transition-colors py-2"
               >
-                返回登录
+                使用其他邮箱
               </button>
-            </form>
+            </div>
           ) : (
             <>
-              {/* Email/Password Form */}
-              <form onSubmit={handleEmailAuth} className="space-y-4">
+              {/* Email Login Form */}
+              <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     邮箱地址
@@ -230,50 +190,18 @@ const Login: React.FC = () => {
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                       placeholder="your@email.com"
                       disabled={loading}
+                      autoComplete="email"
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    我们将向您的邮箱发送一个安全的登录链接
+                  </p>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    密码
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      placeholder="••••••••"
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
-
-                {!isLogin && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      确认密码
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        placeholder="••••••••"
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                )}
 
                 {error && (
-                  <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <p className="text-sm">{error}</p>
+                  <div className="flex items-start gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm whitespace-pre-line">{error}</p>
                   </div>
                 )}
 
@@ -283,22 +211,9 @@ const Login: React.FC = () => {
                   className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-5 h-5" />
-                  {loading ? '处理中...' : isLogin ? '登录' : '注册'}
+                  {loading ? '发送中...' : '发送登录链接'}
                 </button>
               </form>
-
-              {/* Forgot Password Link */}
-              {isLogin && (
-                <button
-                  onClick={() => {
-                    setShowResetPassword(true);
-                    setError('');
-                  }}
-                  className="w-full text-sm text-gray-600 hover:text-indigo-600 transition-colors"
-                >
-                  忘记密码？
-                </button>
-              )}
 
               {/* Divider */}
               <div className="relative">
@@ -338,22 +253,11 @@ const Login: React.FC = () => {
                 使用 Google 账号登录
               </button>
 
-              {/* Toggle Login/Register */}
-              <div className="text-center text-sm text-gray-600">
-                {isLogin ? '还没有账户？' : '已有账户？'}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setError('');
-                    setEmail('');
-                    setPassword('');
-                    setConfirmPassword('');
-                  }}
-                  className="ml-1 text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
-                >
-                  {isLogin ? '立即注册' : '返回登录'}
-                </button>
+              {/* Info */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left">
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>🔒 安全提示：</strong> 我们使用无密码登录方式，通过发送安全链接到您的邮箱来验证身份。您无需记住密码，更加安全便捷。
+                </p>
               </div>
             </>
           )}

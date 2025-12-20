@@ -2,9 +2,8 @@
 
 ## 概述
 本项目已经集成了 Firebase 认证系统，支持：
-- 邮件/密码登录
+- 电子邮件链接登录（无密码）
 - Google 单点登录（SSO）
-- 密码重置功能
 
 ## 配置步骤
 
@@ -22,73 +21,108 @@
 2. 输入应用昵称，例如 "AstroMoon Web"
 3. （可选）勾选 "Also set up Firebase Hosting"
 4. 点击"注册应用"
-5. **记录下显示的配置信息**，格式如下：
-
-```javascript
-const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
-};
-```
+5. **配置信息已经填写完成**（位于 `firebase.config.ts` 文件）
 
 ### 3. 启用身份验证方法
+
+#### 启用电子邮件链接登录（无密码）
 
 1. 在 Firebase Console 左侧菜单，点击 "Authentication"（身份验证）
 2. 点击 "Get started"（开始使用）
 3. 点击 "Sign-in method"（登录方法）标签
-4. 启用以下登录方法：
-
-#### 启用邮件/密码登录
-- 点击 "Email/Password"
-- 启用第一个选项 "Email/Password"
-- 点击保存
+4. 点击 "Email/Password"
+5. **只启用第二个选项** "Email link (passwordless sign-in)"（电子邮件链接/无密码登录）
+6. 点击保存
 
 #### 启用 Google 登录
-- 点击 "Google"
-- 启用开关
-- 选择项目支持电子邮件
-- 点击保存
 
-### 4. 更新项目配置
+1. 在同一页面点击 "Google"
+2. 启用开关
+3. 选择项目支持电子邮件
+4. 点击保存
 
-打开项目中的 `firebase.config.ts` 文件，将第 7-13 行的占位符替换为你的 Firebase 配置：
+### 4. 配置授权域（重要！）
 
-```typescript
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",              // 替换为你的 API Key
-  authDomain: "YOUR_AUTH_DOMAIN",      // 替换为你的 Auth Domain
-  projectId: "YOUR_PROJECT_ID",        // 替换为你的 Project ID
-  storageBucket: "YOUR_STORAGE_BUCKET", // 替换为你的 Storage Bucket
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // 替换为你的 Messaging Sender ID
-  appId: "YOUR_APP_ID"                 // 替换为你的 App ID
-};
-```
+这一步非常关键，否则会出现 `auth/unauthorized-domain` 错误。
 
-### 5. （可选）配置授权域
-
-如果你部署到自定义域名，需要将域名添加到授权域列表：
+#### 开发环境配置
 
 1. 在 Firebase Console 的 Authentication 页面
 2. 点击 "Settings"（设置）标签
 3. 滚动到 "Authorized domains"（授权域）
-4. 点击 "Add domain"（添加域）
-5. 输入你的域名（例如：yourdomain.com）
-6. 点击"添加"
+4. 默认已包含 `localhost`，如果没有，点击 "Add domain" 添加：
+   - `localhost`
 
-### 6. 测试登录功能
+#### 生产环境配置
 
-配置完成后：
+如果你部署到以下平台，需要添加相应域名：
 
-1. 运行项目：`npm run dev`
-2. 打开浏览器访问应用
-3. 测试注册新账户
-4. 测试邮件登录
-5. 测试 Google 登录
-6. 测试密码重置功能
+**Vercel:**
+```
+your-app.vercel.app
+```
+
+**Netlify:**
+```
+your-app.netlify.app
+```
+
+**自定义域名:**
+```
+yourdomain.com
+www.yourdomain.com
+```
+
+**添加步骤：**
+1. 点击 "Add domain"（添加域）
+2. 输入域名（不包含 http:// 或 https://）
+3. 点击"添加"
+
+### 5. 常见错误和解决方案
+
+#### 错误：`auth/unauthorized-domain`
+
+**原因：** 当前访问的域名不在 Firebase 授权域列表中
+
+**解决方法：**
+1. 打开浏览器控制台，查看当前域名
+2. 访问 Firebase Console → Authentication → Settings → Authorized domains
+3. 点击 "Add domain"
+4. 添加你的域名
+5. 刷新页面重试
+
+**示例：**
+- 本地开发：添加 `localhost`
+- Vercel 部署：添加 `your-app.vercel.app`
+- 自定义域名：添加 `example.com`
+
+#### 错误：Google 登录弹窗被阻止
+
+**解决方法：**
+1. 检查浏览器设置，允许该网站显示弹窗
+2. 在地址栏右侧查看是否有弹窗被阻止的图标
+3. 点击允许后重试
+
+## 工作流程
+
+### 电子邮件链接登录流程
+
+1. 用户输入邮箱地址
+2. 系统发送包含登录链接的邮件
+3. 用户在邮件中点击链接
+4. 自动完成登录并跳转到应用
+
+**注意事项：**
+- 链接有效期为 60 分钟
+- 必须在同一浏览器中打开链接
+- 如果在不同设备打开，需要再次输入邮箱验证
+
+### Google 登录流程
+
+1. 用户点击 "使用 Google 账号登录"
+2. 弹出 Google 登录窗口
+3. 选择 Google 账号
+4. 授权后自动完成登录
 
 ## 项目文件结构
 
@@ -97,7 +131,7 @@ const firebaseConfig = {
 ├── contexts/
 │   └── AuthContext.tsx         # 认证上下文，提供全局认证状态
 ├── components/
-│   └── Login.tsx               # 登录/注册组件
+│   └── Login.tsx               # 登录组件（电子邮件链接 + Google）
 ├── App.tsx                     # 主应用，包含登录检查逻辑
 └── index.tsx                   # 入口文件，包裹 AuthProvider
 ```
@@ -106,80 +140,161 @@ const firebaseConfig = {
 
 ### 已实现的功能
 
-1. **用户注册**
-   - 邮件/密码注册
-   - 密码强度验证（最少 6 个字符）
-   - 邮箱格式验证
+1. **电子邮件链接登录（无密码）**
+   - 输入邮箱即可登录
+   - 自动发送登录链接到邮箱
+   - 60秒发送间隔限制
+   - 自动处理邮箱链接验证
+   - 支持跨设备登录（需要重新输入邮箱）
 
-2. **用户登录**
-   - 邮件/密码登录
-   - Google 单点登录
-   - 完善的错误处理和中文提示
+2. **Google 单点登录**
+   - 一键登录
+   - 弹窗式登录
+   - 完善的错误处理
 
-3. **密码管理**
-   - 忘记密码功能
-   - 通过邮件重置密码
-
-4. **用户状态管理**
+3. **用户状态管理**
    - 全局认证状态
    - 自动登录状态持久化
    - 登出功能
 
-5. **UI/UX**
+4. **UI/UX**
    - 美观的渐变背景
    - 响应式设计
-   - 加载状态指示
+   - 邮件发送成功提示
+   - 倒计时功能
    - 清晰的错误提示
+   - 加载状态指示
 
 ### 使用方式
 
 用户在访问应用时：
 - 如果未登录，自动显示登录页面
+- 可以选择电子邮件链接登录或 Google 登录
 - 登录成功后，显示主应用内容
 - 可以随时点击右上角的"退出"按钮登出
 
+## 测试步骤
+
+### 1. 测试电子邮件链接登录
+
+```bash
+npm run dev
+```
+
+1. 访问 http://localhost:5173
+2. 输入邮箱地址
+3. 点击"发送登录链接"
+4. 检查邮箱（包括垃圾邮件箱）
+5. 点击邮件中的链接
+6. 应该自动登录并进入应用
+
+### 2. 测试 Google 登录
+
+1. 在登录页面点击 "使用 Google 账号登录"
+2. 在弹出窗口中选择 Google 账号
+3. 应该自动登录并进入应用
+
+### 3. 测试登出功能
+
+1. 登录后，点击右上角的用户邮箱旁边的"退出"按钮
+2. 应该返回登录页面
+
 ## 安全建议
 
-1. **不要将 Firebase 配置提交到公共仓库**
-   - 考虑使用环境变量存储敏感配置
-   - 添加 `firebase.config.ts` 到 `.gitignore`（如果包含真实配置）
+1. **环境变量（可选优化）**
+   - 考虑使用环境变量存储 Firebase 配置
+   - 创建 `.env` 文件：
+     ```
+     VITE_FIREBASE_API_KEY=your_api_key
+     VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+     ...
+     ```
+   - 修改 `firebase.config.ts` 读取环境变量
 
 2. **配置安全规则**
-   - 在 Firebase Console 中配置 Firestore/Storage 安全规则
+   - 如果使用 Firestore 或 Storage，配置安全规则
    - 确保只有授权用户可以访问数据
 
 3. **启用应用检查（App Check）**
    - 防止未授权的客户端访问 Firebase 服务
+   - 参考：https://firebase.google.com/docs/app-check
 
 4. **监控使用情况**
    - 定期检查 Firebase Console 中的使用统计
    - 设置配额警报
 
-## 常见问题
+## 邮件发送限制
 
-### Q: 登录时提示 "auth/configuration-not-found"
-A: 请检查 firebase.config.ts 中的配置是否正确填写，确保所有占位符都已替换。
+Firebase 免费版本有以下限制：
+- 每日邮件发送上限
+- 如果超出限制，会返回 `auth/quota-exceeded` 错误
+- 建议在生产环境监控邮件发送量
 
-### Q: Google 登录失败
-A: 确保在 Firebase Console 中已启用 Google 登录方法，并且配置了项目支持电子邮件。
+## 故障排除
 
-### Q: 本地开发时 Google 登录弹窗被阻止
-A: 检查浏览器设置，允许该网站显示弹窗。
+### 问题：未收到登录邮件
 
-### Q: 部署后登录失败
-A: 确保已将部署域名添加到 Firebase Console 的授权域列表中。
+**可能原因：**
+1. 邮件在垃圾邮件文件夹中
+2. 邮箱地址输入错误
+3. 邮件服务器延迟
 
-## 下一步
+**解决方法：**
+1. 检查垃圾邮件文件夹
+2. 等待 1-2 分钟后再检查
+3. 尝试重新发送
+4. 尝试使用其他邮箱
 
-配置完成后，你可以：
-1. 自定义登录页面样式
-2. 添加更多登录方式（如 GitHub、Facebook 等）
-3. 实现用户资料管理功能
-4. 集成 Firestore 存储用户数据
-5. 添加邮箱验证功能
+### 问题：点击邮件链接后提示错误
+
+**可能原因：**
+1. 链接已过期（超过 60 分钟）
+2. 在不同浏览器中打开
+3. 链接已被使用
+
+**解决方法：**
+1. 重新发送登录链接
+2. 确保在同一浏览器中打开
+3. 如果在不同设备，输入邮箱地址继续
+
+### 问题：Google 登录失败
+
+**可能原因：**
+1. 弹窗被浏览器阻止
+2. Google 登录未启用
+3. 域名未授权
+
+**解决方法：**
+1. 允许浏览器弹窗
+2. 检查 Firebase Console 中是否启用 Google 登录
+3. 添加当前域名到授权域列表
+
+## 下一步优化建议
+
+1. **添加邮箱验证**
+   - 要求用户验证邮箱地址
+   - 增强账户安全性
+
+2. **添加更多登录方式**
+   - GitHub 登录
+   - Facebook 登录
+   - Apple 登录
+
+3. **用户资料管理**
+   - 允许用户编辑个人信息
+   - 上传头像
+
+4. **集成 Firestore**
+   - 存储用户数据
+   - 保存用户的星盘分析历史
+
+5. **多因素认证（MFA）**
+   - 增加额外的安全层
+   - 支持短信或认证器应用
 
 ## 支持
 
 如有问题，请参考：
-- [Firebase 文档](https://firebase.google.com/docs)
-- [Firebase Authentication 指南](https://firebase.google.com/docs/auth)
+- [Firebase Authentication 文档](https://firebase.google.com/docs/auth)
+- [Email Link Authentication](https://firebase.google.com/docs/auth/web/email-link-auth)
+- [Google Sign-In](https://firebase.google.com/docs/auth/web/google-signin)

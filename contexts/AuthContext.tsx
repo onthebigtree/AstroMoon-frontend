@@ -1,24 +1,23 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import {
   User,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+  signInWithEmailLink,
+  sendSignInLinkToEmail,
   signOut,
   onAuthStateChanged,
   signInWithPopup,
   GoogleAuthProvider,
-  sendPasswordResetEmail,
+  isSignInWithEmailLink,
 } from 'firebase/auth';
 import { auth } from '../firebase.config';
 
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  sendLoginLink: (email: string) => Promise<void>;
+  completeLoginWithLink: (email: string, emailLink: string) => Promise<void>;
   logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,14 +38,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 邮件密码登录
-  async function login(email: string, password: string) {
-    await signInWithEmailAndPassword(auth, email, password);
+  // 发送登录链接到邮箱
+  async function sendLoginLink(email: string) {
+    const actionCodeSettings = {
+      // 登录完成后的重定向 URL
+      url: window.location.origin,
+      handleCodeInApp: true,
+    };
+
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    // 保存邮箱到本地存储，用于后续验证
+    window.localStorage.setItem('emailForSignIn', email);
   }
 
-  // 邮件密码注册
-  async function register(email: string, password: string) {
-    await createUserWithEmailAndPassword(auth, email, password);
+  // 使用邮箱链接完成登录
+  async function completeLoginWithLink(email: string, emailLink: string) {
+    await signInWithEmailLink(auth, email, emailLink);
+    // 清除本地存储的邮箱
+    window.localStorage.removeItem('emailForSignIn');
   }
 
   // 登出
@@ -60,10 +69,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await signInWithPopup(auth, provider);
   }
 
-  // 重置密码
-  async function resetPassword(email: string) {
-    await sendPasswordResetEmail(auth, email);
-  }
+  // 检查是否是通过邮箱链接打开的页面
+  useEffect(() => {
+    const handleEmailLink = async () => {
+      if (isSignInWithEmailLink(auth, window.location.href)) {
+        let email = window.localStorage.getItem('emailForSignIn');
+        if (!email) {
+          // 如果用户在不同的设备上打开链接，需要提示输入邮箱
+          email = window.prompt('请输入您的邮箱地址以完成登录');
+        }
+        if (email) {
+          try {
+            await completeLoginWithLink(email, window.location.href);
+            // 清理 URL 中的参数
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (error) {
+            console.error('Login with email link failed:', error);
+          }
+        }
+      }
+    };
+
+    handleEmailLink();
+  }, []);
 
   // 监听认证状态变化
   useEffect(() => {
@@ -78,11 +106,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = {
     currentUser,
     loading,
-    login,
-    register,
+    sendLoginLink,
+    completeLoginWithLink,
     logout,
     loginWithGoogle,
-    resetPassword,
   };
 
   return (
