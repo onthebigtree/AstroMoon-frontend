@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { LifeDestinyResult } from '../types';
-import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart } from 'lucide-react';
+import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
 import { generateWithAPI } from '../services/apiService';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
+import LocationMapPicker from './LocationMapPicker';
 
 interface ImportDataModeProps {
     onDataImport: (data: LifeDestinyResult) => void;
@@ -155,6 +156,9 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [jsonInput, setJsonInput] = useState('');
     const [copied, setCopied] = useState(false);
 
+    // 地图选择器相关状态
+    const [showMapPicker, setShowMapPicker] = useState(false);
+
     // 验证弹窗相关状态
     const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [hasClickedFollow, setHasClickedFollow] = useState(false);
@@ -174,6 +178,17 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
                 timezone: city.timezone.toString(),
             }));
         }
+    };
+
+    // 处理地图选择位置
+    const handleMapLocationSelect = (location: { latitude: number; longitude: number; placeName?: string; timezone?: number }) => {
+        setAstroInfo(prev => ({
+            ...prev,
+            birthPlace: location.placeName || prev.birthPlace,
+            latitude: location.latitude.toFixed(4),
+            longitude: location.longitude.toFixed(4),
+            timezone: (location.timezone || 8).toString(),
+        }));
     };
 
     // 调用后端 API 计算基础星盘信息
@@ -888,6 +903,21 @@ ${chartInfo}
                             </div>
                         </div>
 
+                        {/* 地图选择按钮 */}
+                        <div className="mb-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowMapPicker(true)}
+                                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
+                            >
+                                <MapPin className="w-5 h-5" />
+                                <span>📍 点击地图选择位置</span>
+                            </button>
+                            <p className="text-xs text-green-600/70 mt-2 text-center">
+                                💡 在地图上点击选择精确位置，自动获取经纬度和地址
+                            </p>
+                        </div>
+
                         {/* 经纬度和时区输入 */}
                         <div className="grid grid-cols-3 gap-3">
                             <div>
@@ -1290,6 +1320,18 @@ ${chartInfo}
                     </div>
                 </div>
             )}
+
+            {/* 地图选择器模态框 */}
+            <LocationMapPicker
+                isOpen={showMapPicker}
+                onClose={() => setShowMapPicker(false)}
+                onSelect={handleMapLocationSelect}
+                initialPosition={
+                    astroInfo.latitude && astroInfo.longitude
+                        ? { lat: parseFloat(astroInfo.latitude), lng: parseFloat(astroInfo.longitude) }
+                        : undefined
+                }
+            />
         </div>
     );
 };
