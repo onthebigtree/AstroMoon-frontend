@@ -1,15 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { X, MapPin, Loader2, Search } from 'lucide-react';
-import L from 'leaflet';
-
-// 修复 Leaflet 默认图标问题
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
 
 interface LocationData {
   latitude: number;
@@ -25,49 +15,103 @@ interface LocationMapPickerProps {
   initialPosition?: { lat: number; lng: number };
 }
 
-// 地图点击事件处理组件
-function LocationMarker({ position, onPositionChange }: {
-  position: L.LatLng | null;
-  onPositionChange: (latlng: L.LatLng) => void;
-}) {
-  useMapEvents({
-    click(e) {
-      onPositionChange(e.latlng);
-    },
-  });
-
-  return position === null ? null : (
-    <Marker position={position}>
-      <Popup>
-        <div className="text-sm">
-          <p className="font-bold mb-1">选中位置</p>
-          <p>纬度: {position.lat.toFixed(4)}</p>
-          <p>经度: {position.lng.toFixed(4)}</p>
-        </div>
-      </Popup>
-    </Marker>
-  );
-}
-
 const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   isOpen,
   onClose,
   onSelect,
   initialPosition,
 }) => {
-  const [position, setPosition] = useState<L.LatLng | null>(
-    initialPosition ? L.latLng(initialPosition.lat, initialPosition.lng) : null
+  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(
+    initialPosition || null
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isGeocodingAddress, setIsGeocodingAddress] = useState(false);
   const [addressName, setAddressName] = useState<string>('');
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+
+  // 动态加载 Leaflet
+  useEffect(() => {
+    if (!isOpen || mapLoaded) return;
+
+    const loadLeaflet = async () => {
+      try {
+        // 动态导入 Leaflet
+        const L = await import('leaflet');
+
+        if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+        // 修复默认图标路径
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        });
+
+        // 创建地图实例
+        const center: [number, number] = initialPosition
+          ? [initialPosition.lat, initialPosition.lng]
+          : [39.9042, 116.4074]; // 默认北京
+
+        const map = L.map(mapContainerRef.current).setView(center, 4);
+
+        // 添加地图图层
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
+        }).addTo(map);
+
+        // 如果有初始位置，添加标记
+        if (initialPosition) {
+          const marker = L.marker([initialPosition.lat, initialPosition.lng]).addTo(map);
+          marker.bindPopup(`<b>当前位置</b><br>纬度: ${initialPosition.lat.toFixed(4)}<br>经度: ${initialPosition.lng.toFixed(4)}`);
+          markerRef.current = marker;
+        }
+
+        // 点击地图事件
+        map.on('click', (e: any) => {
+          const { lat, lng } = e.latlng;
+          setPosition({ lat, lng });
+
+          // 移除旧标记
+          if (markerRef.current) {
+            map.removeLayer(markerRef.current);
+          }
+
+          // 添加新标记
+          const marker = L.marker([lat, lng]).addTo(map);
+          marker.bindPopup(`<b>选中位置</b><br>纬度: ${lat.toFixed(4)}<br>经度: ${lng.toFixed(4)}`).openPopup();
+          markerRef.current = marker;
+        });
+
+        mapInstanceRef.current = map;
+        setMapLoaded(true);
+      } catch (error) {
+        console.error('加载地图失败:', error);
+      }
+    };
+
+    loadLeaflet();
+
+    // 清理函数
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        markerRef.current = null;
+        setMapLoaded(false);
+      }
+    };
+  }, [isOpen, initialPosition]);
 
   // 反向地理编码：获取地址名称
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
     try {
       setIsGeocodingAddress(true);
-      // 使用 Nominatim API（OpenStreetMap 的免费地理编码服务）
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=zh-CN`,
         {
@@ -79,7 +123,8 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
       if (response.ok) {
         const data = await response.json();
-        const name = data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.display_name || '未知位置';
+        const name = data.address?.city || data.address?.town || data.address?.village ||
+                     data.address?.county || data.display_name || '未知位置';
         setAddressName(name);
         return name;
       }
@@ -98,7 +143,6 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
     try {
       setIsSearching(true);
-      // 使用 Nominatim 搜索 API
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&accept-language=zh-CN`,
         {
@@ -112,9 +156,25 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         const data = await response.json();
         if (data && data.length > 0) {
           const result = data[0];
-          const newPosition = L.latLng(parseFloat(result.lat), parseFloat(result.lon));
+          const newPosition = { lat: parseFloat(result.lat), lng: parseFloat(result.lon) };
           setPosition(newPosition);
           setAddressName(result.display_name);
+
+          // 更新地图视图和标记
+          if (mapInstanceRef.current) {
+            const L = await import('leaflet');
+            mapInstanceRef.current.setView([newPosition.lat, newPosition.lng], 10);
+
+            // 移除旧标记
+            if (markerRef.current) {
+              mapInstanceRef.current.removeLayer(markerRef.current);
+            }
+
+            // 添加新标记
+            const marker = L.marker([newPosition.lat, newPosition.lng]).addTo(mapInstanceRef.current);
+            marker.bindPopup(`<b>${result.display_name}</b><br>纬度: ${newPosition.lat.toFixed(4)}<br>经度: ${newPosition.lng.toFixed(4)}`).openPopup();
+            markerRef.current = marker;
+          }
         } else {
           alert('未找到该地点，请尝试其他关键词');
         }
@@ -141,7 +201,6 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         latitude: position.lat,
         longitude: position.lng,
         placeName: addressName || undefined,
-        // 简单估算时区（基于经度，不完全准确）
         timezone: Math.round(position.lng / 15),
       });
       onClose();
@@ -206,22 +265,20 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         </div>
 
         {/* Map */}
-        <div className="flex-1 relative min-h-[400px]">
-          <MapContainer
-            center={initialPosition || { lat: 39.9042, lng: 116.4074 }} // 默认北京
-            zoom={4}
+        <div className="flex-1 relative min-h-[400px] bg-gray-100">
+          {!mapLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <div className="text-center">
+                <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-2" />
+                <p className="text-gray-600">加载地图中...</p>
+              </div>
+            </div>
+          )}
+          <div
+            ref={mapContainerRef}
             style={{ height: '100%', width: '100%' }}
-            className="z-0"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <LocationMarker
-              position={position}
-              onPositionChange={(latlng) => setPosition(latlng)}
-            />
-          </MapContainer>
+            className={mapLoaded ? 'opacity-100' : 'opacity-0'}
+          />
         </div>
 
         {/* Selected Location Info */}
