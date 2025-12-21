@@ -275,8 +275,8 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
             console.log('✅ 档案保存成功:', newProfile.id);
 
-            // 重新加载档案列表
-            await loadProfiles();
+            // 直接添加新档案到列表（避免重新加载的时间延迟问题）
+            setProfiles(prev => [...prev, newProfile]);
 
             // 设置为当前选中的档案
             setSelectedProfileId(newProfile.id);
@@ -476,8 +476,8 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
                     });
                     console.log('✅ 档案自动保存成功:', newProfile.id);
 
-                    // 重新加载档案列表
-                    await loadProfiles();
+                    // 直接添加新档案到列表（避免重新加载的时间延迟问题）
+                    setProfiles(prev => [...prev, newProfile]);
 
                     // 设置为当前选中的档案
                     setSelectedProfileId(newProfile.id);
