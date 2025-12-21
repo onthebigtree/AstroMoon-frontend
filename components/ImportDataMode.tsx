@@ -4,6 +4,7 @@ import { LifeDestinyResult } from '../types';
 import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
 import { generateWithAPI } from '../services/apiService';
+import { streamReportGenerate } from '../services/api/reports';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import LocationMapPicker from './LocationMapPicker';
 import ChinaCitySelector from './ChinaCitySelector';
@@ -776,11 +777,36 @@ ${chartInfo}
             // 根据模式选择系统指令
             const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
 
-            // 调用后端 API（API Key 已在后端，安全隐藏）
-            const content = await generateWithAPI({
-                userPrompt,
-                systemPrompt,
-            });
+            // 生成报告标题
+            const reportTitle = `${astroInfo.name || '匿名用户'}的${mode === 'trader' ? '交易员财富' : '综合人生'}占星报告`;
+
+            // 调用新后端流式生成 API（会自动保存到数据库）
+            console.log('🚀 调用新后端生成报告（会自动保存到数据库）...');
+            let content = '';
+
+            try {
+                const stream = streamReportGenerate({
+                    systemPrompt,
+                    userPrompt,
+                    chartId: undefined, // 暂时不传 chartId
+                    profileId: selectedProfileId || undefined,
+                    reportTitle,
+                });
+
+                // 累积流式响应内容
+                for await (const chunk of stream) {
+                    content += chunk;
+                }
+
+                console.log('✅ 报告生成完成，已自动保存到数据库');
+            } catch (streamError: any) {
+                // 如果新后端失败，回退到旧后端
+                console.warn('⚠️ 新后端失败，回退到旧后端:', streamError.message);
+                content = await generateWithAPI({
+                    userPrompt,
+                    systemPrompt,
+                });
+            }
 
             // 使用健壮的 JSON 解析工具
             try {
