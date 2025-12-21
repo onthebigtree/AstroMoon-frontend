@@ -210,7 +210,13 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
         }
 
         const profile = profiles.find(p => p.id === profileId);
-        if (!profile) return;
+        if (!profile) {
+            console.error('❌ 找不到档案:', profileId);
+            alert('找不到选择的档案');
+            return;
+        }
+
+        console.log('📂 正在加载档案:', profile.profile_name, profile);
 
         setSelectedProfileId(profileId);
         setAstroInfo({
@@ -227,7 +233,14 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             timezone: profile.timezone || '8.0',
         });
 
-        console.log('✅ 已加载档案:', profile.profile_name);
+        // 重置城市选择器
+        setCitySelectorKey(prev => prev + 1);
+
+        // 显示加载成功提示
+        setShowSaveSuccess(true);
+        setTimeout(() => setShowSaveSuccess(false), 2000);
+
+        console.log('✅ 档案加载成功:', profile.profile_name);
     };
 
     // 保存当前输入为档案
@@ -444,6 +457,35 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             const chart = await calculateBasicChart();
             setBasicChart(chart);
             setStep(2); // 进入星盘展示步骤
+
+            // 🔥 自动保存档案（仅在用户登录且未选择已有档案时）
+            if (currentUser && !selectedProfileId) {
+                try {
+                    const newProfile = await createProfile({
+                        profileName: astroInfo.name || `档案 ${new Date().toLocaleString()}`,
+                        gender: astroInfo.gender === 'Male' ? 'male' : astroInfo.gender === 'Female' ? 'female' : 'other',
+                        birthYear: parseInt(astroInfo.birthYear),
+                        birthMonth: parseInt(astroInfo.birthMonth),
+                        birthDay: parseInt(astroInfo.birthDay),
+                        birthHour: parseInt(astroInfo.birthHour),
+                        birthMinute: parseInt(astroInfo.birthMinute),
+                        birthPlace: astroInfo.birthPlace,
+                        birthLongitude: parseFloat(astroInfo.longitude) || undefined,
+                        birthLatitude: parseFloat(astroInfo.latitude) || undefined,
+                        timezone: astroInfo.timezone,
+                    });
+                    console.log('✅ 档案自动保存成功:', newProfile.id);
+
+                    // 重新加载档案列表
+                    await loadProfiles();
+
+                    // 设置为当前选中的档案
+                    setSelectedProfileId(newProfile.id);
+                } catch (error: any) {
+                    console.error('⚠️ 档案保存失败（不影响继续使用）:', error);
+                    // 静默失败，不影响用户继续使用
+                }
+            }
         } catch (err: any) {
             setError(`计算星盘失败：${err.message}`);
         } finally {
@@ -909,68 +951,43 @@ ${chartInfo}
                         </p>
                     </div>
 
-                    {/* 档案管理区域 */}
-                    {currentUser && (
+                    {/* 档案快速加载区域 */}
+                    {currentUser && profiles.length > 0 && (
                         <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200 mb-4">
                             <div className="flex items-center gap-2 mb-3">
                                 <BookOpen className="w-4 h-4 text-purple-600" />
-                                <span className="text-sm font-bold text-purple-800">快速加载档案</span>
+                                <span className="text-sm font-bold text-purple-800">从已保存的档案加载</span>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {/* 档案选择下拉框 */}
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-600 mb-1">
-                                        从档案加载 {isLoadingProfiles && <span className="text-gray-400">(加载中...)</span>}
-                                    </label>
-                                    <select
-                                        value={selectedProfileId}
-                                        onChange={(e) => handleLoadFromProfile(e.target.value)}
-                                        disabled={isLoadingProfiles || profiles.length === 0}
-                                        className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white disabled:bg-gray-100"
-                                    >
-                                        <option value="">-- 选择档案 --</option>
-                                        {profiles.map(profile => (
-                                            <option key={profile.id} value={profile.id}>
-                                                {profile.profile_name || '未命名'} ({profile.birth_year}-{profile.birth_month}-{profile.birth_day})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {!isLoadingProfiles && profiles.length === 0 && (
-                                        <p className="text-xs text-gray-500 mt-1">暂无保存的档案</p>
-                                    )}
-                                </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">
+                                    选择档案 {isLoadingProfiles && <span className="text-gray-400">(加载中...)</span>}
+                                </label>
+                                <select
+                                    value={selectedProfileId}
+                                    onChange={(e) => handleLoadFromProfile(e.target.value)}
+                                    disabled={isLoadingProfiles}
+                                    className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white disabled:bg-gray-100"
+                                >
+                                    <option value="">-- 选择档案 --</option>
+                                    {profiles.map(profile => (
+                                        <option key={profile.id} value={profile.id}>
+                                            {profile.profile_name || '未命名'} ({profile.birth_year}-{profile.birth_month}-{profile.birth_day})
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    💡 提示：点击"查看基础星盘"后，新的档案会自动保存
+                                </p>
 
-                                {/* 保存为档案按钮 */}
-                                <div className="flex items-end">
-                                    <button
-                                        type="button"
-                                        onClick={handleSaveAsProfile}
-                                        disabled={isSavingProfile}
-                                        className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {isSavingProfile ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                保存中...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save className="w-4 h-4" />
-                                                保存为档案
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
+                                {/* 档案加载成功提示 */}
+                                {showSaveSuccess && selectedProfileId && (
+                                    <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg flex items-center gap-2 text-green-800 text-sm">
+                                        <CheckCircle className="w-4 h-4" />
+                                        <span>档案已加载！</span>
+                                    </div>
+                                )}
                             </div>
-
-                            {/* 保存成功提示 */}
-                            {showSaveSuccess && (
-                                <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg flex items-center gap-2 text-green-800 text-sm">
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span>档案保存成功！</span>
-                                </div>
-                            )}
                         </div>
                     )}
 
