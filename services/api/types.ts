@@ -19,7 +19,7 @@ export interface CreateProfileData {
 }
 
 export interface Profile {
-  id: string;
+  id: string | number; // 后端可能返回数字或字符串
   user_id: string;
   profile_name?: string;
   gender: 'male' | 'female' | 'other';

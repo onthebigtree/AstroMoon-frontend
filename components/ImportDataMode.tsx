@@ -210,15 +210,16 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
     // 从档案加载出生信息
     const handleLoadFromProfile = (profileId: string) => {
-        console.log('🔍 尝试加载档案:', profileId);
-        console.log('📋 当前档案列表:', profiles.map(p => ({ id: p.id, name: p.profile_name })));
+        console.log('🔍 尝试加载档案:', profileId, 'typeof:', typeof profileId);
+        console.log('📋 当前档案列表:', profiles.map(p => ({ id: p.id, type: typeof p.id, name: p.profile_name })));
 
         if (!profileId) {
             setSelectedProfileId('');
             return;
         }
 
-        const profile = profiles.find(p => p.id === profileId);
+        // 🔥 修复类型不匹配问题：将两者都转换为字符串进行比较
+        const profile = profiles.find(p => String(p.id) === String(profileId));
         if (!profile) {
             console.error('❌ 找不到档案:', profileId);
             console.error('📋 当前档案列表中的所有 ID:', profiles.map(p => p.id));
@@ -228,7 +229,8 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
         console.log('📂 正在加载档案:', profile.profile_name, profile);
 
-        setSelectedProfileId(profileId);
+        // 将 ID 统一转换为字符串存储
+        setSelectedProfileId(String(profile.id));
         setAstroInfo({
             name: profile.profile_name || '未命名',
             gender: profile.gender === 'male' ? 'Male' : profile.gender === 'female' ? 'Female' : 'Male',
@@ -288,8 +290,8 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             // 直接添加新档案到列表（避免重新加载的时间延迟问题）
             setProfiles(prev => [...prev, newProfile]);
 
-            // 设置为当前选中的档案
-            setSelectedProfileId(newProfile.id);
+            // 设置为当前选中的档案（统一转换为字符串）
+            setSelectedProfileId(String(newProfile.id));
 
             // 显示成功提示
             setShowSaveSuccess(true);
@@ -494,9 +496,9 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
                         return updated;
                     });
 
-                    // 设置为当前选中的档案
-                    setSelectedProfileId(newProfile.id);
-                    console.log('🎯 已设置选中档案 ID:', newProfile.id);
+                    // 设置为当前选中的档案（统一转换为字符串）
+                    setSelectedProfileId(String(newProfile.id));
+                    console.log('🎯 已设置选中档案 ID:', newProfile.id, 'typeof:', typeof newProfile.id);
                 } catch (error: any) {
                     console.error('⚠️ 档案保存失败（不影响继续使用）:', error);
                     // 静默失败，不影响用户继续使用
