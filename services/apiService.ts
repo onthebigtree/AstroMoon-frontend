@@ -46,19 +46,48 @@ export const calculateChart = async (request: ChartCalculationRequest): Promise<
 };
 
 export const generateWithAPI = async ({ userPrompt, systemPrompt }: GenerateRequest): Promise<string> => {
-    // 🔥 安全策略：通过后端服务调用 AI API，隐藏 API Key
-    // 🔥 在 Vercel 上使用相对路径，自动路由到 Serverless Function 代理，避免 CORS
+    // 🔥 新架构：优先使用新后端（Railway），回退到旧后端
+    // 新后端支持 Firebase 认证，旧后端仍然可用作备份
+    const USE_NEW_BACKEND = import.meta.env.VITE_USE_NEW_BACKEND !== 'false'; // 默认启用新后端
     const isDev = import.meta.env.DEV;
-    const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782') : '';
-    const url = backendUrl ? `${backendUrl}/api/generate` : '/api/generate';
 
-    console.log('🔐 使用后端代理（API Key 安全隐藏）:', url);
-    console.log('📊 环境信息:', { backendUrl, isDev: import.meta.env.DEV });
+    let backendUrl: string;
+    let url: string;
+
+    if (USE_NEW_BACKEND) {
+        // 使用新后端（Railway）
+        backendUrl = 'https://astromoon-backend-production.up.railway.app';
+        url = `${backendUrl}/api/generate`;
+        console.log('🌐 使用新后端（Railway + Firebase Auth）:', url);
+    } else {
+        // 使用旧后端（腾讯云）
+        backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:3782') : '';
+        url = backendUrl ? `${backendUrl}/api/generate` : '/api/generate';
+        console.log('🌐 使用旧后端（腾讯云）:', url);
+    }
 
     const headers: Record<string, string> = {
         'Accept': 'text/event-stream',
         'Content-Type': 'application/json; charset=utf-8',
     };
+
+    // 🔐 新后端支持 Firebase 认证（可选）
+    if (USE_NEW_BACKEND) {
+        try {
+            const { getAuth } = await import('firebase/auth');
+            const auth = getAuth();
+            const user = auth.currentUser;
+            if (user) {
+                const token = await user.getIdToken(true);
+                headers['Authorization'] = `Bearer ${token}`;
+                console.log('🔐 已添加 Firebase 认证 Token');
+            } else {
+                console.log('⚠️ 未登录，使用匿名模式调用 API');
+            }
+        } catch (error) {
+            console.warn('⚠️ 无法获取 Firebase Token，使用匿名模式:', error);
+        }
+    }
 
     // 后端接口格式
     const payload = {
