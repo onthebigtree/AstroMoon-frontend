@@ -1,12 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LifeDestinyResult } from '../types';
-import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin } from 'lucide-react';
+import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
 import { generateWithAPI } from '../services/apiService';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import LocationMapPicker from './LocationMapPicker';
 import ChinaCitySelector from './ChinaCitySelector';
+import { useAuth } from '../contexts/AuthContext';
+import { getProfiles, createProfile, type Profile } from '../services/api';
 
 interface ImportDataModeProps {
     onDataImport: (data: LifeDestinyResult) => void;
@@ -135,6 +137,7 @@ const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; ti
 };
 
 const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
+    const { currentUser } = useAuth();
     const [mode, setMode] = useState<Mode>('choose');
     const [step, setStep] = useState<Step>(1);
     const [basicChart, setBasicChart] = useState<BasicChartInfo | null>(null);
@@ -167,7 +170,114 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [hasClickedFollow, setHasClickedFollow] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
 
+    // 档案管理相关状态
+    const [profiles, setProfiles] = useState<Profile[]>([]);
+    const [selectedProfileId, setSelectedProfileId] = useState<string>('');
+    const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
     // API 配置已在后端服务器，前端不需要配置
+
+    // 加载用户档案列表
+    useEffect(() => {
+        if (currentUser) {
+            loadProfiles();
+        }
+    }, [currentUser]);
+
+    const loadProfiles = async () => {
+        if (!currentUser) return;
+
+        setIsLoadingProfiles(true);
+        try {
+            const profileList = await getProfiles();
+            setProfiles(profileList);
+            console.log('✅ 档案列表加载成功:', profileList.length, '个档案');
+        } catch (error: any) {
+            console.error('❌ 加载档案列表失败:', error);
+            // 静默失败，不影响用户使用
+        } finally {
+            setIsLoadingProfiles(false);
+        }
+    };
+
+    // 从档案加载出生信息
+    const handleLoadFromProfile = (profileId: string) => {
+        if (!profileId) {
+            setSelectedProfileId('');
+            return;
+        }
+
+        const profile = profiles.find(p => p.id === profileId);
+        if (!profile) return;
+
+        setSelectedProfileId(profileId);
+        setAstroInfo({
+            name: profile.profile_name || '未命名',
+            gender: profile.gender === 'male' ? 'Male' : profile.gender === 'female' ? 'Female' : 'Male',
+            birthYear: profile.birth_year.toString(),
+            birthMonth: profile.birth_month.toString(),
+            birthDay: profile.birth_day.toString(),
+            birthHour: profile.birth_hour.toString(),
+            birthMinute: profile.birth_minute.toString(),
+            birthPlace: profile.birth_place || '',
+            latitude: profile.birth_latitude?.toString() || '',
+            longitude: profile.birth_longitude?.toString() || '',
+            timezone: profile.timezone || '8.0',
+        });
+
+        console.log('✅ 已加载档案:', profile.profile_name);
+    };
+
+    // 保存当前输入为档案
+    const handleSaveAsProfile = async () => {
+        if (!currentUser) {
+            alert('请先登录才能保存档案');
+            return;
+        }
+
+        // 验证必填字段
+        if (!astroInfo.birthYear || !astroInfo.birthMonth || !astroInfo.birthDay ||
+            !astroInfo.birthHour || !astroInfo.birthMinute) {
+            alert('请填写完整的出生日期和时间');
+            return;
+        }
+
+        setIsSavingProfile(true);
+        try {
+            const newProfile = await createProfile({
+                profileName: astroInfo.name || `档案 ${new Date().toLocaleString()}`,
+                gender: astroInfo.gender === 'Male' ? 'male' : astroInfo.gender === 'Female' ? 'female' : 'other',
+                birthYear: parseInt(astroInfo.birthYear),
+                birthMonth: parseInt(astroInfo.birthMonth),
+                birthDay: parseInt(astroInfo.birthDay),
+                birthHour: parseInt(astroInfo.birthHour),
+                birthMinute: parseInt(astroInfo.birthMinute),
+                birthPlace: astroInfo.birthPlace,
+                birthLongitude: parseFloat(astroInfo.longitude) || undefined,
+                birthLatitude: parseFloat(astroInfo.latitude) || undefined,
+                timezone: astroInfo.timezone,
+            });
+
+            console.log('✅ 档案保存成功:', newProfile.id);
+
+            // 重新加载档案列表
+            await loadProfiles();
+
+            // 设置为当前选中的档案
+            setSelectedProfileId(newProfile.id);
+
+            // 显示成功提示
+            setShowSaveSuccess(true);
+            setTimeout(() => setShowSaveSuccess(false), 3000);
+        } catch (error: any) {
+            console.error('❌ 保存档案失败:', error);
+            alert(`保存档案失败: ${error.message}`);
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
 
     // 处理城市选择，自动填充经纬度和时区
     const handleCitySelect = (cityName: string) => {
@@ -798,6 +908,71 @@ ${chartInfo}
                             填写出生信息后即可一键生成 {mode === 'trader' ? '交易员财富' : '人生'}分析报告
                         </p>
                     </div>
+
+                    {/* 档案管理区域 */}
+                    {currentUser && (
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200 mb-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <BookOpen className="w-4 h-4 text-purple-600" />
+                                <span className="text-sm font-bold text-purple-800">快速加载档案</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {/* 档案选择下拉框 */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">
+                                        从档案加载 {isLoadingProfiles && <span className="text-gray-400">(加载中...)</span>}
+                                    </label>
+                                    <select
+                                        value={selectedProfileId}
+                                        onChange={(e) => handleLoadFromProfile(e.target.value)}
+                                        disabled={isLoadingProfiles || profiles.length === 0}
+                                        className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white disabled:bg-gray-100"
+                                    >
+                                        <option value="">-- 选择档案 --</option>
+                                        {profiles.map(profile => (
+                                            <option key={profile.id} value={profile.id}>
+                                                {profile.profile_name || '未命名'} ({profile.birth_year}-{profile.birth_month}-{profile.birth_day})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {!isLoadingProfiles && profiles.length === 0 && (
+                                        <p className="text-xs text-gray-500 mt-1">暂无保存的档案</p>
+                                    )}
+                                </div>
+
+                                {/* 保存为档案按钮 */}
+                                <div className="flex items-end">
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveAsProfile}
+                                        disabled={isSavingProfile}
+                                        className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isSavingProfile ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                保存中...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save className="w-4 h-4" />
+                                                保存为档案
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 保存成功提示 */}
+                            {showSaveSuccess && (
+                                <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg flex items-center gap-2 text-green-800 text-sm">
+                                    <CheckCircle className="w-4 h-4" />
+                                    <span>档案保存成功！</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
