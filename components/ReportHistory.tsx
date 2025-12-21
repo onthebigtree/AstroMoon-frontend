@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { History, X, Calendar, FileText, Loader2, AlertCircle, Trash2 } from 'lucide-react';
-import { getReports, deleteReport, type Report } from '../services/api';
+import { X, Calendar, Loader2, AlertCircle } from 'lucide-react';
+import { getReports, type Report } from '../services/api';
 
 interface ReportHistoryProps {
   isOpen: boolean;
@@ -12,7 +12,6 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -31,26 +30,6 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
       setError(err.message || '加载报告列表失败');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDelete = async (reportId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // 防止触发报告选择
-
-    if (!confirm('确定要删除这个报告吗？')) {
-      return;
-    }
-
-    try {
-      setDeletingId(reportId);
-      await deleteReport(reportId);
-      // 从列表中移除已删除的报告
-      setReports(prev => prev.filter(r => r.id !== reportId));
-    } catch (err: any) {
-      console.error('删除报告失败:', err);
-      alert(`删除失败: ${err.message}`);
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -119,7 +98,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
           ) : reports.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="bg-gray-100 p-4 rounded-full mb-4">
-                <FileText className="w-8 h-8 text-gray-400" />
+                <Calendar className="w-8 h-8 text-gray-400" />
               </div>
               <p className="text-gray-500 mb-2">还没有生成过报告</p>
               <p className="text-sm text-gray-400">生成报告后，可以在这里查看历史记录</p>
@@ -132,51 +111,15 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
                   onClick={() => handleSelectReport(report)}
                   className="group bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 mb-2 truncate group-hover:text-indigo-600 transition-colors">
-                        {report.report_title || '未命名报告'}
-                      </h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 mb-2 truncate group-hover:text-indigo-600 transition-colors">
+                      {report.report_title || '未命名报告'}
+                    </h3>
 
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-4 h-4" />
-                          <span>{formatDate(report.created_at)}</span>
-                        </div>
-
-                        {report.profile_id && (
-                          <div className="flex items-center gap-1.5">
-                            <FileText className="w-4 h-4" />
-                            <span>关联档案</span>
-                          </div>
-                        )}
-
-                        {report.model_name && (
-                          <div className="text-xs bg-gray-100 px-2 py-0.5 rounded">
-                            {report.model_name}
-                          </div>
-                        )}
-                      </div>
-
-                      {report.token_count && (
-                        <div className="mt-2 text-xs text-gray-400">
-                          Token 使用: {report.token_count.toLocaleString()}
-                        </div>
-                      )}
+                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                      <Calendar className="w-4 h-4" />
+                      <span>{formatDate(report.created_at)}</span>
                     </div>
-
-                    <button
-                      onClick={(e) => handleDelete(report.id, e)}
-                      disabled={deletingId === report.id}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                      title="删除报告"
-                    >
-                      {deletingId === report.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
                   </div>
                 </div>
               ))}
