@@ -192,8 +192,14 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
         setIsLoadingProfiles(true);
         try {
             const profileList = await getProfiles();
-            setProfiles(profileList);
             console.log('✅ 档案列表加载成功:', profileList.length, '个档案');
+            console.log('📋 档案 ID 列表:', profileList.map(p => p.id));
+            console.log('📋 完整档案列表:', profileList.map(p => ({
+                id: p.id,
+                name: p.profile_name,
+                birthDate: `${p.birth_year}-${p.birth_month}-${p.birth_day}`
+            })));
+            setProfiles(profileList);
         } catch (error: any) {
             console.error('❌ 加载档案列表失败:', error);
             // 静默失败，不影响用户使用
@@ -204,6 +210,9 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
     // 从档案加载出生信息
     const handleLoadFromProfile = (profileId: string) => {
+        console.log('🔍 尝试加载档案:', profileId);
+        console.log('📋 当前档案列表:', profiles.map(p => ({ id: p.id, name: p.profile_name })));
+
         if (!profileId) {
             setSelectedProfileId('');
             return;
@@ -212,6 +221,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
         const profile = profiles.find(p => p.id === profileId);
         if (!profile) {
             console.error('❌ 找不到档案:', profileId);
+            console.error('📋 当前档案列表中的所有 ID:', profiles.map(p => p.id));
             alert('找不到选择的档案');
             return;
         }
@@ -475,12 +485,18 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
                         timezone: astroInfo.timezone,
                     });
                     console.log('✅ 档案自动保存成功:', newProfile.id);
+                    console.log('📦 新档案完整数据:', newProfile);
 
                     // 直接添加新档案到列表（避免重新加载的时间延迟问题）
-                    setProfiles(prev => [...prev, newProfile]);
+                    setProfiles(prev => {
+                        const updated = [...prev, newProfile];
+                        console.log('📋 更新后的档案列表:', updated.map(p => ({ id: p.id, name: p.profile_name })));
+                        return updated;
+                    });
 
                     // 设置为当前选中的档案
                     setSelectedProfileId(newProfile.id);
+                    console.log('🎯 已设置选中档案 ID:', newProfile.id);
                 } catch (error: any) {
                     console.error('⚠️ 档案保存失败（不影响继续使用）:', error);
                     // 静默失败，不影响用户继续使用
