@@ -138,6 +138,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [mode, setMode] = useState<Mode>('choose');
     const [step, setStep] = useState<Step>(1);
     const [basicChart, setBasicChart] = useState<BasicChartInfo | null>(null);
+    const [houseSystem, setHouseSystem] = useState<string>('P'); // 默认使用 Placidus
     const [astroInfo, setAstroInfo] = useState({
         name: '测试用户',
         gender: 'Male',
@@ -252,7 +253,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
                     latitude: latitude,
                     longitude: longitude,
                     timezone_offset: timezone,
-                    house_system: 'B',  // Placidus 宫位系统
+                    house_system: houseSystem,  // 使用用户选择的分宫制
                     gender: astroInfo.gender.toLowerCase(),
                 }),
             });
@@ -298,8 +299,11 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
                 }
             }
 
-            // 使用 alchabitius 宫位系统（effective 宫位）
-            const sunHouse = bodies.Sun.house_placement.alchabitius.effective;
+            // 根据用户选择的分宫制使用对应的宫位数据
+            // W = Whole Sign 使用 whole_sign，其他使用 alchabitius（API 返回的是计算后的分宫制结果）
+            const sunHouse = houseSystem === 'W'
+                ? bodies.Sun.house_placement.whole_sign
+                : bodies.Sun.house_placement.alchabitius.effective;
 
             return {
                 isDiurnal: meta.is_day_chart,
@@ -700,7 +704,7 @@ ${chartInfo}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* 专业交易者模式 */}
                         <button
-                            onClick={() => { setMode('trader'); setStep(1); }}
+                            onClick={() => { setMode('trader'); setStep(1); setHouseSystem('W'); }}
                             className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 hover:from-amber-600 hover:via-orange-600 hover:to-red-600 text-white p-6 rounded-2xl shadow-lg transition-all transform hover:scale-105 hover:shadow-2xl"
                         >
                             <div className="absolute inset-0 bg-black/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -724,7 +728,7 @@ ${chartInfo}
 
                         {/* 综合人生模式 */}
                         <button
-                            onClick={() => { setMode('normal'); setStep(1); }}
+                            onClick={() => { setMode('normal'); setStep(1); setHouseSystem('P'); }}
                             className="group relative bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white p-6 rounded-2xl shadow-lg transition-all transform hover:scale-105 hover:shadow-2xl"
                         >
                             <div className="absolute inset-0 bg-black/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -957,6 +961,38 @@ ${chartInfo}
                         <p className="text-xs text-green-600/70 mt-2">💡 也可以手动输入精确的经纬度和时区</p>
                     </div>
 
+                    {/* 分宫制选择器 */}
+                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                        <div className="flex items-center gap-2 mb-3 text-purple-800 text-sm font-bold">
+                            <Sparkles className="w-4 h-4" />
+                            <span>分宫制系统 (House System)</span>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-600 mb-2">
+                                选择分宫制
+                                <span className="ml-2 text-xs font-normal text-purple-600">
+                                    {mode === 'trader' ? '(交易员版本默认：整宫制)' : '(普通版本默认：普拉西度)'}
+                                </span>
+                            </label>
+                            <select
+                                value={houseSystem}
+                                onChange={(e) => setHouseSystem(e.target.value)}
+                                className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white font-bold"
+                            >
+                                <option value="P">Placidus - 普拉西度制（最常用）</option>
+                                <option value="W">Whole Sign - 整宫制</option>
+                                <option value="K">Koch - 科赫制</option>
+                                <option value="E">Equal - 等宫制</option>
+                                <option value="B">Alcabitius - 阿尔卡比修斯制</option>
+                                <option value="R">Regiomontanus - 雷格蒙塔努斯制</option>
+                                <option value="C">Campanus - 坎帕纳斯制</option>
+                            </select>
+                        </div>
+                        <div className="mt-2 text-xs text-purple-600/80 bg-white/50 p-2 rounded">
+                            💡 不同分宫制会影响宫位的划分方式。{mode === 'trader' ? '交易员版本推荐使用整宫制(W)。' : '普通版本推荐使用普拉西度制(P)。'}
+                        </div>
+                    </div>
+
                     {error && (
                         <div className="flex items-start gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
                             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -994,6 +1030,16 @@ ${chartInfo}
                             {astroInfo.birthPlace && (
                                 <div><span className="font-bold">出生地点：</span>{astroInfo.birthPlace}</div>
                             )}
+                            <div>
+                                <span className="font-bold">分宫制：</span>
+                                {houseSystem === 'P' && 'Placidus (普拉西度制)'}
+                                {houseSystem === 'W' && 'Whole Sign (整宫制)'}
+                                {houseSystem === 'K' && 'Koch (科赫制)'}
+                                {houseSystem === 'E' && 'Equal (等宫制)'}
+                                {houseSystem === 'B' && 'Alcabitius (阿尔卡比修斯制)'}
+                                {houseSystem === 'R' && 'Regiomontanus (雷格蒙塔努斯制)'}
+                                {houseSystem === 'C' && 'Campanus (坎帕纳斯制)'}
+                            </div>
                         </div>
                     </div>
 
