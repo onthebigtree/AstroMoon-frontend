@@ -901,39 +901,18 @@ ${chartInfo}
                         </div>
 
                         {/* 省市区选择器 */}
-                        <div className="mb-4">
-                            <div className="mb-2">
-                                <span className="text-xs font-bold text-gray-700">方式一：省市区选择</span>
-                            </div>
-                            <ChinaCitySelector onSelect={handleCitySelectorSelect} />
-                        </div>
-
-                        {/* 分隔线 */}
-                        <div className="relative my-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-green-300"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs">
-                                <span className="px-2 bg-green-50 text-gray-500">或</span>
-                            </div>
-                        </div>
-
-                        {/* 地图选择按钮 */}
                         <div className="mb-3">
-                            <div className="mb-2">
-                                <span className="text-xs font-bold text-gray-700">方式二：地图选择</span>
+                            <ChinaCitySelector onSelect={handleCitySelectorSelect} />
+                            <div className="mt-2 text-center">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowMapPicker(true)}
+                                    className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1 mx-auto"
+                                >
+                                    <MapPin className="w-3 h-3" />
+                                    <span>找不到？点击地图选择</span>
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowMapPicker(true)}
-                                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
-                            >
-                                <MapPin className="w-5 h-5" />
-                                <span>📍 点击地图选择位置</span>
-                            </button>
-                            <p className="text-xs text-green-600/70 mt-2 text-center">
-                                💡 在地图上点击选择精确位置，自动获取经纬度和地址
-                            </p>
                         </div>
 
                         {/* 经纬度和时区输入 */}
