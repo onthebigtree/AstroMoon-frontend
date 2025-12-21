@@ -244,63 +244,63 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600">
+        <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600">
           <div className="flex items-center gap-2 text-white">
-            <MapPin className="w-6 h-6" />
-            <h2 className="text-xl font-bold">选择出生地点</h2>
+            <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
+            <h2 className="text-lg sm:text-xl font-bold">选择出生地点</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:bg-white/20 p-2 rounded-lg transition-all"
+            className="text-white hover:bg-white/20 p-1.5 sm:p-2 rounded-lg transition-all"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
         {/* Search Bar */}
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex gap-2">
+        <div className="p-2 sm:p-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && searchLocation()}
                 placeholder="搜索城市或地点名称..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 disabled={isSearching}
               />
             </div>
             <button
               onClick={searchLocation}
               disabled={isSearching || !searchQuery.trim()}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {isSearching ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   <span>搜索中...</span>
                 </>
               ) : (
                 <>
-                  <Search className="w-5 h-5" />
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span>搜索</span>
                 </>
               )}
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-gray-500 mt-2 hidden sm:block">
             💡 提示：可以搜索城市名称，或直接在地图上点击选择位置
           </p>
         </div>
 
         {/* Map */}
-        <div className="relative p-4 bg-gray-100">
-          <div className="h-[500px] w-full border-4 border-indigo-500 rounded-xl overflow-hidden shadow-2xl bg-white relative">
+        <div className="relative p-2 sm:p-4 bg-gray-100 flex-1 overflow-y-auto">
+          <div className="h-[250px] sm:h-[350px] md:h-[450px] w-full border-2 sm:border-4 border-indigo-500 rounded-lg sm:rounded-xl overflow-hidden shadow-2xl bg-white relative">
             {!mapLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 z-[1000]">
                 <div className="text-center">
@@ -319,17 +319,17 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
         {/* Selected Location Info */}
         {position && (
-          <div className="p-4 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-start justify-between">
+          <div className="p-3 sm:p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="flex-1">
-                <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2 text-sm sm:text-base">
+                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
                   已选择位置
                 </h3>
-                <div className="space-y-1 text-sm">
+                <div className="space-y-1 text-xs sm:text-sm">
                   {isGeocodingAddress ? (
                     <div className="flex items-center gap-2 text-gray-500">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                       <span>正在获取地址...</span>
                     </div>
                   ) : (
@@ -338,25 +338,27 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
                       {addressName || '未知位置'}
                     </div>
                   )}
-                  <div className="text-gray-700">
-                    <span className="font-medium">纬度：</span>
-                    {position.lat.toFixed(4)}°
+                  <div className="flex gap-4">
+                    <div className="text-gray-700">
+                      <span className="font-medium">纬度：</span>
+                      {position.lat.toFixed(4)}°
+                    </div>
+                    <div className="text-gray-700">
+                      <span className="font-medium">经度：</span>
+                      {position.lng.toFixed(4)}°
+                    </div>
                   </div>
                   <div className="text-gray-700">
-                    <span className="font-medium">经度：</span>
-                    {position.lng.toFixed(4)}°
-                  </div>
-                  <div className="text-gray-700">
-                    <span className="font-medium">估算时区：</span>
+                    <span className="font-medium">时区：</span>
                     UTC{Math.round(position.lng / 15) >= 0 ? '+' : ''}{Math.round(position.lng / 15)}
                   </div>
                 </div>
               </div>
               <button
                 onClick={handleConfirm}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto"
               >
-                <MapPin className="w-5 h-5" />
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>确认选择</span>
               </button>
             </div>

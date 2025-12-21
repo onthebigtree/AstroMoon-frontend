@@ -250,36 +250,36 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center">
       {/* Header */}
-      <header className="w-full bg-white border-b border-gray-200 py-6 sticky top-0 z-50 no-print">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-2 rounded-lg shadow-lg">
-              <Moon className="w-6 h-6" />
+      <header className="w-full bg-white border-b border-gray-200 py-3 sm:py-4 md:py-6 sticky top-0 z-50 no-print">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-1.5 sm:p-2 rounded-lg shadow-lg">
+              <Moon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-serif-sc font-bold text-gray-900 tracking-wide">Astro Moon</h1>
-              <p className="text-xs text-gray-500 uppercase tracking-widest">Astrology & Life Analysis</p>
+              <h1 className="text-base sm:text-xl md:text-2xl font-serif-sc font-bold text-gray-900 tracking-wide">Astro Moon</h1>
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide sm:tracking-widest">Astrology & Life Analysis</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+            <div className="text-xs sm:text-sm text-gray-600 hidden md:block max-w-[150px] lg:max-w-none truncate">
               {currentUser.email}
             </div>
             <button
               onClick={() => setShowHistory(true)}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
               title="历史报告"
             >
               <History className="w-4 h-4" />
-              <span className="hidden sm:inline">历史</span>
+              <span className="hidden sm:inline text-sm">历史</span>
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
               title="退出登录"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">退出</span>
+              <span className="hidden sm:inline text-sm">退出</span>
             </button>
           </div>
         </div>
