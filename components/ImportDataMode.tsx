@@ -4,12 +4,13 @@ import { LifeDestinyResult } from '../types';
 import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
 import { generateWithAPI } from '../services/apiService';
-import { streamReportGenerate } from '../services/api/reports';
+import { streamReportGenerate, checkGenerationLimit } from '../services/api/reports';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import LocationMapPicker from './LocationMapPicker';
 import ChinaCitySelector from './ChinaCitySelector';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfiles, createProfile, type Profile } from '../services/api';
+import type { GenerationLimit } from '../services/api/types';
 
 interface ImportDataModeProps {
     onDataImport: (data: LifeDestinyResult) => void;
@@ -178,12 +179,17 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
+    // 生成限制相关状态
+    const [limitStatus, setLimitStatus] = useState<GenerationLimit | null>(null);
+    const [isLoadingLimit, setIsLoadingLimit] = useState(false);
+
     // API 配置已在后端服务器，前端不需要配置
 
     // 加载用户档案列表
     useEffect(() => {
         if (currentUser) {
             loadProfiles();
+            loadGenerationLimit();
         }
     }, [currentUser]);
 
@@ -206,6 +212,23 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             // 静默失败，不影响用户使用
         } finally {
             setIsLoadingProfiles(false);
+        }
+    };
+
+    // 加载生成限制状态
+    const loadGenerationLimit = async () => {
+        if (!currentUser) return;
+
+        setIsLoadingLimit(true);
+        try {
+            const limit = await checkGenerationLimit();
+            console.log('✅ 生成限制状态:', limit);
+            setLimitStatus(limit);
+        } catch (error: any) {
+            console.error('❌ 加载生成限制状态失败:', error);
+            // 静默失败，不影响用户使用
+        } finally {
+            setIsLoadingLimit(false);
         }
     };
 
@@ -709,8 +732,28 @@ ${chartInfo}
         }
     };
 
-    // 点击生成按钮 - 显示验证弹窗
-    const handleAutoGenerate = () => {
+    // 点击生成按钮 - 先检查限制，再显示验证弹窗
+    const handleAutoGenerate = async () => {
+        // 先检查生成限制
+        try {
+            const limit = await checkGenerationLimit();
+            setLimitStatus(limit);
+
+            if (!limit.allowed) {
+                const resetDate = new Date(limit.resetAt);
+                setError(`今日生成次数已用完（${limit.used}/${limit.limit}），将在 ${resetDate.toLocaleString('zh-CN', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })} 重置`);
+                return;
+            }
+        } catch (err: any) {
+            console.error('检查生成限制失败:', err);
+            // 如果检查失败，允许继续（避免影响用户体验）
+        }
+
         setShowVerifyModal(true);
         setHasClickedFollow(false);
         setIsVerifying(false);
@@ -799,7 +842,18 @@ ${chartInfo}
                 }
 
                 console.log('✅ 报告生成完成，已自动保存到数据库');
+
+                // 生成成功后刷新限制状态
+                loadGenerationLimit();
             } catch (streamError: any) {
+                // 检查是否为 429 限流错误
+                if (streamError.message.includes('Daily generation limit reached') ||
+                    streamError.message.includes('生成上限')) {
+                    // 刷新限制状态以获取最新信息
+                    await loadGenerationLimit();
+                    throw new Error('今日生成次数已用完，请明天再试');
+                }
+
                 // 如果新后端失败，回退到旧后端
                 console.warn('⚠️ 新后端失败，回退到旧后端:', streamError.message);
                 content = await generateWithAPI({
@@ -1359,6 +1413,46 @@ ${chartInfo}
                         </div>
                     </div>
 
+                    {/* 生成限制提示 */}
+                    {limitStatus && (
+                        <div className={`p-4 rounded-xl border-2 ${
+                            limitStatus.allowed
+                                ? 'bg-green-50 border-green-200'
+                                : 'bg-red-50 border-red-200'
+                        }`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    {limitStatus.allowed ? (
+                                        <CheckCircle className="w-5 h-5 text-green-600" />
+                                    ) : (
+                                        <AlertCircle className="w-5 h-5 text-red-600" />
+                                    )}
+                                    <div>
+                                        <p className={`text-sm font-bold ${
+                                            limitStatus.allowed ? 'text-green-800' : 'text-red-800'
+                                        }`}>
+                                            今日剩余生成次数：
+                                            <span className="text-lg mx-1">{limitStatus.remaining}/{limitStatus.limit}</span>
+                                        </p>
+                                        {!limitStatus.allowed && (
+                                            <p className="text-xs text-red-600 mt-1">
+                                                将在 {new Date(limitStatus.resetAt).toLocaleString('zh-CN', {
+                                                    month: '2-digit',
+                                                    day: '2-digit',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })} 重置
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                {isLoadingLimit && (
+                                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* 操作按钮 */}
                     <div className="flex gap-3">
                         <button
@@ -1369,7 +1463,7 @@ ${chartInfo}
                         </button>
                         <button
                             onClick={handleAutoGenerate}
-                            disabled={isLoading}
+                            disabled={isLoading || (limitStatus && !limitStatus.allowed)}
                             className="flex-2 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
