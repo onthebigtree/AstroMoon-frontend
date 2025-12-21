@@ -6,6 +6,7 @@ import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../co
 import { generateWithAPI } from '../services/apiService';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import LocationMapPicker from './LocationMapPicker';
+import ChinaCitySelector from './ChinaCitySelector';
 
 interface ImportDataModeProps {
     onDataImport: (data: LifeDestinyResult) => void;
@@ -188,6 +189,28 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             latitude: location.latitude.toFixed(4),
             longitude: location.longitude.toFixed(4),
             timezone: (location.timezone || 8).toString(),
+        }));
+    };
+
+    // 处理省市区选择器回调
+    const handleCitySelectorSelect = (location: {
+        provinceName: string;
+        cityName: string;
+        districtName?: string;
+        latitude: number;
+        longitude: number;
+        timezone: number;
+    }) => {
+        const placeName = location.districtName
+            ? `${location.provinceName} ${location.cityName} ${location.districtName}`
+            : `${location.provinceName} ${location.cityName}`;
+
+        setAstroInfo(prev => ({
+            ...prev,
+            birthPlace: placeName,
+            latitude: location.latitude.toFixed(4),
+            longitude: location.longitude.toFixed(4),
+            timezone: location.timezone.toString(),
         }));
     };
 
@@ -877,8 +900,29 @@ ${chartInfo}
                             <span>出生地点与坐标</span>
                         </div>
 
+                        {/* 省市区选择器 */}
+                        <div className="mb-4">
+                            <div className="mb-2">
+                                <span className="text-xs font-bold text-gray-700">方式一：省市区选择</span>
+                            </div>
+                            <ChinaCitySelector onSelect={handleCitySelectorSelect} />
+                        </div>
+
+                        {/* 分隔线 */}
+                        <div className="relative my-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-green-300"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs">
+                                <span className="px-2 bg-green-50 text-gray-500">或</span>
+                            </div>
+                        </div>
+
                         {/* 地图选择按钮 */}
                         <div className="mb-3">
+                            <div className="mb-2">
+                                <span className="text-xs font-bold text-gray-700">方式二：地图选择</span>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setShowMapPicker(true)}
