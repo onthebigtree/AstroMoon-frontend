@@ -160,6 +160,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
     // 地图选择器相关状态
     const [showMapPicker, setShowMapPicker] = useState(false);
+    const [citySelectorKey, setCitySelectorKey] = useState(0); // 用于重置城市选择器
 
     // 验证弹窗相关状态
     const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -191,6 +192,8 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             longitude: location.longitude.toFixed(4),
             timezone: (location.timezone || 8).toString(),
         }));
+        // 重置城市选择器，清空行政区选择状态
+        setCitySelectorKey(prev => prev + 1);
     };
 
     // 处理省市区选择器回调
@@ -906,7 +909,7 @@ ${chartInfo}
 
                         {/* 省市区选择器 */}
                         <div className="mb-3">
-                            <ChinaCitySelector onSelect={handleCitySelectorSelect} />
+                            <ChinaCitySelector key={citySelectorKey} onSelect={handleCitySelectorSelect} />
                             <div className="mt-2 text-center">
                                 <button
                                     type="button"
