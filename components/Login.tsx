@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, LogIn, AlertCircle, Moon, CheckCircle, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, Moon, CheckCircle, Eye, EyeOff, UserPlus, MailCheck } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin');
@@ -13,8 +13,18 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
+  const [showUnverified, setShowUnverified] = useState(false);
 
-  const { signUp, signIn, resetPassword, loginWithGoogle } = useAuth();
+  const { currentUser, signUp, signIn, resetPassword, loginWithGoogle, sendVerificationEmail, logout } = useAuth();
+
+  // 检查用户是否已验证邮箱
+  useEffect(() => {
+    if (currentUser && !currentUser.emailVerified && currentUser.providerData[0]?.providerId === 'password') {
+      setShowUnverified(true);
+    } else {
+      setShowUnverified(false);
+    }
+  }, [currentUser]);
 
   // 验证邮箱格式
   const validateEmail = (email: string) => {
@@ -127,6 +137,9 @@ const Login: React.FC = () => {
         case 'auth/too-many-requests':
           setError('登录尝试次数过多，请稍后再试');
           break;
+        case 'auth/invalid-credential':
+          setError('邮箱或密码错误');
+          break;
         default:
           setError(err.message || '登录失败，请稍后重试');
       }
@@ -197,6 +210,115 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // 重新发送验证邮件
+  const handleResendVerification = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      await sendVerificationEmail();
+      setSuccess('验证邮件已重新发送，请查收！');
+    } catch (err: any) {
+      console.error('Resend verification error:', err);
+      setError(err.message || '发送验证邮件失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 退出登录
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowUnverified(false);
+    } catch (err: any) {
+      console.error('Logout error:', err);
+    }
+  };
+
+  // 如果用户已登录但邮箱未验证，显示验证提示
+  if (showUnverified && currentUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          {/* Logo Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-2xl shadow-lg mb-4">
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-2 rounded-lg">
+                <Moon className="w-8 h-8" />
+              </div>
+              <div className="text-left">
+                <h1 className="text-2xl font-serif-sc font-bold text-gray-900">Astro Moon</h1>
+                <p className="text-xs text-gray-500 uppercase tracking-widest">Astrology & Life Analysis</p>
+              </div>
+            </div>
+            <p className="text-gray-600">验证您的邮箱</p>
+          </div>
+
+          {/* Verification Card */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+            <div className="text-center space-y-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
+                <MailCheck className="w-10 h-10 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">请验证您的邮箱</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                我们已向 <strong className="text-indigo-600">{currentUser.email}</strong> 发送了一封验证邮件。
+              </p>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                请点击邮件中的链接完成验证后，刷新此页面即可使用。
+              </p>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                <p className="text-sm text-blue-800 font-medium mb-2">💡 提示：</p>
+                <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                  <li>请检查您的垃圾邮件文件夹</li>
+                  <li>验证邮件可能需要几分钟才能送达</li>
+                  <li>点击邮件中的链接后，返回此页面刷新</li>
+                </ul>
+              </div>
+
+              {success && (
+                <div className="flex items-start gap-2 text-green-600 bg-green-50 px-4 py-3 rounded-lg border border-green-200">
+                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm">{success}</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="flex items-start gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm">{error}</p>
+                </div>
+              )}
+
+              <button
+                onClick={handleResendVerification}
+                disabled={loading}
+                className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? '发送中...' : '重新发送验证邮件'}
+              </button>
+
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-all font-medium"
+              >
+                我已验证，刷新页面
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="w-full text-gray-600 text-sm hover:text-gray-900 transition-colors py-2"
+              >
+                退出登录
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
