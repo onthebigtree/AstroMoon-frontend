@@ -7,7 +7,6 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
@@ -69,13 +68,12 @@ const Login: React.FC = () => {
 
     try {
       setLoading(true);
-      await signUp(email, password, displayName || undefined);
+      await signUp(email, password);
       setSuccess('注册成功！我们已向您的邮箱发送了验证邮件，请查收。');
       // 清空表单
       setEmail('');
       setPassword('');
       setConfirmPassword('');
-      setDisplayName('');
     } catch (err: any) {
       console.error('Sign up error:', err);
       switch (err.code) {
@@ -394,20 +392,6 @@ const Login: React.FC = () => {
           {/* Sign Up Form */}
           {mode === 'signup' && (
             <form onSubmit={handleSignUp} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  姓名 (可选)
-                </label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  placeholder="您的姓名"
-                  disabled={loading}
-                />
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   邮箱地址 *

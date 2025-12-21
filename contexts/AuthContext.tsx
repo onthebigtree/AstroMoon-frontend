@@ -12,7 +12,6 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   sendEmailVerification,
-  updateProfile,
 } from 'firebase/auth';
 import { auth } from '../firebase.config';
 
@@ -24,7 +23,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   // 新增：电子邮件/密码登录
-  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
@@ -80,13 +79,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   // 注册新用户（电子邮件/密码）
-  async function signUp(email: string, password: string, displayName?: string) {
+  async function signUp(email: string, password: string) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-    // 设置用户显示名称
-    if (displayName && userCredential.user) {
-      await updateProfile(userCredential.user, { displayName });
-    }
 
     // 发送验证邮件
     if (userCredential.user) {
