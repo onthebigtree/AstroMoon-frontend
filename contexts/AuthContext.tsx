@@ -8,6 +8,11 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   isSignInWithEmailLink,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  sendEmailVerification,
+  updateProfile,
 } from 'firebase/auth';
 import { auth } from '../firebase.config';
 
@@ -18,6 +23,11 @@ interface AuthContextType {
   completeLoginWithLink: (email: string, emailLink: string) => Promise<void>;
   logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  // 新增：电子邮件/密码登录
+  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,6 +79,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await signInWithPopup(auth, provider);
   }
 
+  // 注册新用户（电子邮件/密码）
+  async function signUp(email: string, password: string, displayName?: string) {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+    // 设置用户显示名称
+    if (displayName && userCredential.user) {
+      await updateProfile(userCredential.user, { displayName });
+    }
+
+    // 发送验证邮件
+    if (userCredential.user) {
+      await sendEmailVerification(userCredential.user);
+    }
+  }
+
+  // 登录（电子邮件/密码）
+  async function signIn(email: string, password: string) {
+    await signInWithEmailAndPassword(auth, email, password);
+  }
+
+  // 重置密码
+  async function resetPassword(email: string) {
+    await sendPasswordResetEmail(auth, email, {
+      url: window.location.origin,
+      handleCodeInApp: false,
+    });
+  }
+
+  // 发送邮箱验证邮件
+  async function sendVerificationEmail() {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser);
+    } else {
+      throw new Error('没有登录的用户');
+    }
+  }
+
   // 检查是否是通过邮箱链接打开的页面
   useEffect(() => {
     const handleEmailLink = async () => {
@@ -110,6 +157,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     completeLoginWithLink,
     logout,
     loginWithGoogle,
+    // 新增的方法
+    signUp,
+    signIn,
+    resetPassword,
+    sendVerificationEmail,
   };
 
   return (
