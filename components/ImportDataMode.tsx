@@ -910,7 +910,7 @@ ${chartInfo}
                                     className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1 mx-auto"
                                 >
                                     <MapPin className="w-3 h-3" />
-                                    <span>找不到？点击地图选择</span>
+                                    <span>找不到出生地？点击地图选择</span>
                                 </button>
                             </div>
                         </div>
