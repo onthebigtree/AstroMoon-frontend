@@ -32,3 +32,16 @@ export {
   getActivity,
   getSummaryStats,
 } from './stats';
+
+// Telegram 频道验证
+export {
+  checkTelegramMembership,
+  bindTelegramAccount,
+  unbindTelegramAccount,
+} from './telegram';
+export type {
+  TelegramMemberCheck,
+  TelegramBindRequest,
+  TelegramBindResult,
+  TelegramUnbindResult,
+} from './telegram';

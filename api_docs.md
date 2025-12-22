@@ -405,8 +405,95 @@ Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
 - 自动保存完整报告到数据库
 - 记录 token 使用量和生成时长
 - 更新用户活动记录
+- ⚠️ **每日生成限制：默认5次/天**
 
-#### 3.2 获取所有报告
+**限流错误响应** (HTTP 429):
+```json
+{
+  "error": "Daily generation limit reached",
+  "message": "您今日已达到生成上限（5次），请明天再试",
+  "limit": 5,
+  "used": 5,
+  "remaining": 0,
+  "resetAt": "2024-12-22T00:00:00.000Z"
+}
+```
+
+#### 3.2 查询生成限制状态
+
+**GET** `/api/reports/limit`
+
+查询当前用户今日的生成次数和剩余配额。
+
+**请求 Headers**:
+```
+Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "allowed": true,
+  "remaining": 3,
+  "used": 2,
+  "limit": 5,
+  "resetAt": "2024-12-22T00:00:00.000Z"
+}
+```
+
+**字段说明**:
+- `allowed`: 是否允许继续生成（`true`/`false`）
+- `remaining`: 今日剩余生成次数
+- `used`: 今日已使用次数
+- `limit`: 每日生成上限
+- `resetAt`: 限制重置时间（明天00:00）
+
+**TypeScript 示例**:
+```typescript
+interface GenerationLimit {
+  success: boolean;
+  allowed: boolean;
+  remaining: number;
+  used: number;
+  limit: number;
+  resetAt: string;
+}
+
+async function checkGenerationLimit(): Promise<GenerationLimit> {
+  const response = await fetch(
+    'https://astromoon-backend-production.up.railway.app/api/reports/limit',
+    {
+      headers: {
+        'Authorization': `Bearer ${idToken}`
+      }
+    }
+  );
+
+  return response.json();
+}
+
+// 使用示例
+const limitStatus = await checkGenerationLimit();
+
+if (!limitStatus.allowed) {
+  alert(`今日生成次数已用完，剩余 ${limitStatus.remaining} 次`);
+  // 显示明天重置时间
+  const resetDate = new Date(limitStatus.resetAt);
+  console.log('将在', resetDate.toLocaleString(), '重置');
+} else {
+  console.log(`可以继续生成，剩余 ${limitStatus.remaining} 次`);
+  // 继续生成报告...
+}
+```
+
+**建议用法**:
+1. 在用户点击"生成"按钮前先调用此接口
+2. 根据 `remaining` 显示剩余次数提示
+3. 当 `allowed: false` 时禁用生成按钮
+4. 显示 `resetAt` 让用户知道何时可以再次使用
+
+#### 3.3 获取所有报告
 
 **GET** `/api/reports`
 
@@ -450,7 +537,7 @@ Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
 }
 ```
 
-#### 3.3 获取单个报告
+#### 3.4 获取单个报告
 
 **GET** `/api/reports/:id`
 
@@ -492,7 +579,7 @@ Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
 **副作用**:
 - 自动更新 `viewed_at` 字段为当前时间
 
-#### 3.4 标记报告为已导出
+#### 3.5 标记报告为已导出
 
 **POST** `/api/reports/:id/export`
 
@@ -511,7 +598,7 @@ Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
 }
 ```
 
-#### 3.5 删除报告
+#### 3.6 删除报告
 
 **DELETE** `/api/reports/:id`
 
@@ -1075,6 +1162,582 @@ async function fetchData() {
 
 ---
 
+## 5. Telegram 频道成员管理 🔐
+
+### 概述
+
+本模块提供 Telegram 频道成员验证和账号绑定功能，用于：
+- 验证用户是否在指定的 Telegram 频道内
+- 将用户的 Telegram 账号绑定到系统账户
+- 实现基于 Telegram 频道订阅的会员验证
+
+**频道信息**:
+- 频道名称: 月亮牌手说
+- 频道 Username: @themoon_dojo
+- 频道 ID: -1003243468587
+
+---
+
+### 5.1 检查用户是否在频道内 ⭐⭐⭐
+
+**GET** `/api/telegram/check/:tg_user_id`
+
+检查指定 Telegram 用户 ID 是否在频道内（支持所有成员类型：创建者、管理员、普通成员）。
+
+**URL 参数**:
+- `tg_user_id`: Telegram 用户 ID（数字）
+
+**请求 Headers**:
+```
+Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
+```
+
+**响应示例 - 用户在频道内**:
+```json
+{
+  "success": true,
+  "isMember": true,
+  "status": "member",
+  "user": {
+    "tg_user_id": 123456789,
+    "username": "john_doe",
+    "first_name": "John",
+    "last_name": "Doe"
+  },
+  "lastChecked": "2024-12-22T00:00:00.000Z",
+  "cachedUntil": "2024-12-22T00:00:30.000Z",
+  "source": "database"
+}
+```
+
+**响应示例 - 用户不在频道内**:
+```json
+{
+  "success": true,
+  "isMember": false,
+  "status": "left",
+  "user": null,
+  "source": "realtime"
+}
+```
+
+**字段说明**:
+- `isMember`: 是否是频道成员（`true`/`false`）
+- `status`: 成员状态
+  - `creator` - 频道创建者
+  - `administrator` - 管理员
+  - `member` - 普通成员
+  - `left` - 已离开
+  - `kicked` - 被踢出
+  - `not_found` - 用户不存在
+- `source`: 数据来源（`database` 缓存 / `realtime` 实时查询）
+- `cachedUntil`: 缓存过期时间（30秒缓存）
+
+**TypeScript 示例**:
+```typescript
+interface TelegramMemberCheck {
+  success: boolean;
+  isMember: boolean;
+  status: string;
+  user: {
+    tg_user_id: number;
+    username: string;
+    first_name: string;
+    last_name: string;
+  } | null;
+  lastChecked: string;
+  cachedUntil: string;
+  source: 'database' | 'realtime';
+}
+
+async function checkTelegramMembership(
+  tgUserId: number
+): Promise<TelegramMemberCheck> {
+  const response = await fetch(
+    `https://astromoon-backend-production.up.railway.app/api/telegram/check/${tgUserId}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${idToken}`
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to check membership');
+  }
+
+  return response.json();
+}
+
+// 使用示例
+const result = await checkTelegramMembership(123456789);
+
+if (result.isMember) {
+  console.log('✅ 用户在频道内，状态:', result.status);
+  // 允许访问功能
+} else {
+  console.log('❌ 用户不在频道内');
+  // 提示用户加入频道
+  alert('请先加入我们的 Telegram 频道: https://t.me/themoon_dojo');
+}
+```
+
+**注意事项**:
+- ⚡ 带30秒缓存，减少 API 调用
+- 🔄 缓存过期自动刷新
+- 📊 可检查任何用户（管理员或普通成员）
+
+---
+
+### 5.2 绑定 Telegram 账号 ⭐
+
+**POST** `/api/telegram/bind`
+
+将 Telegram 账号绑定到当前登录用户。
+
+**请求 Headers**:
+```
+Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
+Content-Type: application/json
+```
+
+**请求 Body**:
+```json
+{
+  "tg_user_id": 123456789,
+  "tg_username": "john_doe"
+}
+```
+
+**必填字段**:
+- `tg_user_id`: Telegram 用户 ID（必填）
+
+**可选字段**:
+- `tg_username`: Telegram 用户名（可选，用于显示）
+
+**响应示例 - 绑定成功**:
+```json
+{
+  "success": true,
+  "message": "Telegram 账号绑定成功",
+  "user": {
+    "tg_user_id": 123456789,
+    "tg_username": "john_doe",
+    "tg_verified": true
+  }
+}
+```
+
+**响应示例 - 用户不在频道**:
+```json
+{
+  "error": "User not in channel",
+  "message": "该 Telegram 账号不在指定频道内",
+  "tg_user_id": 123456789,
+  "status": "left"
+}
+```
+
+**响应示例 - 账号已被绑定**:
+```json
+{
+  "error": "TG account already bound",
+  "message": "该 Telegram 账号已被其他用户绑定"
+}
+```
+
+**绑定验证流程**:
+1. ✅ 验证用户是否在频道内
+2. ✅ 检查该 Telegram ID 是否已被其他用户绑定
+3. ✅ 绑定成功，设置 `tg_verified = true`
+4. ✅ 记录绑定时间
+
+**TypeScript 示例**:
+```typescript
+interface BindResult {
+  success: boolean;
+  message: string;
+  user?: {
+    tg_user_id: number;
+    tg_username: string;
+    tg_verified: boolean;
+  };
+}
+
+async function bindTelegramAccount(
+  tgUserId: number,
+  tgUsername?: string
+): Promise<BindResult> {
+  const response = await fetch(
+    'https://astromoon-backend-production.up.railway.app/api/telegram/bind',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tg_user_id: tgUserId,
+        tg_username: tgUsername
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    if (data.error === 'User not in channel') {
+      throw new Error('请先加入 Telegram 频道');
+    } else if (data.error === 'TG account already bound') {
+      throw new Error('该 Telegram 账号已被其他用户绑定');
+    }
+    throw new Error(data.message || 'Binding failed');
+  }
+
+  return data;
+}
+```
+
+**用户绑定数据存储**:
+
+绑定后，用户数据会更新以下字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `tg_user_id` | BIGINT | Telegram 用户 ID |
+| `tg_username` | VARCHAR(255) | Telegram 用户名 |
+| `tg_verified` | BOOLEAN | 是否已验证（绑定后为 true） |
+| `tg_linked_at` | TIMESTAMP | 绑定时间 |
+
+**查询用户的 Telegram 绑定信息**:
+```sql
+SELECT
+  id,
+  email,
+  tg_user_id,
+  tg_username,
+  tg_verified,
+  tg_linked_at
+FROM users
+WHERE id = :user_id;
+```
+
+---
+
+### 5.3 解绑 Telegram 账号
+
+**DELETE** `/api/telegram/unbind`
+
+解除当前用户的 Telegram 账号绑定。
+
+**请求 Headers**:
+```
+Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "Telegram 账号解绑成功"
+}
+```
+
+**TypeScript 示例**:
+```typescript
+async function unbindTelegramAccount(): Promise<void> {
+  const response = await fetch(
+    'https://astromoon-backend-production.up.railway.app/api/telegram/unbind',
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${idToken}`
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to unbind Telegram account');
+  }
+
+  const data = await response.json();
+  console.log(data.message);
+}
+```
+
+---
+
+### 5.4 获取频道成员列表
+
+**GET** `/api/telegram/members`
+
+获取频道成员列表（分页），主要用于管理后台。
+
+**查询参数**:
+- `limit`: 每页数量（默认：50）
+- `offset`: 偏移量（默认：0）
+
+**请求示例**:
+```
+GET /api/telegram/members?limit=20&offset=0
+```
+
+**请求 Headers**:
+```
+Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "members": [
+    {
+      "tg_user_id": 123456789,
+      "username": "john_doe",
+      "first_name": "John",
+      "last_name": "Doe",
+      "status": "member",
+      "last_seen_at": "2024-12-22T00:00:00.000Z"
+    }
+  ],
+  "total": 150,
+  "limit": 20,
+  "offset": 0,
+  "cacheValid": true,
+  "cachedUntil": "2024-12-22T00:00:30.000Z"
+}
+```
+
+---
+
+### 5.5 完整集成示例
+
+#### 场景1：用户绑定 Telegram 账号流程
+
+```typescript
+// 第一步：用户输入 Telegram ID
+function TelegramBindingForm() {
+  const [tgUserId, setTgUserId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleBind = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // 1. 先检查用户是否在频道内
+      const check = await checkTelegramMembership(parseInt(tgUserId));
+
+      if (!check.isMember) {
+        setError('您不在频道内，请先加入');
+        window.open('https://t.me/themoon_dojo', '_blank');
+        return;
+      }
+
+      // 2. 在频道内，执行绑定
+      const result = await bindTelegramAccount(
+        parseInt(tgUserId),
+        check.user?.username
+      );
+
+      alert('✅ Telegram 账号绑定成功！');
+
+      // 3. 刷新用户信息
+      await refreshUserProfile();
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="输入您的 Telegram ID"
+        value={tgUserId}
+        onChange={(e) => setTgUserId(e.target.value)}
+      />
+      <button onClick={handleBind} disabled={loading}>
+        {loading ? '验证中...' : '绑定 Telegram'}
+      </button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <p style={{ fontSize: '12px', color: '#666' }}>
+        💡 如何获取 Telegram ID？发送 /start 给
+        <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a>
+      </p>
+    </div>
+  );
+}
+```
+
+#### 场景2：生成报告前验证会员身份
+
+```typescript
+async function generateAIReport() {
+  try {
+    // 1. 获取当前用户信息
+    const user = await getCurrentUser();
+
+    // 2. 检查是否绑定了 Telegram
+    if (!user.tg_user_id || !user.tg_verified) {
+      alert('请先绑定 Telegram 账号以使用此功能');
+      // 跳转到绑定页面
+      router.push('/settings/telegram');
+      return;
+    }
+
+    // 3. 实时检查用户是否还在频道内
+    const check = await checkTelegramMembership(user.tg_user_id);
+
+    if (!check.isMember) {
+      alert('您已离开频道，无法使用此功能。请重新加入频道。');
+      window.open('https://t.me/themoon_dojo', '_blank');
+      return;
+    }
+
+    // 4. 验证通过，调用生成报告 API
+    const response = await fetch(
+      'https://astromoon-backend-production.up.railway.app/api/reports/generate',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          systemPrompt: '...',
+          userPrompt: '...'
+        })
+      }
+    );
+
+    // 处理流式响应...
+
+  } catch (error) {
+    console.error('生成失败:', error);
+    alert('生成失败，请稍后重试');
+  }
+}
+```
+
+#### 场景3：显示用户的 Telegram 绑定状态
+
+```typescript
+function TelegramStatus() {
+  const [user, setUser] = useState(null);
+  const [memberStatus, setMemberStatus] = useState(null);
+
+  useEffect(() => {
+    loadUserTelegramStatus();
+  }, []);
+
+  const loadUserTelegramStatus = async () => {
+    const currentUser = await getCurrentUser();
+    setUser(currentUser);
+
+    if (currentUser.tg_user_id) {
+      // 检查当前是否还在频道内
+      const status = await checkTelegramMembership(currentUser.tg_user_id);
+      setMemberStatus(status);
+    }
+  };
+
+  if (!user?.tg_user_id) {
+    return (
+      <div className="telegram-status unbound">
+        <p>❌ 未绑定 Telegram 账号</p>
+        <button onClick={() => router.push('/bind-telegram')}>
+          立即绑定
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="telegram-status bound">
+      <p>✅ 已绑定 Telegram</p>
+      <p>Username: @{user.tg_username}</p>
+      <p>User ID: {user.tg_user_id}</p>
+      <p>绑定时间: {new Date(user.tg_linked_at).toLocaleString()}</p>
+
+      {memberStatus && (
+        <p>
+          频道状态: {memberStatus.isMember ? '✅ 在频道内' : '❌ 已离开频道'}
+        </p>
+      )}
+
+      <button onClick={handleUnbind}>解绑账号</button>
+    </div>
+  );
+}
+```
+
+---
+
+### 5.6 获取 Telegram User ID 的方法
+
+用户可以通过以下方式获取自己的 Telegram ID：
+
+**方法1：使用 Bot**
+1. 打开 Telegram
+2. 搜索 @userinfobot
+3. 发送 `/start` 命令
+4. Bot 会返回您的 User ID
+
+**方法2：使用其他工具**
+- @getmyid_bot
+- @myidbot
+
+**前端提示示例**:
+```typescript
+<div className="help-text">
+  <h4>如何获取 Telegram ID？</h4>
+  <ol>
+    <li>打开 Telegram 应用</li>
+    <li>搜索 <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a></li>
+    <li>发送 /start 命令</li>
+    <li>复制返回的 ID 数字</li>
+  </ol>
+</div>
+```
+
+---
+
+### 5.7 错误处理
+
+| 错误码 | 错误类型 | 说明 | 处理建议 |
+|--------|---------|------|----------|
+| 403 | User not in channel | 用户不在频道内 | 提示用户加入频道 |
+| 409 | TG account already bound | 该 TG 账号已被绑定 | 提示用户该账号已被使用 |
+| 404 | member not found | 用户不存在 | 检查 ID 是否正确 |
+| 500 | Telegram API Error | Telegram API 错误 | 稍后重试 |
+
+**错误处理示例**:
+```typescript
+try {
+  await bindTelegramAccount(tgUserId);
+} catch (error) {
+  if (error.message.includes('not in channel')) {
+    // 不在频道内
+    showJoinChannelPrompt();
+  } else if (error.message.includes('already bound')) {
+    // 已被绑定
+    alert('该 Telegram 账号已被其他用户绑定');
+  } else {
+    // 其他错误
+    alert('绑定失败，请稍后重试');
+  }
+}
+```
+
+---
+
 ## 调试建议
 
 ### 1. 查看网络请求
@@ -1111,6 +1774,17 @@ Railway Dashboard → 你的项目 → Deployments → View Logs
 
 ---
 
-**文档版本**: 1.0
-**最后更新**: 2024-12-21
+**文档版本**: 1.1
+**最后更新**: 2024-12-22
 **生产环境**: https://astromoon-backend-production.up.railway.app
+
+## 更新日志
+
+**v1.1 (2024-12-22)**
+- ✅ 新增第5章：Telegram 频道成员管理
+- ✅ 添加用户绑定 Telegram 账号功能
+- ✅ 添加成员验证接口文档
+- ✅ 提供完整的前端集成示例
+
+**v1.0 (2024-12-21)**
+- 初始版本发布
