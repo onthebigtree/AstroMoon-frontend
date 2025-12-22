@@ -27,16 +27,41 @@ const App: React.FC = () => {
   };
 
   // 处理选择历史报告
-  const handleSelectReport = (report: Report) => {
+  const handleSelectReport = async (report: Report) => {
     try {
       console.log('📖 加载历史报告:', report.report_title);
+      setError(null);
+
+      // 检查报告数据是否完整
+      if (!report.full_report || !report.full_report.content) {
+        console.log('⚠️ 报告列表数据不完整，尝试获取完整报告...');
+
+        // 动态导入 getReport 函数
+        const { getReport } = await import('./services/api');
+        const fullReport = await getReport(report.id);
+
+        if (!fullReport.full_report || !fullReport.full_report.content) {
+          throw new Error('报告数据不完整或已损坏');
+        }
+
+        report = fullReport;
+      }
 
       // 解析报告内容
-      const reportContent = typeof report.full_report.content === 'string'
+      let reportContent = typeof report.full_report.content === 'string'
         ? JSON.parse(report.full_report.content)
         : report.full_report.content;
 
       console.log('✅ 报告内容已解析:', reportContent);
+
+      // 兼容旧的导出格式：如果是扁平结构，需要重构为 LifeDestinyResult 格式
+      if (reportContent.chartPoints && !reportContent.chartData) {
+        const { chartPoints, ...analysisData } = reportContent;
+        reportContent = {
+          chartData: chartPoints,
+          analysis: analysisData
+        };
+      }
 
       // 设置结果数据
       setResult(reportContent);
