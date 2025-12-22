@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LifeDestinyResult } from '../types';
-import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save } from 'lucide-react';
+import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
 import { generateWithAPI } from '../services/apiService';
 import { streamReportGenerate, checkGenerationLimit } from '../services/api/reports';
@@ -9,7 +9,7 @@ import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import LocationMapPicker from './LocationMapPicker';
 import ChinaCitySelector from './ChinaCitySelector';
 import { useAuth } from '../contexts/AuthContext';
-import { getProfiles, createProfile, type Profile } from '../services/api';
+import { getProfiles, createProfile, updateProfile, deleteProfile, type Profile } from '../services/api';
 import type { GenerationLimit } from '../services/api/types';
 
 interface ImportDataModeProps {
@@ -179,6 +179,11 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
+    // 档案编辑相关状态
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+    const [isDeletingProfile, setIsDeletingProfile] = useState(false);
+
     // 生成限制相关状态
     const [limitStatus, setLimitStatus] = useState<GenerationLimit | null>(null);
     const [isLoadingLimit, setIsLoadingLimit] = useState(false);
@@ -325,6 +330,100 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             alert(`保存档案失败: ${error.message}`);
         } finally {
             setIsSavingProfile(false);
+        }
+    };
+
+    // 打开编辑档案弹窗
+    const handleEditProfile = (profile: Profile) => {
+        setEditingProfile(profile);
+        setShowEditModal(true);
+    };
+
+    // 保存编辑后的档案
+    const handleSaveEditProfile = async (updatedData: Partial<Profile>) => {
+        if (!editingProfile) return;
+
+        setIsSavingProfile(true);
+        try {
+            const updated = await updateProfile(String(editingProfile.id), {
+                profileName: updatedData.profile_name || editingProfile.profile_name,
+                gender: (updatedData.gender || editingProfile.gender) as 'male' | 'female' | 'other',
+                birthYear: updatedData.birth_year || editingProfile.birth_year,
+                birthMonth: updatedData.birth_month || editingProfile.birth_month,
+                birthDay: updatedData.birth_day || editingProfile.birth_day,
+                birthHour: updatedData.birth_hour || editingProfile.birth_hour,
+                birthMinute: updatedData.birth_minute || editingProfile.birth_minute,
+                birthPlace: updatedData.birth_place || editingProfile.birth_place,
+                birthLongitude: updatedData.birth_longitude || editingProfile.birth_longitude,
+                birthLatitude: updatedData.birth_latitude || editingProfile.birth_latitude,
+                timezone: updatedData.timezone || editingProfile.timezone,
+            });
+
+            console.log('✅ 档案更新成功:', updated.id);
+
+            // 更新本地档案列表
+            setProfiles(prev => prev.map(p =>
+                String(p.id) === String(updated.id) ? updated : p
+            ));
+
+            // 如果当前选中的是被编辑的档案，更新表单
+            if (String(selectedProfileId) === String(updated.id)) {
+                setAstroInfo({
+                    name: updated.profile_name || '',
+                    gender: updated.gender === 'male' ? 'Male' : updated.gender === 'female' ? 'Female' : 'Male',
+                    birthYear: updated.birth_year.toString(),
+                    birthMonth: updated.birth_month.toString(),
+                    birthDay: updated.birth_day.toString(),
+                    birthHour: updated.birth_hour.toString(),
+                    birthMinute: updated.birth_minute.toString(),
+                    birthPlace: updated.birth_place || '',
+                    latitude: updated.birth_latitude?.toString() || '',
+                    longitude: updated.birth_longitude?.toString() || '',
+                    timezone: updated.timezone || '8.0',
+                });
+            }
+
+            setShowEditModal(false);
+            setEditingProfile(null);
+
+            // 显示成功提示
+            setShowSaveSuccess(true);
+            setTimeout(() => setShowSaveSuccess(false), 2000);
+        } catch (error: any) {
+            console.error('❌ 更新档案失败:', error);
+            alert(`更新档案失败: ${error.message}`);
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
+
+    // 删除档案
+    const handleDeleteProfile = async (profileId: string, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+
+        if (!confirm('确定要删除这个档案吗？此操作无法撤销。')) {
+            return;
+        }
+
+        setIsDeletingProfile(true);
+        try {
+            await deleteProfile(String(profileId));
+            console.log('✅ 档案删除成功:', profileId);
+
+            // 从列表中移除
+            setProfiles(prev => prev.filter(p => String(p.id) !== String(profileId)));
+
+            // 如果删除的是当前选中的档案，清空选择
+            if (String(selectedProfileId) === String(profileId)) {
+                setSelectedProfileId('');
+            }
+
+            alert('档案已删除');
+        } catch (error: any) {
+            console.error('❌ 删除档案失败:', error);
+            alert(`删除档案失败: ${error.message}`);
+        } finally {
+            setIsDeletingProfile(false);
         }
     };
 
@@ -1054,38 +1153,65 @@ ${chartInfo}
                         <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200 mb-4">
                             <div className="flex items-center gap-2 mb-3">
                                 <BookOpen className="w-4 h-4 text-purple-600" />
-                                <span className="text-sm font-bold text-purple-800">从已保存的档案加载</span>
+                                <span className="text-sm font-bold text-purple-800">我的档案 ({profiles.length})</span>
+                                {isLoadingProfiles && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">
-                                    选择档案 {isLoadingProfiles && <span className="text-gray-400">(加载中...)</span>}
-                                </label>
-                                <select
-                                    value={selectedProfileId}
-                                    onChange={(e) => handleLoadFromProfile(e.target.value)}
-                                    disabled={isLoadingProfiles}
-                                    className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white disabled:bg-gray-100"
-                                >
-                                    <option value="">-- 选择档案 --</option>
-                                    {profiles.map(profile => (
-                                        <option key={profile.id} value={profile.id}>
-                                            {profile.profile_name || '未命名'} ({profile.birth_year}-{profile.birth_month}-{profile.birth_day})
-                                        </option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    💡 提示：点击"查看基础星盘"后，新的档案会自动保存
-                                </p>
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {profiles.map(profile => (
+                                    <div
+                                        key={profile.id}
+                                        className={`group flex items-center justify-between p-3 rounded-lg border-2 transition-all cursor-pointer ${
+                                            String(selectedProfileId) === String(profile.id)
+                                                ? 'bg-purple-100 border-purple-400'
+                                                : 'bg-white border-purple-200 hover:border-purple-300 hover:bg-purple-50'
+                                        }`}
+                                        onClick={() => handleLoadFromProfile(String(profile.id))}
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-bold text-gray-800 truncate text-sm">
+                                                {profile.profile_name || '未命名'}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {profile.birth_year}-{profile.birth_month}-{profile.birth_day} {profile.birth_hour}:{String(profile.birth_minute).padStart(2, '0')}
+                                            </div>
+                                        </div>
 
-                                {/* 档案加载成功提示 */}
-                                {showSaveSuccess && selectedProfileId && (
-                                    <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg flex items-center gap-2 text-green-800 text-sm">
-                                        <CheckCircle className="w-4 h-4" />
-                                        <span>档案已加载！</span>
+                                        <div className="flex items-center gap-1 ml-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditProfile(profile);
+                                                }}
+                                                className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                                                title="编辑档案"
+                                            >
+                                                <Edit2 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => handleDeleteProfile(String(profile.id), e)}
+                                                disabled={isDeletingProfile}
+                                                className="p-1.5 text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                                                title="删除档案"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
                                     </div>
-                                )}
+                                ))}
                             </div>
+
+                            <p className="text-xs text-gray-500 mt-3">
+                                💡 提示：点击档案快速加载，点击"查看基础星盘"后会自动保存新档案
+                            </p>
+
+                            {/* 档案操作成功提示 */}
+                            {showSaveSuccess && (
+                                <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg flex items-center gap-2 text-green-800 text-sm">
+                                    <CheckCircle className="w-4 h-4" />
+                                    <span>操作成功！</span>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -1692,6 +1818,195 @@ ${chartInfo}
                             <p className="text-xs text-gray-500 text-center">
                                 💡 关注频道后可获取最新占星分析技巧和行运提醒
                             </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 编辑档案弹窗 */}
+            {showEditModal && editingProfile && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        {/* Header */}
+                        <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-purple-600 p-4 flex items-center justify-between rounded-t-2xl">
+                            <div className="flex items-center gap-2 text-white">
+                                <Edit2 className="w-5 h-5" />
+                                <h2 className="text-xl font-bold">编辑档案</h2>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowEditModal(false);
+                                    setEditingProfile(null);
+                                }}
+                                className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 space-y-4">
+                            {/* 姓名和性别 */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">姓名</label>
+                                    <input
+                                        type="text"
+                                        value={editingProfile.profile_name || ''}
+                                        onChange={(e) => setEditingProfile({...editingProfile, profile_name: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">性别</label>
+                                    <select
+                                        value={editingProfile.gender}
+                                        onChange={(e) => setEditingProfile({...editingProfile, gender: e.target.value as 'male' | 'female' | 'other'})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    >
+                                        <option value="male">男</option>
+                                        <option value="female">女</option>
+                                        <option value="other">其他</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* 出生日期 */}
+                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                <div className="text-sm font-bold text-blue-800 mb-3">出生日期时间</div>
+                                <div className="grid grid-cols-3 gap-3 mb-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 mb-1">年</label>
+                                        <input
+                                            type="number"
+                                            value={editingProfile.birth_year}
+                                            onChange={(e) => setEditingProfile({...editingProfile, birth_year: parseInt(e.target.value)})}
+                                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 mb-1">月</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="12"
+                                            value={editingProfile.birth_month}
+                                            onChange={(e) => setEditingProfile({...editingProfile, birth_month: parseInt(e.target.value)})}
+                                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 mb-1">日</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="31"
+                                            value={editingProfile.birth_day}
+                                            onChange={(e) => setEditingProfile({...editingProfile, birth_day: parseInt(e.target.value)})}
+                                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 mb-1">时 (0-23)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="23"
+                                            value={editingProfile.birth_hour}
+                                            onChange={(e) => setEditingProfile({...editingProfile, birth_hour: parseInt(e.target.value)})}
+                                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 mb-1">分 (0-59)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="59"
+                                            value={editingProfile.birth_minute}
+                                            onChange={(e) => setEditingProfile({...editingProfile, birth_minute: parseInt(e.target.value)})}
+                                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 出生地点 */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">出生地点</label>
+                                <input
+                                    type="text"
+                                    value={editingProfile.birth_place || ''}
+                                    onChange={(e) => setEditingProfile({...editingProfile, birth_place: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="如：北京"
+                                />
+                            </div>
+
+                            {/* 经纬度和时区 */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">纬度</label>
+                                    <input
+                                        type="number"
+                                        step="0.0001"
+                                        value={editingProfile.birth_latitude || ''}
+                                        onChange={(e) => setEditingProfile({...editingProfile, birth_latitude: parseFloat(e.target.value)})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">经度</label>
+                                    <input
+                                        type="number"
+                                        step="0.0001"
+                                        value={editingProfile.birth_longitude || ''}
+                                        onChange={(e) => setEditingProfile({...editingProfile, birth_longitude: parseFloat(e.target.value)})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">时区</label>
+                                    <input
+                                        type="text"
+                                        value={editingProfile.timezone || '8.0'}
+                                        onChange={(e) => setEditingProfile({...editingProfile, timezone: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="sticky bottom-0 bg-gray-50 p-4 flex gap-3 rounded-b-2xl border-t border-gray-200">
+                            <button
+                                onClick={() => {
+                                    setShowEditModal(false);
+                                    setEditingProfile(null);
+                                }}
+                                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
+                            >
+                                取消
+                            </button>
+                            <button
+                                onClick={() => handleSaveEditProfile(editingProfile)}
+                                disabled={isSavingProfile}
+                                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {isSavingProfile ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>保存中...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4" />
+                                        <span>保存修改</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>
