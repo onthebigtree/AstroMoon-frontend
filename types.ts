@@ -127,6 +127,9 @@ export interface AnalysisData {
   cryptoScore?: number;
   cryptoYear?: string;
   cryptoStyle?: string;
+
+  // 财富量级潜力评级
+  wealthLevel?: string;  // A10 | A9 | A8 | A7 | A6 | A5 | A4 | A3 | A2 | A1 | 等级标识
 }
 
 export interface LifeDestinyResult {
