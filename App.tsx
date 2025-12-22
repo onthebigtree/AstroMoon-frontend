@@ -48,11 +48,20 @@ const App: React.FC = () => {
       }
 
       // 解析报告内容
-      const reportContent = typeof report.full_report.content === 'string'
+      let reportContent = typeof report.full_report.content === 'string'
         ? JSON.parse(report.full_report.content)
         : report.full_report.content;
 
       console.log('✅ 报告内容已解析:', reportContent);
+
+      // 兼容旧的导出格式：如果是扁平结构，需要重构为 LifeDestinyResult 格式
+      if (reportContent.chartPoints && !reportContent.chartData) {
+        const { chartPoints, ...analysisData } = reportContent;
+        reportContent = {
+          chartData: chartPoints,
+          analysis: analysisData
+        };
+      }
 
       // 设置结果数据
       setResult(reportContent);
