@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Loader2, AlertCircle } from 'lucide-react';
+import { X, Calendar, Loader2, AlertCircle, History } from 'lucide-react';
 import { getReports, type Report } from '../services/api';
 
 interface ReportHistoryProps {
@@ -100,7 +100,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
               <div className="bg-gray-100 p-4 rounded-full mb-4">
                 <Calendar className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500 mb-2">还没有生成过报告</p>
+              <p className="text-lg font-medium text-gray-600 mb-2">暂无生成历史</p>
               <p className="text-sm text-gray-400">生成报告后，可以在这里查看历史记录</p>
             </div>
           ) : (
