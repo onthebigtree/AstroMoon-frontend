@@ -5,7 +5,7 @@ import { getReports, type Report } from '../services/api';
 interface ReportHistoryProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectReport: (report: Report) => void;
+  onSelectReport: (report: Report) => void | Promise<void>;
 }
 
 const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelectReport }) => {
@@ -33,9 +33,18 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
     }
   };
 
-  const handleSelectReport = (report: Report) => {
-    onSelectReport(report);
-    onClose();
+  const handleSelectReport = async (report: Report) => {
+    try {
+      setLoading(true);
+      setError('');
+      await onSelectReport(report);
+      onClose();
+    } catch (err: any) {
+      console.error('选择报告失败:', err);
+      setError(err.message || '加载报告失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {

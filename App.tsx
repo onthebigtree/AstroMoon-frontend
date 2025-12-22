@@ -27,9 +27,25 @@ const App: React.FC = () => {
   };
 
   // 处理选择历史报告
-  const handleSelectReport = (report: Report) => {
+  const handleSelectReport = async (report: Report) => {
     try {
       console.log('📖 加载历史报告:', report.report_title);
+      setError(null);
+
+      // 检查报告数据是否完整
+      if (!report.full_report || !report.full_report.content) {
+        console.log('⚠️ 报告列表数据不完整，尝试获取完整报告...');
+
+        // 动态导入 getReport 函数
+        const { getReport } = await import('./services/api');
+        const fullReport = await getReport(report.id);
+
+        if (!fullReport.full_report || !fullReport.full_report.content) {
+          throw new Error('报告数据不完整或已损坏');
+        }
+
+        report = fullReport;
+      }
 
       // 解析报告内容
       const reportContent = typeof report.full_report.content === 'string'
