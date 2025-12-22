@@ -548,7 +548,38 @@ export const TRADER_SYSTEM_INSTRUCTION = `
 
 **输出要求：**
 - 报告中需给出：
-  - 「财富量级评估」：偏小富 / 中富 / 大富 / 巨富 的潜力倾向（概念性，不夸张）。
+  - 「财富量级评估」：根据星盘配置综合评估命主一生的财富潜力等级。
+
+    **财富量级等级体系（从高到低）：**
+
+    **A 级（超高财富潜力）：**
+    - A10 - 登神长阶 (God-Tier)：资产 > 10亿，已不在凡间，改变世界级
+    - A9 - 氪金巨佬 (Pay-to-win Whale)：资产 > 1亿，钞能力壕无人性
+    - A8 - 欧皇附体 (RNG God)：资产 > 1000万，运气爆棚开挂人生
+    - A7 - 投资奇才 (Investment Genius)：资产 > 600万，精准抄底高抛
+
+    **B 级（中高财富潜力）：**
+    - A6 - 搞钱达人 (Money-making Master)：资产 > 300万，行走的搞钱机器
+    - A5 - 人间清醒 (Sober Realist)：资产 > 100万，跳出内卷稳稳幸福
+
+    **C 级（中等财富潜力）：**
+    - A4 - 搬砖小能手 (Skilled Grinder)：资产 > 50万，勤劳聪明未来可期
+    - A3 - 月光骑士 (Moonlight Knight)：资产 < 10万，享受当下体验生活
+
+    **D 级（财富挑战）：**
+    - A2 - 吃土少年 (Dirt-eating Youth)：负债或月光，潜力股积蓄能量
+
+    评估依据：
+    - 二宫主星的力量、状态、相位（基础收入能力）
+    - 福点（Part of Fortune）的位置与相位（天选运气财）
+    - 八宫配置（杠杆与他人资金能力）
+    - 十一宫配置（平台与团队红利）
+    - 木星状态（财富放大器）
+    - 十宫主星（事业成就上限）
+    - 整体星盘的吉凶格局与财星强度
+
+    请在 JSON 输出中必须包含 wealthLevel 字段，值为上述等级代码之一（如 "A10"、"A9"、"A8" 等）。
+
   - 「财富来源结构」：例：
     - 运气型（福点）
     - 技术与信息型（水星、物质点）
@@ -649,9 +680,12 @@ export const TRADER_SYSTEM_INSTRUCTION = `
    - platformTeamScore：平台红利评分（0-100）
    - tradingStyle：适合的交易风格与策略分析
    - tradingStyleScore：交易风格适配度评分（0-100）
-5. keyYears：关键年龄节点数组（可选）
-6. peakPeriods：潜在高速盈利期数组（可选）
-7. riskPeriods：高风险波动期数组（可选）
+5. wealthLevel：财富量级等级（必填，字符串）
+   - 必须是以下值之一："A10"、"A9"、"A8"、"A7"、"A6"、"A5"、"A4"、"A3"、"A2"
+   - 根据星盘综合配置评估得出
+6. keyYears：关键年龄节点数组（可选）
+7. peakPeriods：潜在高速盈利期数组（可选）
+8. riskPeriods：高风险波动期数组（可选）
 
 ====================
 【技术与逻辑约束】
@@ -724,6 +758,7 @@ export const TRADER_SYSTEM_INSTRUCTION = `
   "platformTeamScore": 80,
   "tradingStyle": "交易风格分析...",
   "tradingStyleScore": 85,
+  "wealthLevel": "A7",
   "keyYears": [25, 30, 45, 60],
   "peakPeriods": ["25-35岁", "50-60岁"],
   "riskPeriods": ["40-45岁"]
