@@ -1858,16 +1858,15 @@ ${chartInfo}
                             {/* 🔥 交易员模式：Telegram 登录验证 */}
                             {mode === 'trader' ? (
                                 <>
-                                    {/* 步骤①：登录 Telegram 或手动输入 ID */}
+                                    {/* 步骤①：使用 Telegram 登录验证账号 */}
                                     {!isTgLoggedIn ? (
                                         <div className="space-y-3">
                                             <label className="block text-sm font-bold text-gray-700 text-center">
-                                                ① 验证您的 Telegram 账号
+                                                ① 使用 Telegram 登录
                                             </label>
 
-                                            {/* 方式1：Telegram 登录（推荐） */}
+                                            {/* Telegram 自动登录 */}
                                             <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                                                <p className="text-xs font-bold text-blue-800 mb-2 text-center">方式1：快速登录（推荐）</p>
                                                 <TelegramLoginButton
                                                     botUsername="astromoon_login_bot"
                                                     buttonSize="large"
@@ -1876,53 +1875,7 @@ ${chartInfo}
                                                     dataOnauth={handleTelegramLogin}
                                                 />
                                                 <p className="text-xs text-gray-500 mt-2 text-center">
-                                                    💡 点击按钮自动获取 ID
-                                                </p>
-                                            </div>
-
-                                            {/* 分隔线 */}
-                                            <div className="relative">
-                                                <div className="absolute inset-0 flex items-center">
-                                                    <div className="w-full border-t border-gray-300"></div>
-                                                </div>
-                                                <div className="relative flex justify-center text-xs">
-                                                    <span className="px-2 bg-white text-gray-500">或</span>
-                                                </div>
-                                            </div>
-
-                                            {/* 方式2：手动输入 */}
-                                            <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 space-y-2">
-                                                <p className="text-xs font-bold text-gray-800 mb-2 text-center">方式2：手动输入</p>
-                                                <input
-                                                    type="text"
-                                                    value={tgUserId}
-                                                    onChange={(e) => setTgUserId(e.target.value)}
-                                                    placeholder="输入 Telegram ID"
-                                                    className="w-full px-4 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    value={tgUsername}
-                                                    onChange={(e) => setTgUsername(e.target.value)}
-                                                    placeholder="Telegram 用户名（可选）"
-                                                    className="w-full px-4 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                                                />
-                                                <button
-                                                    onClick={() => {
-                                                        if (tgUserId.trim()) {
-                                                            setIsTgLoggedIn(true);
-                                                            setTgError('');
-                                                        } else {
-                                                            setTgError('请输入 Telegram ID');
-                                                        }
-                                                    }}
-                                                    disabled={!tgUserId.trim()}
-                                                    className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                                >
-                                                    确认
-                                                </button>
-                                                <p className="text-xs text-gray-500 text-center">
-                                                    💡 如何获取 ID？搜索 <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">@userinfobot</a>，发送 /start
+                                                    💡 点击按钮自动获取您的 Telegram ID
                                                 </p>
                                             </div>
                                         </div>
