@@ -1868,7 +1868,7 @@ ${chartInfo}
                                             {/* Telegram 自动登录 */}
                                             <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
                                                 <TelegramLoginButton
-                                                    botUsername="astromoon_login_bot"
+                                                    botUsername="aaastromoonbot"
                                                     buttonSize="large"
                                                     cornerRadius={10}
                                                     requestAccess={true}
