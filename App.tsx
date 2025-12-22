@@ -296,9 +296,12 @@ const App: React.FC = () => {
                 占星财富分析 <br />
                 <span className="text-indigo-600">交易员专属星盘</span>
               </h2>
-              <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                结合<strong>西方占星学</strong>与<strong>金融交易心理学</strong>，
+              <p className="text-gray-600 text-lg leading-relaxed mb-4">
+                结合<strong>西方古典占星，金融占星与金融交易心理学</strong>，
                 为交易员提供专业的财富格局分析与行运K线图。
+              </p>
+              <p className="text-gray-700 text-base leading-relaxed mb-6 font-medium">
+                <strong>全网第一位财运指标发明人。——月亮牌手 | The Moon Dojo</strong>
               </p>
             </div>
 
