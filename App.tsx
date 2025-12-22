@@ -4,21 +4,46 @@ import LifeKLineChart from './components/LifeKLineChart';
 import AnalysisResult from './components/AnalysisResult';
 import ImportDataMode from './components/ImportDataMode';
 import Login from './components/Login';
+import ReportHistory from './components/ReportHistory';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
-import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, LogOut } from 'lucide-react';
+import { Report } from './services/api/types';
+import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, LogOut, History } from 'lucide-react';
 
 const App: React.FC = () => {
   const { currentUser, logout } = useAuth();
   const [result, setResult] = useState<LifeDestinyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
+  const [showHistory, setShowHistory] = useState(false);
 
   // 处理导入数据
   const handleDataImport = (data: LifeDestinyResult) => {
     setResult(data);
     setUserName('');
     setError(null);
+  };
+
+  // 处理选择历史报告
+  const handleSelectReport = (report: Report) => {
+    try {
+      console.log('📖 加载历史报告:', report.report_title);
+
+      // 解析报告内容
+      const reportContent = typeof report.full_report.content === 'string'
+        ? JSON.parse(report.full_report.content)
+        : report.full_report.content;
+
+      console.log('✅ 报告内容已解析:', reportContent);
+
+      // 设置结果数据
+      setResult(reportContent);
+      setUserName(report.profile_name || '');
+      setError(null);
+    } catch (err: any) {
+      console.error('❌ 加载报告失败:', err);
+      setError(`加载报告失败：${err.message}`);
+    }
   };
 
   // 导出为 JSON 文件
@@ -225,28 +250,36 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center">
       {/* Header */}
-      <header className="w-full bg-white border-b border-gray-200 py-6 sticky top-0 z-50 no-print">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-2 rounded-lg shadow-lg">
-              <Moon className="w-6 h-6" />
+      <header className="w-full bg-white border-b border-gray-200 py-3 sm:py-4 md:py-6 sticky top-0 z-50 no-print">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-1.5 sm:p-2 rounded-lg shadow-lg">
+              <Moon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-serif-sc font-bold text-gray-900 tracking-wide">Astro Moon</h1>
-              <p className="text-xs text-gray-500 uppercase tracking-widest">Astrology & Life Analysis</p>
+              <h1 className="text-base sm:text-xl md:text-2xl font-serif-sc font-bold text-gray-900 tracking-wide">Astro Moon</h1>
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide sm:tracking-widest">Astrology & Life Analysis</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+            <div className="text-xs sm:text-sm text-gray-600 hidden md:block max-w-[150px] lg:max-w-none truncate">
               {currentUser.email}
             </div>
             <button
+              onClick={() => setShowHistory(true)}
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+              title="历史报告"
+            >
+              <History className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">历史</span>
+            </button>
+            <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
               title="退出登录"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">退出</span>
+              <span className="hidden sm:inline text-sm">退出</span>
             </button>
           </div>
         </div>
@@ -397,6 +430,13 @@ const App: React.FC = () => {
           <p>&copy; {new Date().getFullYear()} Astro Moon | 仅供参考研究，投资需谨慎</p>
         </div>
       </footer>
+
+      {/* Report History Modal */}
+      <ReportHistory
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        onSelectReport={handleSelectReport}
+      />
     </div>
   );
 };

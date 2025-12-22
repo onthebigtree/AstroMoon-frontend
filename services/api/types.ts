@@ -100,6 +100,26 @@ export interface ExportResponse {
   exportCount: number;
 }
 
+// ==================== 生成限制相关类型 ====================
+
+export interface GenerationLimit {
+  success: boolean;
+  allowed: boolean;
+  remaining: number;
+  used: number;
+  limit: number;
+  resetAt: string;
+}
+
+export interface GenerationLimitError {
+  error: string;
+  message: string;
+  limit: number;
+  used: number;
+  remaining: number;
+  resetAt: string;
+}
+
 // ==================== 统计数据相关类型 ====================
 
 export interface UsageStats {

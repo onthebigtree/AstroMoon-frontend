@@ -7,6 +7,7 @@ import type {
   ReportResponse,
   ExportResponse,
   SuccessResponse,
+  GenerationLimit,
 } from './types';
 
 /**
@@ -37,6 +38,13 @@ export async function* streamReportGenerate(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'API 请求失败' }));
+
+    // 特殊处理 429 限流错误
+    if (response.status === 429) {
+      const errorMsg = errorData.message || errorData.error || '今日生成次数已用完';
+      throw new Error(errorMsg);
+    }
+
     throw new Error(errorData.error || errorData.message || 'AI 生成失败');
   }
 
@@ -137,4 +145,19 @@ export async function deleteReport(id: string): Promise<void> {
     },
     true
   );
+}
+
+/**
+ * 查询今日生成限制状态
+ * @returns 生成限制信息（是否允许、剩余次数、重置时间等）
+ */
+export async function checkGenerationLimit(): Promise<GenerationLimit> {
+  const response = await apiRequest<GenerationLimit>(
+    '/api/reports/limit',
+    {
+      method: 'GET',
+    },
+    true
+  );
+  return response;
 }
