@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Download, TrendingUp } from 'lucide-react';
+import { X, Download, TrendingUp, Share2, Twitter, Copy } from 'lucide-react';
 import { getWealthLevelInfo } from '../utils/wealthLevels';
 import html2canvas from 'html2canvas';
 
@@ -22,11 +22,10 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
 
   if (!isOpen || !levelInfo) return null;
 
-  // 下载为图片
-  const handleDownload = async () => {
-    if (!cardRef.current) return;
+  // 生成图片
+  const generateImage = async (): Promise<string | null> => {
+    if (!cardRef.current) return null;
 
-    setIsDownloading(true);
     try {
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: '#ffffff',
@@ -35,13 +34,103 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
         useCORS: true,
       });
 
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      console.error('生成图片失败:', error);
+      return null;
+    }
+  };
+
+  // 下载为图片
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const dataUrl = await generateImage();
+      if (!dataUrl) {
+        alert('下载失败，请重试');
+        return;
+      }
+
       const link = document.createElement('a');
       link.download = `财富量级-${levelInfo.name}-${new Date().getTime()}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       link.click();
     } catch (error) {
       console.error('下载图片失败:', error);
       alert('下载失败，请重试');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // 复制图片到剪贴板
+  const handleCopyImage = async () => {
+    setIsDownloading(true);
+    try {
+      const dataUrl = await generateImage();
+      if (!dataUrl) {
+        alert('复制失败，请重试');
+        return;
+      }
+
+      // 将 base64 转换为 blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+
+      // 复制到剪贴板
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob
+        })
+      ]);
+
+      alert('✅ 已复制到剪贴板！可以直接粘贴到社交媒体');
+    } catch (error) {
+      console.error('复制图片失败:', error);
+      alert('复制失败，请使用下载功能');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // 分享到 Twitter
+  const handleShareTwitter = () => {
+    const text = `我的财富量级潜力是 ${levelInfo.name} ${levelInfo.emoji}\n\n${levelInfo.assetRange}\n\n快来测试你的财富潜力！`;
+    const url = 'https://www.astromoon.xyz/';
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=AstroMoon,财富占星,交易员`;
+    window.open(twitterUrl, '_blank');
+  };
+
+  // 使用 Web Share API
+  const handleWebShare = async () => {
+    setIsDownloading(true);
+    try {
+      const dataUrl = await generateImage();
+      if (!dataUrl) {
+        alert('分享失败，请重试');
+        return;
+      }
+
+      // 将 base64 转换为 blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `财富量级-${levelInfo.name}.png`, { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: '我的财富量级潜力',
+          text: `我的财富量级潜力是 ${levelInfo.name} ${levelInfo.emoji}`,
+          files: [file],
+        });
+      } else {
+        // 降级方案：复制到剪贴板
+        await handleCopyImage();
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('分享失败:', error);
+        alert('分享失败，请使用下载或复制功能');
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -150,15 +239,50 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
         </div>
 
         {/* 操作按钮 */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
+        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 space-y-3">
+          {/* 主要分享按钮 */}
           <button
-            onClick={handleDownload}
+            onClick={handleWebShare}
             disabled={isDownloading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-medium shadow-sm"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg"
           >
-            <Download className="w-4 h-4" />
-            {isDownloading ? '生成中...' : '下载图片'}
+            <Share2 className="w-5 h-5" />
+            {isDownloading ? '生成中...' : '分享到社交媒体'}
           </button>
+
+          {/* 次要操作按钮组 */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={handleCopyImage}
+              disabled={isDownloading}
+              className="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all text-xs font-medium"
+            >
+              <Copy className="w-4 h-4" />
+              <span>复制图片</span>
+            </button>
+
+            <button
+              onClick={handleShareTwitter}
+              disabled={isDownloading}
+              className="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all text-xs font-medium"
+            >
+              <Twitter className="w-4 h-4" />
+              <span>推特</span>
+            </button>
+
+            <button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all text-xs font-medium"
+            >
+              <Download className="w-4 h-4" />
+              <span>下载</span>
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-500 text-center">
+            💡 点击"复制图片"后可直接粘贴到 Telegram、微信等应用
+          </p>
         </div>
       </div>
     </div>
