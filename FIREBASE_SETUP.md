@@ -57,20 +57,15 @@
 
 如果你部署到以下平台，需要添加相应域名：
 
-**Vercel:**
+**生产域名:**
+```
+app.astromoon.xyz
+```
+
+**其他平台示例:**
 ```
 your-app.vercel.app
-```
-
-**Netlify:**
-```
 your-app.netlify.app
-```
-
-**自定义域名:**
-```
-yourdomain.com
-www.yourdomain.com
 ```
 
 **添加步骤：**
@@ -93,8 +88,7 @@ www.yourdomain.com
 
 **示例：**
 - 本地开发：添加 `localhost`
-- Vercel 部署：添加 `your-app.vercel.app`
-- 自定义域名：添加 `example.com`
+- 生产环境：添加 `app.astromoon.xyz`
 
 #### 错误：Google 登录弹窗被阻止
 

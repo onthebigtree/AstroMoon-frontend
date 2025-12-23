@@ -8,7 +8,7 @@
 ### 1. 确认当前域名
 打开浏览器控制台（F12），在地址栏查看当前 URL。例如：
 - `http://localhost:5173` → 域名是 `localhost`
-- `https://your-app.vercel.app` → 域名是 `your-app.vercel.app`
+- `https://app.astromoon.xyz` → 域名是 `app.astromoon.xyz`
 
 ### 2. 访问 Firebase Console
 1. 打开 [Firebase Console](https://console.firebase.google.com/project/astromoon-f8837/authentication/settings)
@@ -21,8 +21,8 @@
 2. 输入你的域名（**不要包含** `http://` 或 `https://`）
    - ✅ 正确：`localhost`
    - ❌ 错误：`http://localhost`
-   - ✅ 正确：`your-app.vercel.app`
-   - ❌ 错误：`https://your-app.vercel.app`
+   - ✅ 正确：`app.astromoon.xyz`
+   - ❌ 错误：`https://app.astromoon.xyz`
 3. 点击"添加"
 
 ### 4. 刷新页面测试

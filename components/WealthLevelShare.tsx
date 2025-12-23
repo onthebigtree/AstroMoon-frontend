@@ -96,7 +96,7 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
   // 分享到 Twitter
   const handleShareTwitter = () => {
     const text = `我的财富量级潜力是 ${levelInfo.name} ${levelInfo.emoji}\n\n${levelInfo.assetRange}\n\n快来测试你的财富潜力！`;
-    const url = 'https://www.astromoon.xyz/';
+    const url = 'https://app.astromoon.xyz/';
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=AstroMoon,财富占星,交易员`;
     window.open(twitterUrl, '_blank');
   };
