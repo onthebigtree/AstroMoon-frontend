@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LifeDestinyResult } from '../types';
-import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X } from 'lucide-react';
+import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
 import { generateWithAPI } from '../services/apiService';
 import { streamReportGenerate, checkGenerationLimit } from '../services/api/reports';
@@ -170,16 +170,9 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
     // 验证弹窗相关状态
     const [showVerifyModal, setShowVerifyModal] = useState(false);
-    const [hasClickedFollow, setHasClickedFollow] = useState(false);
+    const [hasClickedTelegramFollow, setHasClickedTelegramFollow] = useState(false);
+    const [hasClickedTwitterFollow, setHasClickedTwitterFollow] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
-
-    // Telegram 验证相关状态（仅交易员模式）
-    const [tgUserId, setTgUserId] = useState('');
-    const [tgUsername, setTgUsername] = useState('');
-    const [isTgLoggedIn, setIsTgLoggedIn] = useState(false); // 是否已登录 Telegram
-    const [isTgBound, setIsTgBound] = useState(false);
-    const [isTgVerifying, setIsTgVerifying] = useState(false);
-    const [tgError, setTgError] = useState('');
 
     // 档案管理相关状态
     const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -862,103 +855,30 @@ ${chartInfo}
             // 如果检查失败，允许继续（避免影响用户体验）
         }
 
-        // 🔥 交易员模式：需要验证 Telegram 会员身份
-        if (mode === 'trader') {
-            // TODO: 从后端获取用户的 Telegram 绑定状态
-            // 暂时假设用户未绑定，需要在验证弹窗中处理
-            setIsTgBound(false);
-            setTgError('');
-        }
-
         setShowVerifyModal(true);
-        setHasClickedFollow(false);
+        setHasClickedTelegramFollow(false);
+        setHasClickedTwitterFollow(false);
         setIsVerifying(false);
-        setTgUserId('');
-        setTgUsername('');
-        setIsTgLoggedIn(false);
     };
 
-    // 点击"前往关注"按钮
-    const handleClickFollow = () => {
+    // 点击"关注 Telegram 频道"按钮
+    const handleClickTelegramFollow = () => {
         window.open('https://t.me/themoon_dojo', '_blank');
-        setHasClickedFollow(true);
+        setHasClickedTelegramFollow(true);
     };
 
-    // 处理 Telegram 登录成功（来自 Telegram Login Widget）
-    const handleTelegramLogin = (user: any) => {
-        console.log('🎉 Telegram 登录成功:', user);
-        setTgUserId(user.id.toString());
-        setTgUsername(user.username || `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`);
-        setIsTgLoggedIn(true);
-        setTgError('');
+    // 点击"关注 Twitter"按钮
+    const handleClickTwitterFollow = () => {
+        window.open('https://twitter.com/astromoon_xyz', '_blank');
+        setHasClickedTwitterFollow(true);
     };
 
-    // Telegram 绑定和验证
-    const handleTelegramBind = async () => {
-        if (!tgUserId.trim()) {
-            setTgError('请输入您的 Telegram ID');
-            return;
-        }
-
-        const tgId = parseInt(tgUserId.trim());
-        if (isNaN(tgId)) {
-            setTgError('Telegram ID 必须是数字');
-            return;
-        }
-
-        setIsTgVerifying(true);
-        setTgError('');
-
-        try {
-            // 1. 先检查用户是否在频道内
-            console.log('🔍 检查 Telegram 用户是否在频道内:', tgId);
-            const memberCheck = await checkTelegramMembership(tgId);
-
-            if (!memberCheck.isMember) {
-                setTgError('您不在频道内，请先加入 Telegram 频道');
-                setIsTgVerifying(false);
-                window.open('https://t.me/themoon_dojo', '_blank');
-                return;
-            }
-
-            // 2. 用户在频道内，执行绑定
-            console.log('✅ 用户在频道内，开始绑定...');
-            const bindResult = await bindTelegramAccount({
-                tg_user_id: tgId,
-                tg_username: tgUsername.trim() || memberCheck.user?.username || undefined,
-            });
-
-            console.log('✅ Telegram 账号绑定成功:', bindResult);
-            setIsTgBound(true);
-            setHasClickedFollow(true); // 标记已完成第一步
-
-        } catch (error: any) {
-            console.error('❌ Telegram 验证失败:', error);
-            if (error.message.includes('not in channel')) {
-                setTgError('您不在频道内，请先加入频道');
-                window.open('https://t.me/themoon_dojo', '_blank');
-            } else if (error.message.includes('already bound')) {
-                setTgError('该 Telegram 账号已被其他用户绑定');
-            } else {
-                setTgError(error.message || '验证失败，请稍后重试');
-            }
-        } finally {
-            setIsTgVerifying(false);
-        }
-    };
-
-    // 点击"验证"按钮
+    // 点击"验证并继续"按钮
     const handleVerify = async () => {
-        // 🔥 交易员模式：必须先绑定和验证 Telegram
-        if (mode === 'trader' && !isTgBound) {
-            setTgError('请先完成 Telegram 账号绑定');
-            return;
-        }
-
         setIsVerifying(true);
 
-        // 假加载 2 秒
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // 假加载 1 秒
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // 关闭弹窗并开始真正的 AI 生成
         setShowVerifyModal(false);
@@ -1839,203 +1759,86 @@ ${chartInfo}
                     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
                         <div className="text-center mb-6">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
-                                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-                                </svg>
+                                <Share2 className="w-8 h-8 text-white" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                                {mode === 'trader' ? '验证会员身份' : '免费获取完整分析'}
+                                免费获取完整分析
                             </h3>
                             <p className="text-gray-600 text-sm">
-                                {mode === 'trader'
-                                    ? '交易员模式需要验证 Telegram 频道会员身份'
-                                    : '请先关注我们的 Telegram 频道，获取更多占星知识与更新通知'
-                                }
+                                关注我们的社交媒体，获取更多占星知识与更新通知
                             </p>
                         </div>
 
-                        <div className="space-y-4">
-                            {/* 🔥 交易员模式：Telegram 登录验证 */}
-                            {mode === 'trader' ? (
-                                <>
-                                    {/* 步骤①：前往加入频道 */}
-                                    <button
-                                        onClick={handleClickFollow}
-                                        disabled={isTgBound}
-                                        className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-                                            hasClickedFollow || isTgBound
-                                                ? 'bg-green-100 text-green-700 border-2 border-green-500'
-                                                : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg'
-                                        }`}
-                                    >
-                                        {hasClickedFollow || isTgBound ? (
-                                            <>
-                                                <CheckCircle className="w-5 h-5" />
-                                                <span>✅ 已前往加入频道</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-                                                </svg>
-                                                <span>① 前往加入频道</span>
-                                            </>
-                                        )}
-                                    </button>
+                        <div className="space-y-3">
+                            {/* Telegram 关注按钮 */}
+                            <button
+                                onClick={handleClickTelegramFollow}
+                                className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                                    hasClickedTelegramFollow
+                                        ? 'bg-green-100 text-green-700 border-2 border-green-500'
+                                        : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg'
+                                }`}
+                            >
+                                {hasClickedTelegramFollow ? (
+                                    <>
+                                        <CheckCircle className="w-5 h-5" />
+                                        <span>✅ 已关注 Telegram</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                                        </svg>
+                                        <span>① 关注 Telegram 频道</span>
+                                    </>
+                                )}
+                            </button>
 
-                                    {/* 步骤②：使用 Telegram 登录验证账号 */}
-                                    {hasClickedFollow && !isTgLoggedIn && (
-                                        <div className="space-y-3">
-                                            <label className="block text-sm font-bold text-gray-700 text-center">
-                                                ② 使用 Telegram 登录
-                                            </label>
+                            {/* Twitter 关注按钮 */}
+                            <button
+                                onClick={handleClickTwitterFollow}
+                                className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                                    hasClickedTwitterFollow
+                                        ? 'bg-green-100 text-green-700 border-2 border-green-500'
+                                        : 'bg-gradient-to-r from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 text-white shadow-lg'
+                                }`}
+                            >
+                                {hasClickedTwitterFollow ? (
+                                    <>
+                                        <CheckCircle className="w-5 h-5" />
+                                        <span>✅ 已关注 Twitter</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Twitter className="w-5 h-5" />
+                                        <span>② 关注 Twitter</span>
+                                    </>
+                                )}
+                            </button>
 
-                                            {/* Telegram 自动登录 */}
-                                            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                                                <TelegramLoginButton
-                                                    botUsername="aaastromoonbot"
-                                                    buttonSize="large"
-                                                    cornerRadius={10}
-                                                    requestAccess={false}
-                                                    dataOnauth={handleTelegramLogin}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Telegram 账号已确认提示 */}
-                                    {isTgLoggedIn && (
-                                        <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4 space-y-3">
-                                            <div className="flex items-center gap-2">
-                                                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                                <span className="text-green-800 font-bold">✅ Telegram 账号已确认！</span>
-                                            </div>
-                                            <div className="text-sm text-gray-700 pl-7">
-                                                {tgUsername && <p>用户名：{tgUsername}</p>}
-                                                <p>ID：{tgUserId}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => window.open('https://t.me/aaastromoonbot?start=enable_notifications', '_blank')}
-                                                className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                                            >
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-                                                </svg>
-                                                点击开启 Bot 推送通知
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* 步骤③：验证并绑定 */}
-                                    {isTgLoggedIn && hasClickedFollow && !isTgBound && (
-                                        <button
-                                            onClick={handleTelegramBind}
-                                            disabled={isTgVerifying}
-                                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                        >
-                                            {isTgVerifying ? (
-                                                <>
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                    <span>验证中...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CheckCircle className="w-5 h-5" />
-                                                    <span>③ 验证并绑定</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    )}
-
-                                    {/* 绑定成功提示 */}
-                                    {isTgBound && (
-                                        <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4 flex items-center gap-2">
-                                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                            <span className="text-green-800 font-bold">✅ Telegram 账号验证成功！</span>
-                                        </div>
-                                    )}
-
-                                    {/* 错误提示 */}
-                                    {tgError && (
-                                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                                            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                                            <p className="text-sm text-red-700">{tgError}</p>
-                                        </div>
-                                    )}
-
-                                    {/* 继续生成按钮 */}
-                                    {isTgBound && (
-                                        <button
-                                            onClick={handleVerify}
-                                            disabled={isVerifying}
-                                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                        >
-                                            {isVerifying ? (
-                                                <>
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                    <span>生成中...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Zap className="w-5 h-5" />
-                                                    <span>④ 开始生成报告</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    )}
-                                </>
-                            ) : (
-                                /* 普通模式：保持原有流程 */
-                                <>
-                                    {/* 前往关注按钮 */}
-                                    <button
-                                        onClick={handleClickFollow}
-                                        className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-                                            hasClickedFollow
-                                                ? 'bg-green-100 text-green-700 border-2 border-green-500'
-                                                : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg'
-                                        }`}
-                                    >
-                                        {hasClickedFollow ? (
-                                            <>
-                                                <CheckCircle className="w-5 h-5" />
-                                                <span>已前往关注</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-                                                </svg>
-                                                <span>前往关注频道</span>
-                                            </>
-                                        )}
-                                    </button>
-
-                                    {/* 验证按钮 */}
-                                    <button
-                                        onClick={handleVerify}
-                                        disabled={!hasClickedFollow || isVerifying}
-                                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {isVerifying ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                                <span>验证中...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <CheckCircle className="w-5 h-5" />
-                                                <span>验证并继续</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </>
-                            )}
+                            {/* 验证并继续按钮 */}
+                            <button
+                                onClick={handleVerify}
+                                disabled={!hasClickedTelegramFollow || !hasClickedTwitterFollow || isVerifying}
+                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {isVerifying ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>生成中...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Zap className="w-5 h-5" />
+                                        <span>开始生成报告</span>
+                                    </>
+                                )}
+                            </button>
 
                             {/* 取消按钮 */}
                             <button
                                 onClick={() => setShowVerifyModal(false)}
-                                disabled={isVerifying || isTgVerifying}
+                                disabled={isVerifying}
                                 className="w-full text-gray-500 hover:text-gray-700 font-medium py-2 transition-all disabled:opacity-50"
                             >
                                 取消
@@ -2044,7 +1847,7 @@ ${chartInfo}
 
                         <div className="mt-6 pt-6 border-t border-gray-200">
                             <p className="text-xs text-gray-500 text-center">
-                                💡 {mode === 'trader' ? '交易员模式专享功能，需验证会员身份' : '关注频道后可获取最新占星分析技巧和行运提醒'}
+                                💡 关注后可获取最新占星分析技巧和行运提醒
                             </p>
                         </div>
                     </div>
