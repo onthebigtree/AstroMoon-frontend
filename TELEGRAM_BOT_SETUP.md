@@ -20,7 +20,7 @@
 2. 选择你刚创建的 Bot
 3. 输入你的前端域名，例如：
    - 开发环境：`http://localhost:5173`
-   - 生产环境：`https://yourdomain.com`
+   - 生产环境：`https://app.astromoon.xyz`
 
 **注意：** 每个 Bot 只能设置一个域名。如果需要支持多个域名（如开发和生产），需要创建多个 Bot。
 
@@ -86,7 +86,7 @@ VITE_TELEGRAM_BOT_USERNAME=astromoon_login_bot_prod
    - 域名：`http://localhost:5173`
 
 2. **生产 Bot**：`astromoon_login_bot`
-   - 域名：`https://yourdomain.com`
+   - 域名：`https://app.astromoon.xyz`
 
 然后在代码中根据环境动态选择：
 
