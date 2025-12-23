@@ -187,3 +187,15 @@ export interface SuccessResponse {
   success: boolean;
   message: string;
 }
+
+// ==================== 队列相关类型 ====================
+
+export interface QueueInfo {
+  requestId: number;
+  waitTime: number;
+  processingTime: number;
+  totalTime: number;
+  queuePosition: number;
+  activeCount: number;
+  queueLength: number;
+}

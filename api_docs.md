@@ -58,6 +58,18 @@ if (user) {
   "message": "AI API 代理服务运行中",
   "activeRequests": 2,
   "totalRequests": 1523,
+  "queue": {
+    "activeCount": 3,
+    "queueLength": 2,
+    "maxConcurrent": 5,
+    "totalInProgress": 5,
+    "stats": {
+      "totalProcessed": 150,
+      "totalQueued": 155,
+      "totalRejected": 0
+    },
+    "availableSlots": 2
+  },
   "uptime": 86400.5,
   "memory": {
     "rss": 65536000,
@@ -97,6 +109,8 @@ Authorization: Bearer YOUR_TOKEN (可选)
 
 **响应示例**:
 ```
+data: {"type":"queue_info","queueInfo":{"requestId":123,"waitTime":1500,"processingTime":0,"totalTime":1500,"queuePosition":3,"activeCount":5,"queueLength":2}}
+
 data: {"id":"chatcmpl-xxx","object":"chat.completion.chunk","created":1703001234,"model":"gemini-3-pro-high","choices":[{"delta":{"content":"根据"},"index":0}]}
 
 data: {"id":"chatcmpl-xxx","object":"chat.completion.chunk","created":1703001234,"model":"gemini-3-pro-high","choices":[{"delta":{"content":"您的星盘..."},"index":0}]}
@@ -104,9 +118,22 @@ data: {"id":"chatcmpl-xxx","object":"chat.completion.chunk","created":1703001234
 data: [DONE]
 ```
 
-**前端示例 - Fetch API**:
+**新增：队列信息事件**
+
+流式响应的第一个事件是队列信息，包含：
+- `type`: "queue_info" - 事件类型标识
+- `queueInfo`: 队列详情
+  - `requestId`: 请求唯一ID
+  - `waitTime`: 等待时间（毫秒）
+  - `processingTime`: 处理时间（毫秒）
+  - `totalTime`: 总时间（毫秒）
+  - `queuePosition`: 在队列中的位置（1表示立即处理）
+  - `activeCount`: 当前活跃请求数
+  - `queueLength`: 等待队列长度
+
+**前端示例 - Fetch API（带队列信息处理）**:
 ```javascript
-async function streamAIGenerate(systemPrompt, userPrompt) {
+async function streamAIGenerate(systemPrompt, userPrompt, onQueueInfo, onToken) {
   const response = await fetch('https://astromoon-backend-production.up.railway.app/api/generate', {
     method: 'POST',
     headers: {
@@ -130,10 +157,23 @@ async function streamAIGenerate(systemPrompt, userPrompt) {
       if (line.startsWith('data: ') && !line.includes('[DONE]')) {
         try {
           const json = JSON.parse(line.slice(6));
-          const content = json.choices?.[0]?.delta?.content || '';
-          if (content) {
-            // 实时显示内容
-            console.log(content);
+
+          // 处理队列信息事件
+          if (json.type === 'queue_info') {
+            console.log('队列信息:', json.queueInfo);
+            if (onQueueInfo) {
+              onQueueInfo(json.queueInfo);
+            }
+          }
+          // 处理AI生成内容
+          else {
+            const content = json.choices?.[0]?.delta?.content || '';
+            if (content) {
+              console.log(content);
+              if (onToken) {
+                onToken(content);
+              }
+            }
           }
         } catch (e) {
           // 忽略解析错误
@@ -142,11 +182,123 @@ async function streamAIGenerate(systemPrompt, userPrompt) {
     }
   }
 }
+
+// 使用示例
+streamAIGenerate(
+  '你是专业占星师',
+  '请分析星盘...',
+  (queueInfo) => {
+    // 显示队列状态
+    if (queueInfo.queuePosition > 1) {
+      console.log(`排队中，当前第 ${queueInfo.queuePosition} 位`);
+    } else {
+      console.log('正在处理您的请求...');
+    }
+  },
+  (token) => {
+    // 实时显示生成的内容
+    appendToResult(token);
+  }
+);
 ```
 
-**前端示例 - EventSource** (不推荐，因为不支持 POST):
-```javascript
-// 注意：EventSource 只支持 GET 请求，这里需要使用 Fetch API
+#### 1.4 队列状态查询
+
+**GET** `/api/queue/status`
+
+实时查询 AI 请求队列的状态。
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "activeCount": 3,
+  "queueLength": 2,
+  "maxConcurrent": 5,
+  "totalInProgress": 5,
+  "stats": {
+    "totalProcessed": 150,
+    "totalQueued": 155,
+    "totalRejected": 0
+  },
+  "availableSlots": 2
+}
+```
+
+**字段说明**:
+- `activeCount`: 当前正在处理的请求数
+- `queueLength`: 等待队列中的请求数
+- `maxConcurrent`: 最大并发处理数（默认5）
+- `totalInProgress`: 总计进行中的请求（活跃+等待）
+- `stats.totalProcessed`: 历史处理总数
+- `stats.totalQueued`: 历史入队总数
+- `stats.totalRejected`: 失败总数
+- `availableSlots`: 当前可用处理槽位
+
+**TypeScript 示例**:
+```typescript
+interface QueueStatus {
+  success: boolean;
+  activeCount: number;
+  queueLength: number;
+  maxConcurrent: number;
+  totalInProgress: number;
+  stats: {
+    totalProcessed: number;
+    totalQueued: number;
+    totalRejected: number;
+  };
+  availableSlots: number;
+}
+
+async function checkQueueStatus(): Promise<QueueStatus> {
+  const response = await fetch(
+    'https://astromoon-backend-production.up.railway.app/api/queue/status'
+  );
+  return response.json();
+}
+
+// 使用示例：在发起生成请求前检查队列状态
+const queueStatus = await checkQueueStatus();
+
+if (queueStatus.availableSlots > 0) {
+  console.log('可以立即处理');
+} else {
+  console.log(`需要排队，前面还有 ${queueStatus.queueLength} 个请求`);
+}
+```
+
+**前端UI建议**:
+```typescript
+function QueueStatusIndicator() {
+  const [status, setStatus] = useState<QueueStatus | null>(null);
+
+  useEffect(() => {
+    // 定期刷新队列状态
+    const interval = setInterval(async () => {
+      const queueStatus = await checkQueueStatus();
+      setStatus(queueStatus);
+    }, 5000); // 每5秒刷新一次
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!status) return null;
+
+  return (
+    <div className="queue-status">
+      <div className="status-bar">
+        <span>活跃请求: {status.activeCount}/{status.maxConcurrent}</span>
+        <span>等待队列: {status.queueLength}</span>
+      </div>
+      {status.availableSlots === 0 && (
+        <p className="warning">
+          ⏳ 当前请求较多，您的请求可能需要排队
+        </p>
+      )}
+    </div>
+  );
+}
 ```
 
 ---
@@ -401,11 +553,22 @@ Authorization: Bearer YOUR_FIREBASE_ID_TOKEN
 **响应格式**: `text/event-stream` (与 `/api/generate` 相同)
 
 **特点**:
-- 流式返回 AI 生成内容
-- 自动保存完整报告到数据库
-- 记录 token 使用量和生成时长
-- 更新用户活动记录
+- 🔄 **队列管理**：自动排队，最多5个并发
+- ⏱️ **队列信息**：返回排队位置和等待时间
+- 📝 流式返回 AI 生成内容
+- 💾 自动保存完整报告到数据库
+- 📊 记录 token 使用量和生成时长
+- 📈 更新用户活动记录
 - ⚠️ **每日生成限制：默认5次/天**
+
+**响应示例**（与 `/api/generate` 相同）:
+```
+data: {"type":"queue_info","queueInfo":{"requestId":123,"waitTime":1500,"queuePosition":3,"activeCount":5,"queueLength":2}}
+
+data: {"id":"chatcmpl-xxx","object":"chat.completion.chunk",...}
+
+data: [DONE]
+```
 
 **限流错误响应** (HTTP 429):
 ```json
@@ -956,10 +1119,23 @@ import { getAuth } from 'firebase/auth';
 
 const BASE_URL = 'https://astromoon-backend-production.up.railway.app';
 
+export interface QueueInfo {
+  requestId: number;
+  waitTime: number;
+  processingTime: number;
+  totalTime: number;
+  queuePosition: number;
+  activeCount: number;
+  queueLength: number;
+}
+
 export async function* streamAIGenerate(
   systemPrompt: string,
   userPrompt: string,
-  onToken?: (token: string) => void
+  options?: {
+    onToken?: (token: string) => void;
+    onQueueInfo?: (queueInfo: QueueInfo) => void;
+  }
 ): AsyncGenerator<string, void, unknown> {
   const auth = getAuth();
   const user = auth.currentUser;
@@ -1000,10 +1176,18 @@ export async function* streamAIGenerate(
         if (line.startsWith('data: ') && !line.includes('[DONE]')) {
           try {
             const json = JSON.parse(line.slice(6));
-            const content = json.choices?.[0]?.delta?.content || '';
-            if (content) {
-              onToken?.(content);
-              yield content;
+
+            // 处理队列信息事件
+            if (json.type === 'queue_info') {
+              options?.onQueueInfo?.(json.queueInfo);
+            }
+            // 处理AI生成内容
+            else {
+              const content = json.choices?.[0]?.delta?.content || '';
+              if (content) {
+                options?.onToken?.(content);
+                yield content;
+              }
             }
           } catch (e) {
             // 忽略解析错误
@@ -1017,26 +1201,37 @@ export async function* streamAIGenerate(
 }
 ```
 
-#### 4. React 组件使用示例
+#### 4. React 组件使用示例（带队列显示）
 
 ```typescript
 // components/AIGenerateDialog.tsx
 import { useState } from 'react';
-import { streamAIGenerate } from '../api/generate';
+import { streamAIGenerate, QueueInfo } from '../api/generate';
 
 export function AIGenerateDialog() {
   const [prompt, setPrompt] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const [queueInfo, setQueueInfo] = useState<QueueInfo | null>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
     setResult('');
+    setQueueInfo(null);
 
     try {
       const systemPrompt = '你是一位专业的占星师...';
 
-      for await (const token of streamAIGenerate(systemPrompt, prompt)) {
+      for await (const token of streamAIGenerate(systemPrompt, prompt, {
+        onQueueInfo: (info) => {
+          setQueueInfo(info);
+          console.log('队列信息:', info);
+        },
+        onToken: (token) => {
+          // 可以在这里处理每个 token
+          console.log('收到新内容:', token);
+        }
+      })) {
         setResult(prev => prev + token);
       }
     } catch (error) {
@@ -1044,6 +1239,7 @@ export function AIGenerateDialog() {
       alert('生成失败，请重试');
     } finally {
       setLoading(false);
+      setQueueInfo(null);
     }
   };
 
@@ -1060,10 +1256,32 @@ export function AIGenerateDialog() {
         {loading ? '生成中...' : '生成'}
       </button>
 
+      {/* 队列状态显示 */}
+      {queueInfo && (
+        <div className="queue-info" style={{
+          padding: '10px',
+          background: '#f0f0f0',
+          borderRadius: '5px',
+          margin: '10px 0'
+        }}>
+          {queueInfo.queuePosition > 1 ? (
+            <>
+              <span>⏳ 排队中，您在第 {queueInfo.queuePosition} 位</span>
+              <span style={{ marginLeft: '10px', fontSize: '0.9em', color: '#666' }}>
+                (活跃: {queueInfo.activeCount}, 等待: {queueInfo.queueLength})
+              </span>
+            </>
+          ) : (
+            <span>🚀 正在处理您的请求...</span>
+          )}
+        </div>
+      )}
+
+      {/* AI生成结果 */}
       {result && (
         <div className="result">
           <h3>AI 解读结果：</h3>
-          <p>{result}</p>
+          <p style={{ whiteSpace: 'pre-wrap' }}>{result}</p>
         </div>
       )}
     </div>
@@ -1774,11 +1992,21 @@ Railway Dashboard → 你的项目 → Deployments → View Logs
 
 ---
 
-**文档版本**: 1.1
-**最后更新**: 2024-12-22
+**文档版本**: 1.2
+**最后更新**: 2024-12-23
 **生产环境**: https://astromoon-backend-production.up.railway.app
 
 ## 更新日志
+
+**v1.2 (2024-12-23)**
+- ✅ 新增 AI 请求队列系统
+- ✅ 添加 `/api/queue/status` 队列状态查询接口
+- ✅ 更新 `/health` 接口返回队列信息
+- ✅ 更新 `/api/generate` 和 `/api/reports/generate` 响应格式
+- ✅ 新增 `queue_info` 事件类型，返回排队位置信息
+- ✅ 提供完整的队列处理前端示例（TypeScript + React）
+- ✅ 最大并发限制：5 个请求
+- ✅ 自动排队管理，FIFO 处理顺序
 
 **v1.1 (2024-12-22)**
 - ✅ 新增第5章：Telegram 频道成员管理

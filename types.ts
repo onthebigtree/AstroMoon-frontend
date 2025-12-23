@@ -103,6 +103,10 @@ export interface AnalysisData {
   sexualCharm?: string;                // 性魅力与吸引力分析
   sexualCharmScore?: number;           // 0-100
 
+  favorableDirectionsTitle?: string;   // 维度标题
+  favorableDirections?: string;        // 适宜发展方位分析
+  favorableDirectionsScore?: number;   // 0-100
+
   // 关键年份与周期
   keyYears?: string;              // 关键财富年份列表
   peakPeriods?: string;           // 潜在高速盈利期

@@ -114,7 +114,49 @@ const App: React.FC = () => {
   };
 
   const handlePrint = () => {
+    // 判断报告类型：如果有 traderVitality 字段，则为交易员报告
+    const isTraderReport = result?.analysis?.traderVitality ? true : false;
+    const reportType = isTraderReport ? '交易员财富报告' : '综合人生报告';
+
+    // 设置文档标题为：姓名+报告类型
+    const originalTitle = document.title;
+    const pdfFileName = `${userName || '占星'}${reportType}`;
+    document.title = pdfFileName;
+
+    // 打印
     window.print();
+
+    // 恢复原标题
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
+  const handleShare = () => {
+    // 判断报告类型
+    const isTraderReport = result?.analysis?.traderVitality ? true : false;
+    const reportType = isTraderReport ? '交易员财富报告' : '综合人生报告';
+    const shareText = `我刚完成了 ${userName ? userName + '的' : ''}${reportType}分析！快来看看你的星盘吧 🌙✨`;
+    const shareUrl = window.location.href;
+
+    // 尝试使用 Web Share API
+    if (navigator.share) {
+      navigator.share({
+        title: `${userName || ''}的 Astro Moon 占星报告`,
+        text: shareText,
+        url: shareUrl,
+      }).catch((error) => {
+        console.log('分享取消:', error);
+      });
+    } else {
+      // 降级方案：复制链接到剪贴板
+      const textToCopy = `${shareText}\n${shareUrl}`;
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        alert('链接已复制到剪贴板！\n\n' + textToCopy);
+      }).catch(() => {
+        alert('分享链接：\n\n' + textToCopy);
+      });
+    }
   };
 
   const handleSaveHtml = () => {
@@ -351,13 +393,6 @@ const App: React.FC = () => {
 
               <div className="flex flex-wrap gap-3 no-print">
                 <button
-                  onClick={handleExportJson}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white border border-emerald-600 rounded-lg hover:bg-emerald-700 transition-all font-medium text-sm shadow-sm"
-                >
-                  <FileDown className="w-4 h-4" />
-                  导出JSON
-                </button>
-                <button
                   onClick={handlePrint}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
                 >
@@ -365,11 +400,11 @@ const App: React.FC = () => {
                   保存PDF
                 </button>
                 <button
-                  onClick={handleSaveHtml}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
+                  onClick={handleShare}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white border border-purple-600 rounded-lg hover:bg-purple-700 transition-all font-medium text-sm shadow-sm"
                 >
-                  <Download className="w-4 h-4" />
-                  保存网页
+                  <TrendingUp className="w-4 h-4" />
+                  分享报告
                 </button>
                 <button
                   onClick={() => setResult(null)}
@@ -379,19 +414,6 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
-
-            {/* 财富量级潜力按钮 */}
-            {result.analysis.wealthLevel && (
-              <div className="flex justify-center no-print">
-                <button
-                  onClick={() => setShowWealthShare(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  <TrendingUp className="w-5 h-5" />
-                  一键生成我的财富量级潜力
-                </button>
-              </div>
-            )}
 
             {/* The Chart */}
             <section className="space-y-4 break-inside-avoid">
@@ -459,6 +481,19 @@ const App: React.FC = () => {
                 <span>生成时间：{new Date().toLocaleString()}</span>
               </div>
             </div>
+
+            {/* 财富量级潜力按钮 - 放在页面最下方 */}
+            {result.analysis.wealthLevel && (
+              <div className="flex justify-center no-print mt-8">
+                <button
+                  onClick={() => setShowWealthShare(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <TrendingUp className="w-5 h-5" />
+                  一键生成我的财富量级潜力
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

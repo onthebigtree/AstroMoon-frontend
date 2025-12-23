@@ -14,11 +14,14 @@ import type {
  * 生成 AI 报告（流式）
  * 注意：这是一个 AsyncGenerator，用于流式接收生成内容
  * @param request 报告生成请求
- * @param onToken 每个 token 的回调函数（可选）
+ * @param options 选项对象，包含回调函数
  */
 export async function* streamReportGenerate(
   request: GenerateReportRequest,
-  onToken?: (token: string) => void
+  options?: {
+    onToken?: (token: string) => void;
+    onQueueInfo?: (queueInfo: import('./types').QueueInfo) => void;
+  }
 ): AsyncGenerator<string, void, unknown> {
   const token = await getAuthToken();
   if (!token) {
@@ -65,10 +68,18 @@ export async function* streamReportGenerate(
         if (line.startsWith('data: ') && !line.includes('[DONE]')) {
           try {
             const json = JSON.parse(line.slice(6));
-            const content = json.choices?.[0]?.delta?.content || '';
-            if (content) {
-              onToken?.(content);
-              yield content;
+
+            // 处理队列信息事件
+            if (json.type === 'queue_info') {
+              options?.onQueueInfo?.(json.queueInfo);
+            }
+            // 处理AI生成内容
+            else {
+              const content = json.choices?.[0]?.delta?.content || '';
+              if (content) {
+                options?.onToken?.(content);
+                yield content;
+              }
             }
           } catch (e) {
             // 忽略解析错误
