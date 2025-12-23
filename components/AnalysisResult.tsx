@@ -100,6 +100,9 @@ const Card = ({ title, icon: Icon, content, score, colorClass, extraBadges }: an
 };
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
+  // 检测报告模式：如果有交易员特定字段，则为交易员模式
+  const isTraderMode = !!analysis.traderVitality;
+
   return (
     <div className="w-full space-y-8 animate-fade-in-up">
       {/* Birth Chart Info */}
@@ -112,12 +115,26 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         </div>
       )}
 
+      {/* Bazi Info (for legacy reports) */}
+      {analysis.bazi && (
+        <div className="flex justify-center bg-gradient-to-r from-amber-900 via-orange-900 to-amber-900 text-amber-50 p-6 rounded-xl shadow-lg">
+          <div className="text-center">
+            <div className="text-xs text-gray-300 mb-2 uppercase tracking-wider">八字 · Bazi</div>
+            <div className="text-lg md:text-xl font-serif-sc font-medium tracking-wide space-x-4">
+              {analysis.bazi.map((pillar, idx) => (
+                <span key={idx} className="inline-block">{pillar}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary with Score */}
       <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-xl border border-indigo-100 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <h3 className="flex items-center gap-2 font-serif-sc font-bold text-xl text-indigo-900">
             <ScrollText className="w-5 h-5" />
-            交易员财富格局总评
+            {isTraderMode ? '交易员财富格局总评' : '命理格局总评'}
           </h3>
           <div className="w-full md:w-1/3">
             <ScoreBar score={analysis.summaryScore} />
@@ -129,75 +146,176 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
       {/* Grid for categorical analysis with Scores */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        {/* Core Analysis Cards - 标题根据模式动态显示 */}
-        <Card
-          title={analysis.traderVitalityTitle || "交易生命力与抗压指数"}
-          icon={Zap}
-          content={analysis.traderVitality}
-          score={analysis.traderVitalityScore}
-          colorClass="text-orange-600"
-        />
+        {/* 交易员模式 */}
+        {isTraderMode ? (
+          <>
+            <Card
+              title={analysis.traderVitalityTitle || "交易生命力与抗压指数"}
+              icon={Zap}
+              content={analysis.traderVitality}
+              score={analysis.traderVitalityScore}
+              colorClass="text-orange-600"
+            />
 
-        <Card
-          title={analysis.wealthPotentialTitle || "财富量级与来源结构"}
-          icon={DollarSign}
-          content={analysis.wealthPotential}
-          score={analysis.wealthPotentialScore}
-          colorClass="text-amber-600"
-        />
+            <Card
+              title={analysis.wealthPotentialTitle || "财富量级与来源结构"}
+              icon={DollarSign}
+              content={analysis.wealthPotential}
+              score={analysis.wealthPotentialScore}
+              colorClass="text-amber-600"
+            />
 
-        <Card
-          title={analysis.fortuneLuckTitle || "运气与天选财富"}
-          icon={Sparkles}
-          content={analysis.fortuneLuck}
-          score={analysis.fortuneLuckScore}
-          colorClass="text-yellow-600"
-        />
+            <Card
+              title={analysis.fortuneLuckTitle || "运气与天选财富"}
+              icon={Sparkles}
+              content={analysis.fortuneLuck}
+              score={analysis.fortuneLuckScore}
+              colorClass="text-yellow-600"
+            />
 
-        <Card
-          title={analysis.leverageRiskTitle || "杠杆与风险管理能力"}
-          icon={Shield}
-          content={analysis.leverageRisk}
-          score={analysis.leverageRiskScore}
-          colorClass="text-red-600"
-        />
+            <Card
+              title={analysis.leverageRiskTitle || "杠杆与风险管理能力"}
+              icon={Shield}
+              content={analysis.leverageRisk}
+              score={analysis.leverageRiskScore}
+              colorClass="text-red-600"
+            />
 
-        <Card
-          title={analysis.platformTeamTitle || "平台与团队红利"}
-          icon={Users}
-          content={analysis.platformTeam}
-          score={analysis.platformTeamScore}
-          colorClass="text-purple-600"
-        />
+            <Card
+              title={analysis.platformTeamTitle || "平台与团队红利"}
+              icon={Users}
+              content={analysis.platformTeam}
+              score={analysis.platformTeamScore}
+              colorClass="text-purple-600"
+            />
 
-        <Card
-          title={analysis.tradingStyleTitle || "适合的交易风格与策略"}
-          icon={Target}
-          content={analysis.tradingStyle}
-          score={analysis.tradingStyleScore}
-          colorClass="text-indigo-600"
-        />
+            <Card
+              title={analysis.tradingStyleTitle || "适合的交易风格与策略"}
+              icon={Target}
+              content={analysis.tradingStyle}
+              score={analysis.tradingStyleScore}
+              colorClass="text-indigo-600"
+            />
 
-        {/* 新增维度：亲密能量 */}
-        {analysis.intimacyEnergy && (
-          <Card
-            title={analysis.intimacyEnergyTitle || "亲密能量与深度连接能力"}
-            icon={Heart}
-            content={analysis.intimacyEnergy}
-            score={analysis.intimacyEnergyScore}
-            colorClass="text-pink-600"
-          />
-        )}
+            {/* 新增维度：亲密能量 */}
+            {analysis.intimacyEnergy && (
+              <Card
+                title={analysis.intimacyEnergyTitle || "亲密能量与深度连接能力"}
+                icon={Heart}
+                content={analysis.intimacyEnergy}
+                score={analysis.intimacyEnergyScore}
+                colorClass="text-pink-600"
+              />
+            )}
 
-        {/* 新增维度：性魅力 */}
-        {analysis.sexualCharm && (
-          <Card
-            title={analysis.sexualCharmTitle || "性魅力与吸引力"}
-            icon={Flame}
-            content={analysis.sexualCharm}
-            score={analysis.sexualCharmScore}
-            colorClass="text-rose-600"
-          />
+            {/* 新增维度：性魅力 */}
+            {analysis.sexualCharm && (
+              <Card
+                title={analysis.sexualCharmTitle || "性魅力与吸引力"}
+                icon={Flame}
+                content={analysis.sexualCharm}
+                score={analysis.sexualCharmScore}
+                colorClass="text-rose-600"
+              />
+            )}
+          </>
+        ) : (
+          /* 普通人生模式 */
+          <>
+            {analysis.personality && (
+              <Card
+                title="性格与天赋"
+                icon={Star}
+                content={analysis.personality}
+                score={analysis.personalityScore}
+                colorClass="text-purple-600"
+              />
+            )}
+
+            {analysis.industry && (
+              <Card
+                title="事业与职业方向"
+                icon={Target}
+                content={analysis.industry}
+                score={analysis.industryScore}
+                colorClass="text-indigo-600"
+              />
+            )}
+
+            {analysis.wealth && (
+              <Card
+                title="财运"
+                icon={DollarSign}
+                content={analysis.wealth}
+                score={analysis.wealthScore}
+                colorClass="text-amber-600"
+              />
+            )}
+
+            {analysis.marriage && (
+              <Card
+                title="婚姻感情"
+                icon={Heart}
+                content={analysis.marriage}
+                score={analysis.marriageScore}
+                colorClass="text-pink-600"
+              />
+            )}
+
+            {analysis.health && (
+              <Card
+                title="健康"
+                icon={Shield}
+                content={analysis.health}
+                score={analysis.healthScore}
+                colorClass="text-green-600"
+              />
+            )}
+
+            {analysis.family && (
+              <Card
+                title="家庭与子女"
+                icon={Users}
+                content={analysis.family}
+                score={analysis.familyScore}
+                colorClass="text-blue-600"
+              />
+            )}
+
+            {analysis.fengShui && (
+              <Card
+                title="风水与环境"
+                icon={Sparkles}
+                content={analysis.fengShui}
+                score={analysis.fengShuiScore}
+                colorClass="text-teal-600"
+              />
+            )}
+
+            {analysis.crypto && (
+              <Card
+                title="加密货币投资建议"
+                icon={TrendingUp}
+                content={analysis.crypto}
+                score={analysis.cryptoScore}
+                colorClass="text-orange-600"
+                extraBadges={
+                  <>
+                    {analysis.cryptoYear && (
+                      <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded font-bold">
+                        关键年份：{analysis.cryptoYear}
+                      </span>
+                    )}
+                    {analysis.cryptoStyle && (
+                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold">
+                        风格：{analysis.cryptoStyle}
+                      </span>
+                    )}
+                  </>
+                }
+              />
+            )}
+          </>
         )}
 
         {/* Key Years and Periods - if available */}
