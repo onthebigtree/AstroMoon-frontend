@@ -1892,15 +1892,6 @@ ${chartInfo}
 
                                             {/* Telegram 自动登录 */}
                                             <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                                                <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                                                    <p className="text-xs text-amber-800 leading-relaxed">
-                                                        <strong>ℹ️ 重要提示：</strong><br/>
-                                                        下方会出现一个<strong className="text-blue-600">蓝色的 Telegram 登录按钮</strong>，点击后会弹出授权窗口。<br/>
-                                                        <strong className="text-red-600">不需要输入手机号，不需要收验证码！</strong><br/>
-                                                        如果 5 秒后还没出现按钮，请刷新页面。
-                                                    </p>
-                                                </div>
-
                                                 <TelegramLoginButton
                                                     botUsername="aaastromoonbot"
                                                     buttonSize="large"
@@ -1909,16 +1900,18 @@ ${chartInfo}
                                                     dataOnauth={handleTelegramLogin}
                                                 />
 
-                                                <p className="text-xs text-gray-500 mt-3 text-center">
-                                                    💡 应该看到一个蓝色的 "Log in with Telegram" 按钮
-                                                </p>
+                                                <div className="mt-3 bg-amber-50 border border-amber-300 rounded-lg p-2">
+                                                    <p className="text-xs text-amber-800">
+                                                        <strong>💡 接收推送提示：</strong>登录后请先在 Telegram 搜索 <strong className="text-blue-600">@aaastromoonbot</strong>，点击 <strong>/start</strong> 开启推送
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Telegram 账号已确认提示 */}
                                     {isTgLoggedIn && (
-                                        <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4 space-y-2">
+                                        <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4 space-y-3">
                                             <div className="flex items-center gap-2">
                                                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                                                 <span className="text-green-800 font-bold">✅ Telegram 账号已确认！</span>
@@ -1927,6 +1920,15 @@ ${chartInfo}
                                                 {tgUsername && <p>用户名：{tgUsername}</p>}
                                                 <p>ID：{tgUserId}</p>
                                             </div>
+                                            <button
+                                                onClick={() => window.open('https://t.me/aaastromoonbot?start=enable_notifications', '_blank')}
+                                                className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                                                </svg>
+                                                点击开启 Bot 推送通知
+                                            </button>
                                         </div>
                                     )}
 
