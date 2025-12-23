@@ -1858,11 +1858,36 @@ ${chartInfo}
                             {/* 🔥 交易员模式：Telegram 登录验证 */}
                             {mode === 'trader' ? (
                                 <>
-                                    {/* 步骤①：使用 Telegram 登录验证账号 */}
-                                    {!isTgLoggedIn ? (
+                                    {/* 步骤①：前往加入频道 */}
+                                    <button
+                                        onClick={handleClickFollow}
+                                        disabled={isTgBound}
+                                        className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                                            hasClickedFollow || isTgBound
+                                                ? 'bg-green-100 text-green-700 border-2 border-green-500'
+                                                : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg'
+                                        }`}
+                                    >
+                                        {hasClickedFollow || isTgBound ? (
+                                            <>
+                                                <CheckCircle className="w-5 h-5" />
+                                                <span>✅ 已前往加入频道</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                                                </svg>
+                                                <span>① 前往加入频道</span>
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* 步骤②：使用 Telegram 登录验证账号 */}
+                                    {hasClickedFollow && !isTgLoggedIn && (
                                         <div className="space-y-3">
                                             <label className="block text-sm font-bold text-gray-700 text-center">
-                                                ① 使用 Telegram 登录
+                                                ② 使用 Telegram 登录
                                             </label>
 
                                             {/* Telegram 自动登录 */}
@@ -1879,7 +1904,10 @@ ${chartInfo}
                                                 </p>
                                             </div>
                                         </div>
-                                    ) : (
+                                    )}
+
+                                    {/* Telegram 账号已确认提示 */}
+                                    {isTgLoggedIn && (
                                         <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4 space-y-2">
                                             <div className="flex items-center gap-2">
                                                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -1890,33 +1918,6 @@ ${chartInfo}
                                                 <p>ID：{tgUserId}</p>
                                             </div>
                                         </div>
-                                    )}
-
-                                    {/* 步骤②：前往加入频道 */}
-                                    {isTgLoggedIn && (
-                                        <button
-                                            onClick={handleClickFollow}
-                                            disabled={isTgBound}
-                                            className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-                                                hasClickedFollow || isTgBound
-                                                    ? 'bg-green-100 text-green-700 border-2 border-green-500'
-                                                    : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg'
-                                            }`}
-                                        >
-                                            {hasClickedFollow || isTgBound ? (
-                                                <>
-                                                    <CheckCircle className="w-5 h-5" />
-                                                    <span>已前往加入频道</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-                                                    </svg>
-                                                    <span>② 前往加入频道</span>
-                                                </>
-                                            )}
-                                        </button>
                                     )}
 
                                     {/* 步骤③：验证并绑定 */}
