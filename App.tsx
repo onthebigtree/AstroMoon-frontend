@@ -316,7 +316,7 @@ const App: React.FC = () => {
           <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-fade-in">
             <div className="text-center max-w-2xl flex flex-col items-center">
               <h2 className="text-4xl md:text-5xl font-serif-sc font-bold text-gray-900 mb-6">
-                占星财富分析 <br />
+                财富占星分析 <br />
                 <span className="text-indigo-600">交易员专属星盘</span>
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed mb-4">
