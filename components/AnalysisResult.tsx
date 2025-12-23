@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AnalysisData } from '../types';
-import { ScrollText, TrendingUp, Zap, Sparkles, Shield, Users, Star, Info, Target, DollarSign, BarChart3, Heart, Flame } from 'lucide-react';
+import { ScrollText, TrendingUp, Zap, Sparkles, Shield, Users, Star, Info, Target, DollarSign, BarChart3, Heart, Flame, Compass } from 'lucide-react';
 
 interface AnalysisResultProps {
   analysis: AnalysisData;
@@ -216,6 +216,17 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
                 content={analysis.sexualCharm}
                 score={analysis.sexualCharmScore}
                 colorClass="text-rose-600"
+              />
+            )}
+
+            {/* 新增维度：适宜发展方位 */}
+            {analysis.favorableDirections && (
+              <Card
+                title={analysis.favorableDirectionsTitle || "适宜发展方位"}
+                icon={Compass}
+                content={analysis.favorableDirections}
+                score={analysis.favorableDirectionsScore}
+                colorClass="text-cyan-600"
               />
             )}
           </>

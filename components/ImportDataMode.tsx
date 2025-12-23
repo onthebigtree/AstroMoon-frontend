@@ -190,6 +190,10 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [limitStatus, setLimitStatus] = useState<GenerationLimit | null>(null);
     const [isLoadingLimit, setIsLoadingLimit] = useState(false);
 
+    // 队列状态相关
+    const [queuePosition, setQueuePosition] = useState<number | null>(null);
+    const [isInQueue, setIsInQueue] = useState(false);
+
     // API 配置已在后端服务器，前端不需要配置
 
     // 加载用户档案列表
@@ -809,6 +813,10 @@ ${chartInfo}
                 sexualCharm: data.sexualCharm || (isTrader ? undefined : "性魅力与吸引力分析"),
                 sexualCharmScore: data.sexualCharmScore || (isTrader ? undefined : 85),
 
+                favorableDirectionsTitle: "适宜发展方位",
+                favorableDirections: data.favorableDirections || (isTrader ? undefined : "适宜发展方位分析"),
+                favorableDirectionsScore: data.favorableDirectionsScore || (isTrader ? undefined : 85),
+
                 keyYears: data.keyYears,
                 peakPeriods: data.peakPeriods,
                 riskPeriods: data.riskPeriods,
@@ -891,12 +899,40 @@ ${chartInfo}
         setError(null);
         setIsLoading(true);
         setLoadingTime(0);
+        setIsInQueue(true);
 
         // 启动计时器，每秒更新一次
         const startTime = Date.now();
         const timer = setInterval(() => {
             setLoadingTime(Math.floor((Date.now() - startTime) / 1000));
         }, 1000);
+
+        // 🎭 假排队逻辑：从第 20 位开始，每 7-13 秒随机前进一位
+        setQueuePosition(20);
+        let fakeQueueActive = true;
+        let fakeQueueTimer: NodeJS.Timeout | null = null;
+
+        const updateFakeQueue = () => {
+            if (!fakeQueueActive) return;
+
+            setQueuePosition((prev) => {
+                if (prev === null || prev <= 1) {
+                    fakeQueueActive = false;
+                    return 1;
+                }
+                return prev - 1;
+            });
+
+            // 随机 7-13 秒后继续前进
+            if (fakeQueueActive) {
+                const randomDelay = 7000 + Math.random() * 6000; // 7-13秒
+                fakeQueueTimer = setTimeout(updateFakeQueue, randomDelay);
+            }
+        };
+
+        // 启动假排队
+        const initialDelay = 7000 + Math.random() * 6000; // 第一次也是随机 7-13 秒
+        fakeQueueTimer = setTimeout(updateFakeQueue, initialDelay);
 
         try {
             // 校验出生信息
@@ -942,6 +978,17 @@ ${chartInfo}
                     chartId: undefined, // 暂时不传 chartId
                     profileId: selectedProfileId || undefined,
                     reportTitle,
+                }, {
+                    // 处理队列信息
+                    onQueueInfo: (queueInfo) => {
+                        console.log('📊 收到队列信息:', queueInfo);
+                        // 收到真实队列信息时，停止假排队
+                        if (queueInfo.queuePosition === 1) {
+                            fakeQueueActive = false;
+                            setQueuePosition(0); // 设置为 0 表示正在处理
+                            setIsInQueue(false);
+                        }
+                    },
                 });
 
                 // 累积流式响应内容
@@ -1025,6 +1072,10 @@ ${chartInfo}
                         sexualCharm: data.sexualCharm || (isTrader ? undefined : "性魅力与吸引力分析"),
                         sexualCharmScore: data.sexualCharmScore || (isTrader ? undefined : 85),
 
+                        favorableDirectionsTitle: "适宜发展方位",
+                        favorableDirections: data.favorableDirections || (isTrader ? undefined : "适宜发展方位分析"),
+                        favorableDirectionsScore: data.favorableDirectionsScore || (isTrader ? undefined : 85),
+
                         keyYears: data.keyYears,
                         peakPeriods: data.peakPeriods,
                         riskPeriods: data.riskPeriods,
@@ -1040,8 +1091,14 @@ ${chartInfo}
             setError(`生成失败：${err.message}`);
         } finally {
             clearInterval(timer);
+            fakeQueueActive = false; // 停止假排队
+            if (fakeQueueTimer) {
+                clearTimeout(fakeQueueTimer);
+            }
             setIsLoading(false);
             setLoadingTime(0);
+            setQueuePosition(null);
+            setIsInQueue(false);
         }
     };
 
@@ -1588,11 +1645,46 @@ ${chartInfo}
                         </div>
                     )}
 
+                    {/* 队列状态显示 */}
+                    {isInQueue && queuePosition !== null && queuePosition > 0 && (
+                        <div className="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 animate-pulse">
+                            <div className="flex items-center gap-3">
+                                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                                <div className="flex-1">
+                                    <p className="text-blue-800 font-bold">
+                                        ⏳ 正在排队，您在第 {queuePosition} 位
+                                    </p>
+                                    <p className="text-xs text-blue-600 mt-1">
+                                        预计每 7-13 秒前进一位，AI 生成约需 250 秒
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 正在处理提示 */}
+                    {isLoading && queuePosition === 0 && (
+                        <div className="bg-green-50 p-4 rounded-xl border-2 border-green-200">
+                            <div className="flex items-center gap-3">
+                                <Sparkles className="w-5 h-5 text-green-600 animate-pulse" />
+                                <div className="flex-1">
+                                    <p className="text-green-800 font-bold">
+                                        🚀 正在处理您的请求...
+                                    </p>
+                                    <p className="text-xs text-green-600 mt-1">
+                                        AI 正在分析您的星盘，预计需要 250 秒
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* 操作按钮 */}
                     <div className="flex gap-3">
                         <button
                             onClick={() => setStep(1)}
-                            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-all"
+                            disabled={isLoading}
+                            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             ← 修改信息
                         </button>
