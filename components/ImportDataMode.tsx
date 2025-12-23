@@ -1892,6 +1892,15 @@ ${chartInfo}
 
                                             {/* Telegram 自动登录 */}
                                             <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                                                <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                                    <p className="text-xs text-amber-800 leading-relaxed">
+                                                        <strong>ℹ️ 重要提示：</strong><br/>
+                                                        下方会出现一个<strong className="text-blue-600">蓝色的 Telegram 登录按钮</strong>，点击后会弹出授权窗口。<br/>
+                                                        <strong className="text-red-600">不需要输入手机号，不需要收验证码！</strong><br/>
+                                                        如果 5 秒后还没出现按钮，请刷新页面。
+                                                    </p>
+                                                </div>
+
                                                 <TelegramLoginButton
                                                     botUsername="aaastromoonbot"
                                                     buttonSize="large"
@@ -1899,8 +1908,9 @@ ${chartInfo}
                                                     requestAccess={true}
                                                     dataOnauth={handleTelegramLogin}
                                                 />
-                                                <p className="text-xs text-gray-500 mt-2 text-center">
-                                                    💡 点击按钮自动获取您的 Telegram ID
+
+                                                <p className="text-xs text-gray-500 mt-3 text-center">
+                                                    💡 应该看到一个蓝色的 "Log in with Telegram" 按钮
                                                 </p>
                                             </div>
                                         </div>
