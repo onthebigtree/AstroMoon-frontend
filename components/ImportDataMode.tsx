@@ -1896,7 +1896,7 @@ ${chartInfo}
                                                     botUsername="aaastromoonbot"
                                                     buttonSize="large"
                                                     cornerRadius={10}
-                                                    requestAccess={true}
+                                                    requestAccess={false}
                                                     dataOnauth={handleTelegramLogin}
                                                 />
                                             </div>
