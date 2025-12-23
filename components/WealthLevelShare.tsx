@@ -240,43 +240,24 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
 
         {/* 操作按钮 */}
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 space-y-3">
-          {/* 主要分享按钮 */}
-          <button
-            onClick={handleWebShare}
-            disabled={isDownloading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg"
-          >
-            <Share2 className="w-5 h-5" />
-            {isDownloading ? '生成中...' : '分享到社交媒体'}
-          </button>
-
-          {/* 次要操作按钮组 */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* 操作按钮组 */}
+          <div className="grid grid-cols-2 gap-3">
             <button
               onClick={handleCopyImage}
               disabled={isDownloading}
-              className="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all text-xs font-medium"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-5 h-5" />
               <span>复制图片</span>
-            </button>
-
-            <button
-              onClick={handleShareTwitter}
-              disabled={isDownloading}
-              className="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all text-xs font-medium"
-            >
-              <Twitter className="w-4 h-4" />
-              <span>推特</span>
             </button>
 
             <button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all text-xs font-medium"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all font-bold"
             >
-              <Download className="w-4 h-4" />
-              <span>下载</span>
+              <Download className="w-5 h-5" />
+              <span>{isDownloading ? '生成中...' : '下载'}</span>
             </button>
           </div>
 
