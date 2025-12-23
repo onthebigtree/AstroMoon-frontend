@@ -1899,12 +1899,6 @@ ${chartInfo}
                                                     requestAccess={true}
                                                     dataOnauth={handleTelegramLogin}
                                                 />
-
-                                                <div className="mt-3 bg-amber-50 border border-amber-300 rounded-lg p-2">
-                                                    <p className="text-xs text-amber-800">
-                                                        <strong>💡 接收推送提示：</strong>登录后请先在 Telegram 搜索 <strong className="text-blue-600">@aaastromoonbot</strong>，点击 <strong>/start</strong> 开启推送
-                                                    </p>
-                                                </div>
                                             </div>
                                         </div>
                                     )}
