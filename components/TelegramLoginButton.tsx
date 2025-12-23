@@ -40,6 +40,8 @@ const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
     // 避免重复加载
     if (scriptLoadedRef.current) return;
 
+    console.log('🔧 初始化 Telegram Login Widget, Bot:', botUsername);
+
     // 将回调函数绑定到全局对象
     (window as any).onTelegramAuth = (user: TelegramUser) => {
       console.log('✅ Telegram 登录成功:', user);
@@ -52,6 +54,14 @@ const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
     script.async = true;
     script.setAttribute('data-telegram-login', botUsername);
     script.setAttribute('data-size', buttonSize);
+
+    script.onload = () => {
+      console.log('✅ Telegram Widget 脚本加载成功');
+    };
+
+    script.onerror = (error) => {
+      console.error('❌ Telegram Widget 脚本加载失败:', error);
+    };
 
     if (cornerRadius !== undefined) {
       script.setAttribute('data-radius', cornerRadius.toString());
@@ -66,7 +76,11 @@ const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
     }
 
     // 使用回调方式（不使用 redirect）
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    if (dataAuthUrl) {
+      script.setAttribute('data-auth-url', dataAuthUrl);
+    } else {
+      script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    }
 
     if (containerRef.current) {
       containerRef.current.appendChild(script);
