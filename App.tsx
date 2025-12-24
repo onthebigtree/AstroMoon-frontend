@@ -9,10 +9,10 @@ import WealthLevelShare from './components/WealthLevelShare';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
-import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp } from 'lucide-react';
+import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut } from 'lucide-react';
 
 const App: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [result, setResult] = useState<LifeDestinyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
@@ -60,6 +60,25 @@ const App: React.FC = () => {
         reportContent = {
           chartData: chartPoints,
           analysis: analysisData
+        };
+      }
+
+      // 判断报告类型：检查是否为交易员版本
+      const isTraderReport = reportContent.analysis.traderVitality &&
+        (reportContent.analysis.traderVitality.includes('交易') ||
+         reportContent.analysis.traderVitality.includes('风险') ||
+         report.report_title?.includes('交易员'));
+
+      // 如果是普通版本，需要修正标题
+      if (!isTraderReport && reportContent.analysis) {
+        reportContent.analysis = {
+          ...reportContent.analysis,
+          traderVitalityTitle: "性格特质与生命力",
+          wealthPotentialTitle: "财富与物质安全感",
+          fortuneLuckTitle: "情感婚姻与亲密关系",
+          leverageRiskTitle: "事业发展与社会角色",
+          platformTeamTitle: "家庭关系与社会支持",
+          tradingStyleTitle: "健康状况与生活方式",
         };
       }
 
@@ -346,6 +365,16 @@ const App: React.FC = () => {
               <History className="w-4 h-4" />
               <span className="hidden sm:inline text-sm">历史</span>
             </button>
+            {currentUser && (
+              <button
+                onClick={() => logout()}
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all flex-shrink-0"
+                title="退出登录"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm">退出</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -398,6 +427,13 @@ const App: React.FC = () => {
                 >
                   <Printer className="w-4 h-4" />
                   保存PDF
+                </button>
+                <button
+                  onClick={handleSaveHtml}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white border border-emerald-600 rounded-lg hover:bg-emerald-700 transition-all font-medium text-sm shadow-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  下载网页
                 </button>
                 <button
                   onClick={handleShare}

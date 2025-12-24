@@ -877,7 +877,7 @@ ${chartInfo}
 
     // 点击"关注 Twitter"按钮
     const handleClickTwitterFollow = () => {
-        window.open('https://twitter.com/astromoon_xyz', '_blank');
+        window.open('https://x.com/Cryptosister53', '_blank');
         setHasClickedTwitterFollow(true);
     };
 
