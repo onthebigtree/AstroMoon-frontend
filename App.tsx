@@ -415,6 +415,34 @@ const App: React.FC = () => {
         {result && (
           <div className="animate-fade-in space-y-12">
 
+            {/* 财富量级横幅 - 页面最顶部 */}
+            {result.analysis.wealthLevel && (
+              <div className="no-print bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-lg">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full p-3 animate-pulse">
+                      <TrendingUp className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-amber-900 mb-1">
+                        🌟 发现你的财富量级潜力
+                      </h3>
+                      <p className="text-sm text-amber-700">
+                        基于你的星盘配置，一键生成专属财富等级分析
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowWealthShare(true)}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-xl hover:shadow-2xl transform hover:scale-105 whitespace-nowrap"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    立即生成
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col md:flex-row justify-between items-end md:items-center border-b border-gray-200 pb-4 gap-4">
               <h2 className="text-2xl font-bold font-serif-sc text-gray-800">
                 {userName ? `${userName}的` : ''}Astro Moon 占星报告
