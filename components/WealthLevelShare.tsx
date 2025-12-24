@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Download, TrendingUp, Share2, Twitter, Copy } from 'lucide-react';
+import { X, Download, TrendingUp, Share2, Twitter } from 'lucide-react';
 import { getWealthLevelInfo } from '../utils/wealthLevels';
 import html2canvas from 'html2canvas';
 
@@ -63,31 +63,28 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
     }
   };
 
-  // 复制图片到剪贴板
+  // 保存图片（和下载功能相同，确保手机端兼容性）
   const handleCopyImage = async () => {
     setIsDownloading(true);
     try {
       const dataUrl = await generateImage();
       if (!dataUrl) {
-        alert('复制失败，请重试');
+        alert('保存失败，请重试');
         return;
       }
 
-      // 将 base64 转换为 blob
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
+      const link = document.createElement('a');
+      link.download = `财富量级-${levelInfo.name}-${new Date().getTime()}.png`;
+      link.href = dataUrl;
+      link.click();
 
-      // 复制到剪贴板
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          [blob.type]: blob
-        })
-      ]);
-
-      alert('✅ 已复制到剪贴板！可以直接粘贴到社交媒体');
+      // 给用户反馈
+      setTimeout(() => {
+        alert('✅ 图片已保存到相册/下载文件夹');
+      }, 300);
     } catch (error) {
-      console.error('复制图片失败:', error);
-      alert('复制失败，请使用下载功能');
+      console.error('保存图片失败:', error);
+      alert('保存失败，请重试');
     } finally {
       setIsDownloading(false);
     }
@@ -243,8 +240,8 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
               disabled={isDownloading}
               className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg"
             >
-              <Copy className="w-5 h-5" />
-              <span>复制图片</span>
+              <Download className="w-5 h-5" />
+              <span>{isDownloading ? '生成中...' : '保存图片'}</span>
             </button>
 
             <button
@@ -253,12 +250,12 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
               className="flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all font-bold"
             >
               <Download className="w-5 h-5" />
-              <span>{isDownloading ? '生成中...' : '下载'}</span>
+              <span>{isDownloading ? '生成中...' : '下载图片'}</span>
             </button>
           </div>
 
           <p className="text-xs text-gray-500 text-center">
-            💡 点击"复制图片"后可直接粘贴到 Telegram、微信等应用
+            💡 点击按钮后图片将保存到相册/下载文件夹
           </p>
         </div>
       </div>
