@@ -218,7 +218,7 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
               结合西方古典占星、金融占星与交易心理学
             </p>
             <p className="text-xs font-bold text-gray-700">
-              全网第一位财运指标发明人。——>月亮牌手@TheMoonDojo
+              全网第一位财运指标发明人。——&gt;月亮牌手@TheMoonDojo
             </p>
             {/* 网站水印 */}
             <div className="mt-4 pt-3 border-t border-gray-100">
