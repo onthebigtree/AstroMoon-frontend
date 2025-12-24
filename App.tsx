@@ -151,33 +151,6 @@ const App: React.FC = () => {
     }, 1000);
   };
 
-  const handleShare = () => {
-    // 判断报告类型
-    const isTraderReport = result?.analysis?.traderVitality ? true : false;
-    const reportType = isTraderReport ? '交易员财富报告' : '综合人生报告';
-    const shareText = `我刚完成了 ${userName ? userName + '的' : ''}${reportType}分析！快来看看你的星盘吧 🌙✨`;
-    const shareUrl = window.location.href;
-
-    // 尝试使用 Web Share API
-    if (navigator.share) {
-      navigator.share({
-        title: `${userName || ''}的 Astro Moon 占星报告`,
-        text: shareText,
-        url: shareUrl,
-      }).catch((error) => {
-        console.log('分享取消:', error);
-      });
-    } else {
-      // 降级方案：复制链接到剪贴板
-      const textToCopy = `${shareText}\n${shareUrl}`;
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        alert('链接已复制到剪贴板！\n\n' + textToCopy);
-      }).catch(() => {
-        alert('分享链接：\n\n' + textToCopy);
-      });
-    }
-  };
-
   const handleSaveHtml = () => {
     if (!result) return;
 
@@ -193,60 +166,11 @@ const App: React.FC = () => {
       hour12: false
     });
 
-    // 1. 获取图表 SVG (Recharts 生成的是 SVG)
-    const chartContainer = document.querySelector('.recharts-surface');
-    // 如果找不到 chart，给一个提示文本
-    const chartSvg = chartContainer ? chartContainer.outerHTML : '<div style="padding:20px;text-align:center;">图表导出失败，请截图保存</div>';
-
-    // 2. 获取命理分析部分的 HTML
+    // 获取命理分析部分的 HTML
     const analysisContainer = document.getElementById('analysis-result-container');
     const analysisHtml = analysisContainer ? analysisContainer.innerHTML : '';
 
-    // 3. 生成流年详批表格 (替代交互式的 Tooltip)
-    // 根据分数判断颜色
-    const tableRows = result.chartData.map(item => {
-      const scoreColor = item.close >= item.open ? 'text-green-600' : 'text-red-600';
-      const trendIcon = item.close >= item.open ? '▲' : '▼';
-      return `
-        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-          <td class="p-3 border-r border-gray-100 text-center font-mono">${item.age}岁</td>
-          <td class="p-3 border-r border-gray-100 text-center font-bold">${item.year} ${item.ganZhi}</td>
-          <td class="p-3 border-r border-gray-100 text-center text-sm">${item.daYun || '-'}</td>
-          <td class="p-3 border-r border-gray-100 text-center font-bold ${scoreColor}">
-            ${item.score} <span class="text-xs">${trendIcon}</span>
-          </td>
-          <td class="p-3 text-sm text-gray-700 text-justify leading-relaxed">${item.reason}</td>
-        </tr>
-      `;
-    }).join('');
-
-    const detailedTableHtml = `
-      <div class="mt-12 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-           <div class="w-1 h-5 bg-indigo-600 rounded-full"></div>
-           <h3 class="text-xl font-bold text-gray-800 font-serif-sc">流年详批全表</h3>
-           <span class="text-xs text-gray-500 ml-2">(由于离线网页无法交互，特此列出所有年份详情)</span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-gray-100 text-gray-600 text-sm font-bold uppercase tracking-wider">
-                <th class="p-3 border-r border-gray-200 text-center w-20">年龄</th>
-                <th class="p-3 border-r border-gray-200 text-center w-28">流年</th>
-                <th class="p-3 border-r border-gray-200 text-center w-28">大运</th>
-                <th class="p-3 border-r border-gray-200 text-center w-20">评分</th>
-                <th class="p-3">运势批断与建议</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableRows}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-
-    // 4. 组装完整的 HTML 文件
+    // 组装完整的 HTML 文件（不包含流年大运）
     const fullHtml = `
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -259,39 +183,21 @@ const App: React.FC = () => {
     @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Inter:wght@400;600&display=swap');
     body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
     .font-serif-sc { font-family: 'Noto Serif SC', serif; }
-    /* Ensure SVG fits */
-    svg { width: 100% !important; height: auto !important; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 md:p-12">
   <div class="max-w-6xl mx-auto space-y-10">
-    
+
     <!-- Header -->
     <div class="text-center border-b border-gray-200 pb-8">
       <h1 class="text-4xl font-bold font-serif-sc text-gray-900 mb-2">${userName ? userName + '的' : ''}Astro Moon 占星报告</h1>
       <p class="text-gray-500 text-sm">生成时间：${timeString}</p>
     </div>
 
-    <!-- Chart Section -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-      <div class="flex items-center gap-2 mb-6">
-        <div class="w-1 h-6 bg-indigo-600 rounded-full"></div>
-        <h3 class="text-xl font-bold text-gray-800 font-serif-sc">流年大运走势图</h3>
-      </div>
-      <!-- Injected SVG Container -->
-      <div class="w-full overflow-hidden flex justify-center py-4">
-        ${chartSvg}
-      </div>
-      <p class="text-center text-xs text-gray-400 mt-2">注：图表K线颜色根据运势涨跌绘制，数值越高代表运势越强。</p>
-    </div>
-
     <!-- Analysis Cards -->
     <div class="space-y-8">
        ${analysisHtml}
     </div>
-
-    <!-- Detailed Table -->
-    ${detailedTableHtml}
 
     <!-- Footer -->
     <div class="text-center text-gray-400 text-sm py-12 border-t border-gray-200 mt-12">
@@ -303,7 +209,7 @@ const App: React.FC = () => {
 </html>
     `;
 
-    // 5. 触发下载
+    // 触发下载
     const blob = new Blob([fullHtml], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -464,13 +370,6 @@ const App: React.FC = () => {
                   下载网页
                 </button>
                 <button
-                  onClick={handleShare}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white border border-purple-600 rounded-lg hover:bg-purple-700 transition-all font-medium text-sm shadow-sm"
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  分享报告
-                </button>
-                <button
                   onClick={() => setResult(null)}
                   className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm"
                 >
@@ -493,7 +392,7 @@ const App: React.FC = () => {
             )}
 
             {/* The Chart */}
-            <section className="space-y-4 break-inside-avoid">
+            <section className="space-y-4 break-inside-avoid no-print">
               <div className="flex flex-col gap-1">
                 <h3 className="text-xl font-bold text-gray-700 flex items-center gap-2">
                   <span className="w-1 h-6 bg-indigo-600 rounded-full"></span>
@@ -507,7 +406,7 @@ const App: React.FC = () => {
                 )}
               </div>
 
-              <p className="text-sm text-gray-500 mb-2 no-print">
+              <p className="text-sm text-gray-500 mb-2">
                 <span className="text-green-600 font-bold">绿色K线</span> 代表运势上涨（吉），
                 <span className="text-red-600 font-bold">红色K线</span> 代表运势下跌（凶）。
                 <span className="text-red-500 font-bold">★</span> 标记为全盘最高运势点。
@@ -521,8 +420,8 @@ const App: React.FC = () => {
               <AnalysisResult analysis={result.analysis} />
             </section>
 
-            {/* Print Only: Detailed Table to substitute interactive tooltips */}
-            <div className="hidden print:block mt-8 break-before-page">
+            {/* Print Only: Detailed Table to substitute interactive tooltips - 已禁用 */}
+            <div className="hidden mt-8 break-before-page">
               <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2 mb-4">
                 <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
                 <h3 className="text-xl font-bold text-gray-800 font-serif-sc">流年详批全表</h3>
