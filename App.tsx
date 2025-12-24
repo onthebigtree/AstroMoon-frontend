@@ -415,8 +415,8 @@ const App: React.FC = () => {
         {result && (
           <div className="animate-fade-in space-y-12">
 
-            {/* 财富量级横幅 - 页面最顶部 */}
-            {result.analysis.wealthLevel && (
+            {/* 财富量级横幅 - 页面最顶部（仅交易员报告） */}
+            {result.analysis.wealthLevel && result.analysis.traderVitality && (
               <div className="no-print bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-lg">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -479,8 +479,8 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* 财富量级潜力按钮 - 页面顶部醒目位置 */}
-            {result.analysis.wealthLevel && (
+            {/* 财富量级潜力按钮 - 页面顶部醒目位置（仅交易员报告） */}
+            {result.analysis.wealthLevel && result.analysis.traderVitality && (
               <div className="flex justify-center no-print -mt-6">
                 <button
                   onClick={() => setShowWealthShare(true)}
@@ -559,8 +559,8 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* 财富量级潜力按钮 - 放在页面最下方 */}
-            {result.analysis.wealthLevel && (
+            {/* 财富量级潜力按钮 - 放在页面最下方（仅交易员报告） */}
+            {result.analysis.wealthLevel && result.analysis.traderVitality && (
               <div className="flex justify-center no-print mt-8">
                 <button
                   onClick={() => setShowWealthShare(true)}
@@ -589,8 +589,8 @@ const App: React.FC = () => {
         onSelectReport={handleSelectReport}
       />
 
-      {/* Wealth Level Share Modal */}
-      {result && result.analysis.wealthLevel && (
+      {/* Wealth Level Share Modal - 仅交易员报告 */}
+      {result && result.analysis.wealthLevel && result.analysis.traderVitality && (
         <WealthLevelShare
           isOpen={showWealthShare}
           onClose={() => setShowWealthShare(false)}
