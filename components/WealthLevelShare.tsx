@@ -17,6 +17,7 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
   userName
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const levelInfo = getWealthLevelInfo(wealthLevel);
 
@@ -41,6 +42,24 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
     }
   };
 
+  // 生成并显示图片（用于长按保存）
+  const handleGenerateImage = async () => {
+    setIsDownloading(true);
+    try {
+      const dataUrl = await generateImage();
+      if (!dataUrl) {
+        alert('生成失败，请重试');
+        return;
+      }
+      setGeneratedImage(dataUrl);
+    } catch (error) {
+      console.error('生成图片失败:', error);
+      alert('生成失败，请重试');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   // 下载为图片
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -50,6 +69,9 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
         alert('下载失败，请重试');
         return;
       }
+
+      // 保存到 state 供长按使用
+      setGeneratedImage(dataUrl);
 
       const link = document.createElement('a');
       link.download = `财富量级-${levelInfo.name}-${new Date().getTime()}.png`;
@@ -170,12 +192,30 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
             className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg text-lg"
           >
             <Download className="w-5 h-5" />
-            <span>{isDownloading ? '生成中...' : '保存图片到相册'}</span>
+            <span>{isDownloading ? '生成中...' : '生成分享图片'}</span>
           </button>
 
-          <p className="text-xs text-gray-500 text-center">
-            💡 图片将保存到相册/下载文件夹
-          </p>
+          {/* 生成的图片预览 */}
+          {generatedImage && (
+            <div className="space-y-2">
+              <div className="border-2 border-indigo-200 rounded-lg overflow-hidden">
+                <img
+                  src={generatedImage}
+                  alt="财富量级分享图"
+                  className="w-full h-auto"
+                />
+              </div>
+              <p className="text-sm text-center font-medium text-indigo-600 animate-pulse">
+                📱 长按图片保存到相册
+              </p>
+            </div>
+          )}
+
+          {!generatedImage && (
+            <p className="text-xs text-gray-500 text-center">
+              💡 点击按钮生成图片，然后长按图片保存
+            </p>
+          )}
         </div>
       </div>
     </div>
