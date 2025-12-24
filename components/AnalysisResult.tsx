@@ -134,7 +134,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <h3 className="flex items-center gap-2 font-serif-sc font-bold text-xl text-indigo-900">
             <ScrollText className="w-5 h-5" />
-            {isTraderMode ? '交易员财富格局总评' : '命理格局总评'}
+            {isTraderMode ? '交易员财富格局总评' : '你的综合人生总评'}
           </h3>
           <div className="w-full md:w-1/3">
             <ScoreBar score={analysis.summaryScore} />

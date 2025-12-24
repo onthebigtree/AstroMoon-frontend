@@ -776,7 +776,7 @@ ${chartInfo}
             chartData: data.chartPoints,
             analysis: {
                 birthChart: data.birthChart || "星盘信息未提供",
-                summary: data.summary || (isTrader ? "交易员财富格局总评" : "人生格局总评"),
+                summary: data.summary || (isTrader ? "交易员财富格局总评" : "你的综合人生总评"),
                 summaryScore: data.summaryScore || 85,
 
                 // 设置标题和内容
@@ -1038,7 +1038,7 @@ ${chartInfo}
                     chartData: data.chartPoints,
                     analysis: {
                         birthChart: data.birthChart || "星盘信息未提供",
-                        summary: data.summary || (isTrader ? "交易员财富格局总评" : "人生格局总评"),
+                        summary: data.summary || (isTrader ? "交易员财富格局总评" : "你的综合人生总评"),
                         summaryScore: data.summaryScore || 85,
 
                         // 设置标题和内容
