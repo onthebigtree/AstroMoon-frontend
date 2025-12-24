@@ -395,7 +395,7 @@ const App: React.FC = () => {
                 为交易员提供专业的财富格局分析与行运K线图。
               </p>
               <p className="text-gray-700 text-base leading-relaxed mb-6 font-medium">
-                <strong>全网第一位财运指标发明人。——>月亮牌手@TheMoonDojo</strong>
+                <strong>全网第一位财运指标发明人。——&gt;月亮牌手@TheMoonDojo</strong>
               </p>
             </div>
 
