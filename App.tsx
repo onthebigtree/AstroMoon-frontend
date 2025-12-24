@@ -69,17 +69,33 @@ const App: React.FC = () => {
          reportContent.analysis.traderVitality.includes('风险') ||
          report.report_title?.includes('交易员'));
 
-      // 如果是普通版本，需要修正标题
+      // 如果是普通版本，需要修正标题并删除交易员特定字段
       if (!isTraderReport && reportContent.analysis) {
-        reportContent.analysis = {
-          ...reportContent.analysis,
-          traderVitalityTitle: "性格特质与生命力",
-          wealthPotentialTitle: "财富与物质安全感",
-          fortuneLuckTitle: "情感婚姻与亲密关系",
-          leverageRiskTitle: "事业发展与社会角色",
-          platformTeamTitle: "家庭关系与社会支持",
-          tradingStyleTitle: "健康状况与生活方式",
-        };
+        // 删除交易员特定字段，避免被误判为交易员模式
+        const {
+          traderVitality,
+          traderVitalityScore,
+          traderVitalityTitle,
+          wealthPotential,
+          wealthPotentialScore,
+          wealthPotentialTitle,
+          fortuneLuck,
+          fortuneLuckScore,
+          fortuneLuckTitle,
+          leverageRisk,
+          leverageRiskScore,
+          leverageRiskTitle,
+          platformTeam,
+          platformTeamScore,
+          platformTeamTitle,
+          tradingStyle,
+          tradingStyleScore,
+          tradingStyleTitle,
+          wealthLevel,
+          ...restAnalysis
+        } = reportContent.analysis;
+
+        reportContent.analysis = restAnalysis;
       }
 
       // 设置结果数据
