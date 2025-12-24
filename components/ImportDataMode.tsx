@@ -1079,6 +1079,9 @@ ${chartInfo}
                         favorableDirections: data.favorableDirections || (isTrader ? undefined : "适宜发展方位分析"),
                         favorableDirectionsScore: data.favorableDirectionsScore || (isTrader ? undefined : 85),
 
+                        // 财富量级（仅交易员报告）
+                        wealthLevel: isTrader ? data.wealthLevel : undefined,
+
                         keyYears: data.keyYears,
                         peakPeriods: data.peakPeriods,
                         riskPeriods: data.riskPeriods,
