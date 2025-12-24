@@ -326,7 +326,7 @@ const App: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 justify-end overflow-x-auto">
             <a
-              href="https://x.com/TheMoonDojo"
+              href="https://x.com/AstroMoon1225"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all whitespace-nowrap"
@@ -334,7 +334,7 @@ const App: React.FC = () => {
               合作/简历投递推特私信联系 @TheMoonDojo
             </a>
             <a
-              href="https://x.com/AstroMoon1225"
+              href="https://x.com/TheMoonDojo"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden lg:flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all whitespace-nowrap"
