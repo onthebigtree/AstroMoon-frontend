@@ -286,7 +286,7 @@ const App: React.FC = () => {
   // 计算人生巅峰
   const peakYearItem = useMemo(() => {
     if (!result || !result.chartData.length) return null;
-    return result.chartData.reduce((prev, current) => (prev.high > current.high) ? prev : current);
+    return result.chartData.reduce((prev, current) => (prev.score > current.score) ? prev : current);
   }, [result]);
 
   // 如果用户未登录，显示登录页面
@@ -463,7 +463,7 @@ const App: React.FC = () => {
                 {peakYearItem && (
                   <p className="text-sm font-bold text-indigo-800 bg-indigo-50 border border-indigo-100 rounded px-2 py-1 inline-flex items-center gap-2 self-start mt-1">
                     <Trophy className="w-3 h-3 text-amber-500" />
-                    人生巅峰年份：{peakYearItem.year}年 ({peakYearItem.ganZhi}) - {peakYearItem.age}岁，评分 <span className="text-amber-600 text-lg">{peakYearItem.high}</span>
+                    人生巅峰年份：{peakYearItem.year}年 ({peakYearItem.ganZhi}) - {peakYearItem.age}岁，评分 <span className="text-amber-600 text-lg">{peakYearItem.score}</span>
                   </p>
                 )}
               </div>
