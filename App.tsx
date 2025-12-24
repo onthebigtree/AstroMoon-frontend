@@ -451,6 +451,19 @@ const App: React.FC = () => {
               </div>
             </div>
 
+            {/* 财富量级潜力按钮 - 页面顶部醒目位置 */}
+            {result.analysis.wealthLevel && (
+              <div className="flex justify-center no-print -mt-6">
+                <button
+                  onClick={() => setShowWealthShare(true)}
+                  className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 animate-pulse"
+                >
+                  <TrendingUp className="w-6 h-6" />
+                  一键生成我的财富量级潜力
+                </button>
+              </div>
+            )}
+
             {/* The Chart */}
             <section className="space-y-4 break-inside-avoid">
               <div className="flex flex-col gap-1">
