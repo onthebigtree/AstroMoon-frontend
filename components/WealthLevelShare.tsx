@@ -143,20 +143,20 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
             <p className="text-xs text-gray-500 mb-2">
               结合西方古典占星、金融占星与交易心理学
             </p>
-            <p className="text-xs font-bold text-gray-700">
+            <p className="text-xs font-bold text-gray-700 mb-2">
               全网第一位财运指标发明人。——&gt;月亮牌手@TheMoonDojo
             </p>
-            {/* 网站水印 */}
-            <div className="mt-4 pt-3 border-t border-gray-100">
-              <a
-                href="https://www.astromoon.xyz/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
-              >
-                <TrendingUp className="w-3 h-3" />
-                www.astromoon.xyz
-              </a>
+            <p className="text-xs text-orange-600 font-medium">
+              ⚠️ 此财富潜力仅针对金融投机方面
+            </p>
+            {/* 二维码 */}
+            <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col items-center gap-2">
+              <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://www.astromoon.xyz/"
+                alt="网站二维码"
+                className="w-20 h-20"
+              />
+              <p className="text-xs text-gray-500">扫码访问 www.astromoon.xyz</p>
             </div>
           </div>
         </div>
