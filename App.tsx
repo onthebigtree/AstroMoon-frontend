@@ -313,17 +313,17 @@ const App: React.FC = () => {
               href="https://x.com/AstroMoon1225"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all whitespace-nowrap"
+              className="hidden md:flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all whitespace-nowrap"
             >
-              十年星盘专家，用独家算法+AI大模型，重新定义你的交易运势 | 推特 @AstroMoon1225
+              合作/简历投递推特私信联系 @AstroMoon1225
             </a>
             <a
               href="https://x.com/AstroMoon1225"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all whitespace-nowrap"
+              className="hidden lg:flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all whitespace-nowrap"
             >
-              合作/简历投递推特私信联系 @TheMoonDojo
+              推特 @AstroMoon1225
             </a>
             <button
               onClick={() => setShowHistory(true)}
