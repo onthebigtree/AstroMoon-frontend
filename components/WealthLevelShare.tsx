@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Download, TrendingUp, Share2, Twitter } from 'lucide-react';
+import { X, Download, TrendingUp } from 'lucide-react';
 import { getWealthLevelInfo } from '../utils/wealthLevels';
 import html2canvas from 'html2canvas';
 
@@ -58,76 +58,6 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
     } catch (error) {
       console.error('下载图片失败:', error);
       alert('下载失败，请重试');
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  // 保存图片（和下载功能相同，确保手机端兼容性）
-  const handleCopyImage = async () => {
-    setIsDownloading(true);
-    try {
-      const dataUrl = await generateImage();
-      if (!dataUrl) {
-        alert('保存失败，请重试');
-        return;
-      }
-
-      const link = document.createElement('a');
-      link.download = `财富量级-${levelInfo.name}-${new Date().getTime()}.png`;
-      link.href = dataUrl;
-      link.click();
-
-      // 给用户反馈
-      setTimeout(() => {
-        alert('✅ 图片已保存到相册/下载文件夹');
-      }, 300);
-    } catch (error) {
-      console.error('保存图片失败:', error);
-      alert('保存失败，请重试');
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  // 分享到 Twitter
-  const handleShareTwitter = () => {
-    const text = `我的财富量级潜力是 ${levelInfo.name} ${levelInfo.emoji}\n\n${levelInfo.assetRange}\n\n快来测试你的财富潜力！`;
-    const url = 'https://app.astromoon.xyz/';
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=AstroMoon,财富占星,交易员`;
-    window.open(twitterUrl, '_blank');
-  };
-
-  // 使用 Web Share API
-  const handleWebShare = async () => {
-    setIsDownloading(true);
-    try {
-      const dataUrl = await generateImage();
-      if (!dataUrl) {
-        alert('分享失败，请重试');
-        return;
-      }
-
-      // 将 base64 转换为 blob
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
-      const file = new File([blob], `财富量级-${levelInfo.name}.png`, { type: 'image/png' });
-
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: '我的财富量级潜力',
-          text: `我的财富量级潜力是 ${levelInfo.name} ${levelInfo.emoji}`,
-          files: [file],
-        });
-      } else {
-        // 降级方案：复制到剪贴板
-        await handleCopyImage();
-      }
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.error('分享失败:', error);
-        alert('分享失败，请使用下载或复制功能');
-      }
     } finally {
       setIsDownloading(false);
     }
@@ -233,29 +163,18 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
 
         {/* 操作按钮 */}
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 space-y-3">
-          {/* 操作按钮组 */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={handleCopyImage}
-              disabled={isDownloading}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg"
-            >
-              <Download className="w-5 h-5" />
-              <span>{isDownloading ? '生成中...' : '保存图片'}</span>
-            </button>
-
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all font-bold"
-            >
-              <Download className="w-5 h-5" />
-              <span>{isDownloading ? '生成中...' : '下载图片'}</span>
-            </button>
-          </div>
+          {/* 下载按钮 */}
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg text-lg"
+          >
+            <Download className="w-5 h-5" />
+            <span>{isDownloading ? '生成中...' : '保存图片到相册'}</span>
+          </button>
 
           <p className="text-xs text-gray-500 text-center">
-            💡 点击按钮后图片将保存到相册/下载文件夹
+            💡 图片将保存到相册/下载文件夹
           </p>
         </div>
       </div>
