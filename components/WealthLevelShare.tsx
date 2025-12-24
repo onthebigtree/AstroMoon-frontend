@@ -165,10 +165,9 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
 
           {/* 大标题 */}
           <div className="text-center mb-8">
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 font-serif-sc">
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900 font-serif-sc">
               我这辈子的财富量级潜力
             </h3>
-            <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto rounded-full"></div>
           </div>
 
           {/* 等级卡片 */}
