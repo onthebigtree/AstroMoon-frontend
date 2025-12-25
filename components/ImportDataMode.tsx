@@ -904,6 +904,9 @@ ${chartInfo}
         setLoadingTime(0);
         setIsInQueue(true);
 
+        const MAX_RETRIES = 3; // 最大重试次数
+        let retryCount = 0;
+
         // 启动计时器，每秒更新一次
         const startTime = Date.now();
         const timer = setInterval(() => {
@@ -937,7 +940,9 @@ ${chartInfo}
         const initialDelay = 7000 + Math.random() * 6000; // 第一次也是随机 7-13 秒
         fakeQueueTimer = setTimeout(updateFakeQueue, initialDelay);
 
-        try {
+        // 重试循环
+        while (retryCount <= MAX_RETRIES) {
+            try {
             // 校验出生信息
             const year = parseInt(astroInfo.birthYear);
             const month = parseInt(astroInfo.birthMonth);
@@ -1090,22 +1095,47 @@ ${chartInfo}
 
                 console.log('✅ 数据解析和转换成功');
                 onDataImport(result);
+
+                // 成功，跳出重试循环
+                break;
             } catch (parseErr: any) {
-                throw new Error(parseErr.message || 'JSON 解析失败，请检查返回格式');
+                const errorMessage = parseErr.message || 'JSON 解析失败，请检查返回格式';
+
+                // 检查是否为数据验证失败
+                if (errorMessage.includes('数据格式验证失败') && retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    console.warn(`⚠️ 数据验证失败，正在重试 (${retryCount}/${MAX_RETRIES})...`);
+                    setError(`数据验证失败，正在自动重试 (${retryCount}/${MAX_RETRIES})...`);
+
+                    // 等待 2 秒后重试
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    continue; // 继续下一次循环
+                }
+
+                // 达到最大重试次数或非验证错误，抛出错误
+                throw new Error(errorMessage);
             }
         } catch (err: any) {
-            setError(`生成失败：${err.message}`);
-        } finally {
-            clearInterval(timer);
-            fakeQueueActive = false; // 停止假排队
-            if (fakeQueueTimer) {
-                clearTimeout(fakeQueueTimer);
+            // 只有在达到最大重试次数或遇到其他错误时才会到这里
+            if (retryCount >= MAX_RETRIES) {
+                setError(`生成失败（已重试 ${MAX_RETRIES} 次）：${err.message}`);
+            } else {
+                setError(`生成失败：${err.message}`);
             }
-            setIsLoading(false);
-            setLoadingTime(0);
-            setQueuePosition(null);
-            setIsInQueue(false);
+            break; // 跳出重试循环
         }
+        } // 结束 while 循环
+
+        // 清理定时器和状态
+        clearInterval(timer);
+        fakeQueueActive = false; // 停止假排队
+        if (fakeQueueTimer) {
+            clearTimeout(fakeQueueTimer);
+        }
+        setIsLoading(false);
+        setLoadingTime(0);
+        setQueuePosition(null);
+        setIsInQueue(false);
     };
 
     const handleAstroChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
