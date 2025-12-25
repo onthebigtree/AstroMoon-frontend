@@ -9,6 +9,7 @@ import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import LocationMapPicker from './LocationMapPicker';
 import ChinaCitySelector from './ChinaCitySelector';
 import TelegramLoginButton from './TelegramLoginButton';
+import TurnstileVerify from './TurnstileVerify';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfiles, createProfile, updateProfile, deleteProfile, type Profile, checkTelegramMembership, bindTelegramAccount } from '../services/api';
 import type { GenerationLimit } from '../services/api/types';
@@ -173,6 +174,10 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [hasClickedTelegramFollow, setHasClickedTelegramFollow] = useState(false);
     const [hasClickedTwitterFollow, setHasClickedTwitterFollow] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
+
+    // Turnstile 人类验证相关状态
+    const [showTurnstileModal, setShowTurnstileModal] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState<string>('');
 
     // 档案管理相关状态
     const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -772,59 +777,133 @@ ${chartInfo}
         const isTrader = currentMode === 'trader';
 
         // 转换为应用所需格式
-        return {
+        const result: any = {
             chartData: data.chartPoints,
             analysis: {
                 birthChart: data.birthChart || "星盘信息未提供",
                 summary: data.summary || (isTrader ? "交易员财富格局总评" : "你的综合人生总评"),
                 summaryScore: data.summaryScore || 85,
 
-                // 设置标题和内容
-                traderVitalityTitle: isTrader ? "交易生命力与抗压指数" : "性格特质与生命力",
-                traderVitality: data.traderVitality || data.personality || (isTrader ? "交易生命力与抗压指数分析" : "性格特质与生命力分析"),
-                traderVitalityScore: data.traderVitalityScore || data.personalityScore || 88,
-
-                wealthPotentialTitle: isTrader ? "财富量级与来源结构" : "财富与物质安全感",
-                wealthPotential: data.wealthPotential || data.wealth || (isTrader ? "财富量级与来源结构分析" : "财富与物质安全感分析"),
-                wealthPotentialScore: data.wealthPotentialScore || data.wealthScore || 82,
-
-                fortuneLuckTitle: isTrader ? "运气与天选财富" : "情感婚姻与亲密关系",
-                fortuneLuck: data.fortuneLuck || data.marriage || (isTrader ? "运气与天选财富潜力分析" : "情感婚姻与亲密关系分析"),
-                fortuneLuckScore: data.fortuneLuckScore || data.marriageScore || 90,
-
-                leverageRiskTitle: isTrader ? "杠杆与风险管理能力" : "事业发展与社会角色",
-                leverageRisk: data.leverageRisk || data.industry || (isTrader ? "杠杆与风险管理能力分析" : "事业发展与社会角色分析"),
-                leverageRiskScore: data.leverageRiskScore || data.industryScore || 75,
-
-                platformTeamTitle: isTrader ? "平台与团队红利" : "家庭关系与社会支持",
-                platformTeam: data.platformTeam || data.family || (isTrader ? "平台与团队红利潜力分析" : "家庭关系与社会支持分析"),
-                platformTeamScore: data.platformTeamScore || data.familyScore || 80,
-
-                tradingStyleTitle: isTrader ? "适合的交易风格与策略" : "健康状况与生活方式",
-                tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配分析" : "健康状况与生活方式分析"),
-                tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
-
-                // 新增的两个维度（仅普通盘）
-                intimacyEnergyTitle: "亲密能量与深度连接能力",
-                intimacyEnergy: data.intimacyEnergy || (isTrader ? undefined : "亲密能量与深度连接能力分析"),
-                intimacyEnergyScore: data.intimacyEnergyScore || (isTrader ? undefined : 85),
-
-                sexualCharmTitle: "性魅力与吸引力",
-                sexualCharm: data.sexualCharm || (isTrader ? undefined : "性魅力与吸引力分析"),
-                sexualCharmScore: data.sexualCharmScore || (isTrader ? undefined : 85),
-
-                favorableDirectionsTitle: "适宜发展方位",
-                favorableDirections: data.favorableDirections || (isTrader ? undefined : "适宜发展方位分析"),
-                favorableDirectionsScore: data.favorableDirectionsScore || (isTrader ? undefined : 85),
-
-                // 财富量级（仅交易员报告）
-                wealthLevel: isTrader ? data.wealthLevel : undefined,
-
+                // 关键年份和周期（两种模式都有）
                 keyYears: data.keyYears,
                 peakPeriods: data.peakPeriods,
                 riskPeriods: data.riskPeriods,
             },
         };
+
+        // 根据模式设置不同的字段
+        if (isTrader) {
+            // 交易员模式：设置交易员特定字段
+            result.analysis.traderVitalityTitle = "交易生命力与抗压指数";
+            result.analysis.traderVitality = data.traderVitality || "交易生命力与抗压指数分析";
+            result.analysis.traderVitalityScore = data.traderVitalityScore || 88;
+
+            result.analysis.wealthPotentialTitle = "财富量级与来源结构";
+            result.analysis.wealthPotential = data.wealthPotential || "财富量级与来源结构分析";
+            result.analysis.wealthPotentialScore = data.wealthPotentialScore || 82;
+
+            result.analysis.fortuneLuckTitle = "运气与天选财富";
+            result.analysis.fortuneLuck = data.fortuneLuck || "运气与天选财富潜力分析";
+            result.analysis.fortuneLuckScore = data.fortuneLuckScore || 90;
+
+            result.analysis.leverageRiskTitle = "杠杆与风险管理能力";
+            result.analysis.leverageRisk = data.leverageRisk || "杠杆与风险管理能力分析";
+            result.analysis.leverageRiskScore = data.leverageRiskScore || 75;
+
+            result.analysis.platformTeamTitle = "平台与团队红利";
+            result.analysis.platformTeam = data.platformTeam || "平台与团队红利潜力分析";
+            result.analysis.platformTeamScore = data.platformTeamScore || 80;
+
+            result.analysis.tradingStyleTitle = "适合的交易风格与策略";
+            result.analysis.tradingStyle = data.tradingStyle || "交易风格与策略匹配分析";
+            result.analysis.tradingStyleScore = data.tradingStyleScore || 85;
+
+            // 财富量级（仅交易员报告）
+            result.analysis.wealthLevel = data.wealthLevel;
+
+            // 新增的两个维度（交易员也可能有）
+            if (data.intimacyEnergy) {
+                result.analysis.intimacyEnergyTitle = "亲密能量与深度连接能力";
+                result.analysis.intimacyEnergy = data.intimacyEnergy;
+                result.analysis.intimacyEnergyScore = data.intimacyEnergyScore || 85;
+            }
+
+            if (data.sexualCharm) {
+                result.analysis.sexualCharmTitle = "性魅力与吸引力";
+                result.analysis.sexualCharm = data.sexualCharm;
+                result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
+            }
+
+            if (data.favorableDirections) {
+                result.analysis.favorableDirectionsTitle = "适宜发展方位";
+                result.analysis.favorableDirections = data.favorableDirections;
+                result.analysis.favorableDirectionsScore = data.favorableDirectionsScore || 85;
+            }
+        } else {
+            // 普通人生模式：设置普通人生字段（不设置交易员字段）
+            if (data.personality) {
+                result.analysis.personality = data.personality;
+                result.analysis.personalityScore = data.personalityScore || 85;
+            }
+
+            if (data.industry) {
+                result.analysis.industry = data.industry;
+                result.analysis.industryScore = data.industryScore || 85;
+            }
+
+            if (data.wealth) {
+                result.analysis.wealth = data.wealth;
+                result.analysis.wealthScore = data.wealthScore || 85;
+            }
+
+            if (data.marriage) {
+                result.analysis.marriage = data.marriage;
+                result.analysis.marriageScore = data.marriageScore || 85;
+            }
+
+            if (data.health) {
+                result.analysis.health = data.health;
+                result.analysis.healthScore = data.healthScore || 85;
+            }
+
+            if (data.family) {
+                result.analysis.family = data.family;
+                result.analysis.familyScore = data.familyScore || 85;
+            }
+
+            if (data.fengShui) {
+                result.analysis.fengShui = data.fengShui;
+                result.analysis.fengShuiScore = data.fengShuiScore || 85;
+            }
+
+            if (data.crypto) {
+                result.analysis.crypto = data.crypto;
+                result.analysis.cryptoScore = data.cryptoScore || 85;
+                result.analysis.cryptoYear = data.cryptoYear;
+                result.analysis.cryptoStyle = data.cryptoStyle;
+            }
+
+            // 新增的三个维度（仅普通盘）
+            if (data.intimacyEnergy) {
+                result.analysis.intimacyEnergyTitle = "亲密能量与深度连接能力";
+                result.analysis.intimacyEnergy = data.intimacyEnergy;
+                result.analysis.intimacyEnergyScore = data.intimacyEnergyScore || 85;
+            }
+
+            if (data.sexualCharm) {
+                result.analysis.sexualCharmTitle = "性魅力与吸引力";
+                result.analysis.sexualCharm = data.sexualCharm;
+                result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
+            }
+
+            if (data.favorableDirections) {
+                result.analysis.favorableDirectionsTitle = "适宜发展方位";
+                result.analysis.favorableDirections = data.favorableDirections;
+                result.analysis.favorableDirectionsScore = data.favorableDirectionsScore || 85;
+            }
+        }
+
+        return result;
     };
 
     // 手动导入 JSON
@@ -884,17 +963,32 @@ ${chartInfo}
         setHasClickedTwitterFollow(true);
     };
 
-    // 点击"验证并继续"按钮
+    // 点击"验证并继续"按钮（社交媒体验证完成后）
     const handleVerify = async () => {
         setIsVerifying(true);
 
         // 假加载 1 秒
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // 关闭弹窗并开始真正的 AI 生成
+        // 关闭社交媒体验证弹窗，显示 Turnstile 人类验证
         setShowVerifyModal(false);
         setIsVerifying(false);
+        setShowTurnstileModal(true);
+    };
+
+    // Turnstile 验证成功后的回调
+    const handleTurnstileSuccess = (token: string) => {
+        console.log('✅ Turnstile 验证成功，token:', token);
+        setTurnstileToken(token);
+        setShowTurnstileModal(false);
+
+        // 开始 AI 生成
         executeAIGeneration();
+    };
+
+    // 取消 Turnstile 验证
+    const handleTurnstileCancel = () => {
+        setShowTurnstileModal(false);
     };
 
     // 真正执行 AI 生成的函数
@@ -1039,59 +1133,131 @@ ${chartInfo}
                 const isTrader = mode === 'trader';
 
                 // 转换为应用所需格式
-                const result = {
+                const result: any = {
                     chartData: data.chartPoints,
                     analysis: {
                         birthChart: data.birthChart || "星盘信息未提供",
                         summary: data.summary || (isTrader ? "交易员财富格局总评" : "你的综合人生总评"),
                         summaryScore: data.summaryScore || 85,
 
-                        // 设置标题和内容
-                        traderVitalityTitle: isTrader ? "交易生命力与抗压指数" : "性格特质与生命力",
-                        traderVitality: data.traderVitality || data.personality || (isTrader ? "交易生命力与抗压指数分析" : "性格特质与生命力分析"),
-                        traderVitalityScore: data.traderVitalityScore || data.personalityScore || 88,
-
-                        wealthPotentialTitle: isTrader ? "财富量级与来源结构" : "财富与物质安全感",
-                        wealthPotential: data.wealthPotential || data.wealth || (isTrader ? "财富量级与来源结构分析" : "财富与物质安全感分析"),
-                        wealthPotentialScore: data.wealthPotentialScore || data.wealthScore || 82,
-
-                        fortuneLuckTitle: isTrader ? "运气与天选财富" : "情感婚姻与亲密关系",
-                        fortuneLuck: data.fortuneLuck || data.marriage || (isTrader ? "运气与天选财富潜力分析" : "情感婚姻与亲密关系分析"),
-                        fortuneLuckScore: data.fortuneLuckScore || data.marriageScore || 90,
-
-                        leverageRiskTitle: isTrader ? "杠杆与风险管理能力" : "事业发展与社会角色",
-                        leverageRisk: data.leverageRisk || data.industry || (isTrader ? "杠杆与风险管理能力分析" : "事业发展与社会角色分析"),
-                        leverageRiskScore: data.leverageRiskScore || data.industryScore || 75,
-
-                        platformTeamTitle: isTrader ? "平台与团队红利" : "家庭关系与社会支持",
-                        platformTeam: data.platformTeam || data.family || (isTrader ? "平台与团队红利潜力分析" : "家庭关系与社会支持分析"),
-                        platformTeamScore: data.platformTeamScore || data.familyScore || 80,
-
-                        tradingStyleTitle: isTrader ? "适合的交易风格与策略" : "健康状况与生活方式",
-                        tradingStyle: data.tradingStyle || data.health || (isTrader ? "交易风格与策略匹配分析" : "健康状况与生活方式分析"),
-                        tradingStyleScore: data.tradingStyleScore || data.healthScore || 85,
-
-                        // 新增的两个维度（仅普通盘）
-                        intimacyEnergyTitle: "亲密能量与深度连接能力",
-                        intimacyEnergy: data.intimacyEnergy || (isTrader ? undefined : "亲密能量与深度连接能力分析"),
-                        intimacyEnergyScore: data.intimacyEnergyScore || (isTrader ? undefined : 85),
-
-                        sexualCharmTitle: "性魅力与吸引力",
-                        sexualCharm: data.sexualCharm || (isTrader ? undefined : "性魅力与吸引力分析"),
-                        sexualCharmScore: data.sexualCharmScore || (isTrader ? undefined : 85),
-
-                        favorableDirectionsTitle: "适宜发展方位",
-                        favorableDirections: data.favorableDirections || (isTrader ? undefined : "适宜发展方位分析"),
-                        favorableDirectionsScore: data.favorableDirectionsScore || (isTrader ? undefined : 85),
-
-                        // 财富量级（仅交易员报告）
-                        wealthLevel: isTrader ? data.wealthLevel : undefined,
-
+                        // 关键年份和周期（两种模式都有）
                         keyYears: data.keyYears,
                         peakPeriods: data.peakPeriods,
                         riskPeriods: data.riskPeriods,
                     },
                 };
+
+                // 根据模式设置不同的字段
+                if (isTrader) {
+                    // 交易员模式：设置交易员特定字段
+                    result.analysis.traderVitalityTitle = "交易生命力与抗压指数";
+                    result.analysis.traderVitality = data.traderVitality || "交易生命力与抗压指数分析";
+                    result.analysis.traderVitalityScore = data.traderVitalityScore || 88;
+
+                    result.analysis.wealthPotentialTitle = "财富量级与来源结构";
+                    result.analysis.wealthPotential = data.wealthPotential || "财富量级与来源结构分析";
+                    result.analysis.wealthPotentialScore = data.wealthPotentialScore || 82;
+
+                    result.analysis.fortuneLuckTitle = "运气与天选财富";
+                    result.analysis.fortuneLuck = data.fortuneLuck || "运气与天选财富潜力分析";
+                    result.analysis.fortuneLuckScore = data.fortuneLuckScore || 90;
+
+                    result.analysis.leverageRiskTitle = "杠杆与风险管理能力";
+                    result.analysis.leverageRisk = data.leverageRisk || "杠杆与风险管理能力分析";
+                    result.analysis.leverageRiskScore = data.leverageRiskScore || 75;
+
+                    result.analysis.platformTeamTitle = "平台与团队红利";
+                    result.analysis.platformTeam = data.platformTeam || "平台与团队红利潜力分析";
+                    result.analysis.platformTeamScore = data.platformTeamScore || 80;
+
+                    result.analysis.tradingStyleTitle = "适合的交易风格与策略";
+                    result.analysis.tradingStyle = data.tradingStyle || "交易风格与策略匹配分析";
+                    result.analysis.tradingStyleScore = data.tradingStyleScore || 85;
+
+                    // 财富量级（仅交易员报告）
+                    result.analysis.wealthLevel = data.wealthLevel;
+
+                    // 新增的两个维度（交易员也可能有）
+                    if (data.intimacyEnergy) {
+                        result.analysis.intimacyEnergyTitle = "亲密能量与深度连接能力";
+                        result.analysis.intimacyEnergy = data.intimacyEnergy;
+                        result.analysis.intimacyEnergyScore = data.intimacyEnergyScore || 85;
+                    }
+
+                    if (data.sexualCharm) {
+                        result.analysis.sexualCharmTitle = "性魅力与吸引力";
+                        result.analysis.sexualCharm = data.sexualCharm;
+                        result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
+                    }
+
+                    if (data.favorableDirections) {
+                        result.analysis.favorableDirectionsTitle = "适宜发展方位";
+                        result.analysis.favorableDirections = data.favorableDirections;
+                        result.analysis.favorableDirectionsScore = data.favorableDirectionsScore || 85;
+                    }
+                } else {
+                    // 普通人生模式：设置普通人生字段（不设置交易员字段）
+                    if (data.personality) {
+                        result.analysis.personality = data.personality;
+                        result.analysis.personalityScore = data.personalityScore || 85;
+                    }
+
+                    if (data.industry) {
+                        result.analysis.industry = data.industry;
+                        result.analysis.industryScore = data.industryScore || 85;
+                    }
+
+                    if (data.wealth) {
+                        result.analysis.wealth = data.wealth;
+                        result.analysis.wealthScore = data.wealthScore || 85;
+                    }
+
+                    if (data.marriage) {
+                        result.analysis.marriage = data.marriage;
+                        result.analysis.marriageScore = data.marriageScore || 85;
+                    }
+
+                    if (data.health) {
+                        result.analysis.health = data.health;
+                        result.analysis.healthScore = data.healthScore || 85;
+                    }
+
+                    if (data.family) {
+                        result.analysis.family = data.family;
+                        result.analysis.familyScore = data.familyScore || 85;
+                    }
+
+                    if (data.fengShui) {
+                        result.analysis.fengShui = data.fengShui;
+                        result.analysis.fengShuiScore = data.fengShuiScore || 85;
+                    }
+
+                    if (data.crypto) {
+                        result.analysis.crypto = data.crypto;
+                        result.analysis.cryptoScore = data.cryptoScore || 85;
+                        result.analysis.cryptoYear = data.cryptoYear;
+                        result.analysis.cryptoStyle = data.cryptoStyle;
+                    }
+
+                    // 新增的三个维度（仅普通盘）
+                    if (data.intimacyEnergy) {
+                        result.analysis.intimacyEnergyTitle = "亲密能量与深度连接能力";
+                        result.analysis.intimacyEnergy = data.intimacyEnergy;
+                        result.analysis.intimacyEnergyScore = data.intimacyEnergyScore || 85;
+                    }
+
+                    if (data.sexualCharm) {
+                        result.analysis.sexualCharmTitle = "性魅力与吸引力";
+                        result.analysis.sexualCharm = data.sexualCharm;
+                        result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
+                    }
+
+                    if (data.favorableDirections) {
+                        result.analysis.favorableDirectionsTitle = "适宜发展方位";
+                        result.analysis.favorableDirections = data.favorableDirections;
+                        result.analysis.favorableDirectionsScore = data.favorableDirectionsScore || 85;
+                    }
+                }
 
                 console.log('✅ 数据解析和转换成功');
                 onDataImport(result);
@@ -2186,6 +2352,14 @@ ${chartInfo}
                         : undefined
                 }
             />
+
+            {/* Cloudflare Turnstile 人类验证弹窗 */}
+            {showTurnstileModal && (
+                <TurnstileVerify
+                    onVerify={handleTurnstileSuccess}
+                    onCancel={handleTurnstileCancel}
+                />
+            )}
         </div>
     );
 };

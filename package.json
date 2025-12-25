@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.4.0",
     "firebase": "^12.7.0",
     "html2canvas": "^1.4.1",
     "leaflet": "^1.9.4",
