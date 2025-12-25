@@ -63,39 +63,139 @@ const App: React.FC = () => {
         };
       }
 
-      // 判断报告类型：检查是否为交易员版本
-      const isTraderReport = reportContent.analysis.traderVitality &&
-        (reportContent.analysis.traderVitality.includes('交易') ||
-         reportContent.analysis.traderVitality.includes('风险') ||
-         report.report_title?.includes('交易员'));
+      // 判断报告类型：优先根据标题判断，然后根据内容判断
+      let isTraderReport = false;
 
-      // 如果是普通版本，需要修正标题并删除交易员特定字段
+      // 1. 标题包含"交易员"，肯定是交易员报告
+      if (report.report_title?.includes('交易员')) {
+        isTraderReport = true;
+      }
+      // 2. 如果标题是"综合人生"，肯定是普通报告
+      else if (report.report_title?.includes('综合人生')) {
+        isTraderReport = false;
+      }
+      // 3. 没有标题信息，根据内容判断
+      else if (reportContent.analysis.traderVitality) {
+        // 检查 traderVitality 内容是否包含交易相关关键词
+        const content = reportContent.analysis.traderVitality || '';
+        isTraderReport = content.includes('交易') ||
+                        content.includes('持仓') ||
+                        content.includes('止损') ||
+                        content.includes('行情') ||
+                        content.includes('建仓');
+      }
+
+      console.log('📊 报告类型判断:', {
+        isTraderReport,
+        title: report.report_title,
+        hasTraderVitality: !!reportContent.analysis.traderVitality,
+        hasPersonality: !!reportContent.analysis.personality
+      });
+
+      // 如果是普通版本但使用了交易员字段名，需要重新映射
       if (!isTraderReport && reportContent.analysis) {
-        // 删除交易员特定字段，避免被误判为交易员模式
-        const {
-          traderVitality,
-          traderVitalityScore,
-          traderVitalityTitle,
-          wealthPotential,
-          wealthPotentialScore,
-          wealthPotentialTitle,
-          fortuneLuck,
-          fortuneLuckScore,
-          fortuneLuckTitle,
-          leverageRisk,
-          leverageRiskScore,
-          leverageRiskTitle,
-          platformTeam,
-          platformTeamScore,
-          platformTeamTitle,
-          tradingStyle,
-          tradingStyleScore,
-          tradingStyleTitle,
-          wealthLevel,
-          ...restAnalysis
-        } = reportContent.analysis;
+        // 检查是否有交易员字段但没有普通字段（旧版本混合数据）
+        const hasTraderFields = !!reportContent.analysis.traderVitality;
+        const hasNormalFields = !!reportContent.analysis.personality;
 
-        reportContent.analysis = restAnalysis;
+        if (hasTraderFields && !hasNormalFields) {
+          // 将交易员字段映射到普通人生字段
+          console.log('🔄 检测到旧版本数据格式，进行字段映射...');
+
+          const mappedAnalysis: any = {
+            birthChart: reportContent.analysis.birthChart,
+            summary: reportContent.analysis.summary,
+            summaryScore: reportContent.analysis.summaryScore,
+            keyYears: reportContent.analysis.keyYears,
+            peakPeriods: reportContent.analysis.peakPeriods,
+            riskPeriods: reportContent.analysis.riskPeriods,
+          };
+
+          // 映射字段：traderVitality -> personality (性格与天赋)
+          if (reportContent.analysis.traderVitality) {
+            mappedAnalysis.personality = reportContent.analysis.traderVitality;
+            mappedAnalysis.personalityScore = reportContent.analysis.traderVitalityScore;
+          }
+
+          // 映射字段：wealthPotential -> wealth (财运)
+          if (reportContent.analysis.wealthPotential) {
+            mappedAnalysis.wealth = reportContent.analysis.wealthPotential;
+            mappedAnalysis.wealthScore = reportContent.analysis.wealthPotentialScore;
+          }
+
+          // 映射字段：fortuneLuck -> marriage (婚姻感情)
+          if (reportContent.analysis.fortuneLuck) {
+            mappedAnalysis.marriage = reportContent.analysis.fortuneLuck;
+            mappedAnalysis.marriageScore = reportContent.analysis.fortuneLuckScore;
+          }
+
+          // 映射字段：leverageRisk -> industry (事业与职业方向)
+          if (reportContent.analysis.leverageRisk) {
+            mappedAnalysis.industry = reportContent.analysis.leverageRisk;
+            mappedAnalysis.industryScore = reportContent.analysis.leverageRiskScore;
+          }
+
+          // 映射字段：platformTeam -> family (家庭与子女)
+          if (reportContent.analysis.platformTeam) {
+            mappedAnalysis.family = reportContent.analysis.platformTeam;
+            mappedAnalysis.familyScore = reportContent.analysis.platformTeamScore;
+          }
+
+          // 映射字段：tradingStyle -> health (健康)
+          if (reportContent.analysis.tradingStyle) {
+            mappedAnalysis.health = reportContent.analysis.tradingStyle;
+            mappedAnalysis.healthScore = reportContent.analysis.tradingStyleScore;
+          }
+
+          // 保留新增的三个维度
+          if (reportContent.analysis.intimacyEnergy) {
+            mappedAnalysis.intimacyEnergy = reportContent.analysis.intimacyEnergy;
+            mappedAnalysis.intimacyEnergyScore = reportContent.analysis.intimacyEnergyScore;
+            mappedAnalysis.intimacyEnergyTitle = reportContent.analysis.intimacyEnergyTitle;
+          }
+
+          if (reportContent.analysis.sexualCharm) {
+            mappedAnalysis.sexualCharm = reportContent.analysis.sexualCharm;
+            mappedAnalysis.sexualCharmScore = reportContent.analysis.sexualCharmScore;
+            mappedAnalysis.sexualCharmTitle = reportContent.analysis.sexualCharmTitle;
+          }
+
+          if (reportContent.analysis.favorableDirections) {
+            mappedAnalysis.favorableDirections = reportContent.analysis.favorableDirections;
+            mappedAnalysis.favorableDirectionsScore = reportContent.analysis.favorableDirectionsScore;
+            mappedAnalysis.favorableDirectionsTitle = reportContent.analysis.favorableDirectionsTitle;
+          }
+
+          reportContent.analysis = mappedAnalysis;
+          console.log('✅ 字段映射完成');
+        } else if (hasTraderFields) {
+          // 删除交易员特定字段，避免被误判为交易员模式
+          console.log('🗑️ 删除交易员字段...');
+          const {
+            traderVitality,
+            traderVitalityScore,
+            traderVitalityTitle,
+            wealthPotential,
+            wealthPotentialScore,
+            wealthPotentialTitle,
+            fortuneLuck,
+            fortuneLuckScore,
+            fortuneLuckTitle,
+            leverageRisk,
+            leverageRiskScore,
+            leverageRiskTitle,
+            platformTeam,
+            platformTeamScore,
+            platformTeamTitle,
+            tradingStyle,
+            tradingStyleScore,
+            tradingStyleTitle,
+            wealthLevel,
+            ...restAnalysis
+          } = reportContent.analysis;
+
+          reportContent.analysis = restAnalysis;
+        }
       }
 
       // 设置结果数据
