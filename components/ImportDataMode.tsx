@@ -6,6 +6,7 @@ import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../co
 import { generateWithAPI } from '../services/apiService';
 import { streamReportGenerate, checkGenerationLimit } from '../services/api/reports';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
+import { replaceAge100Reason } from '../constants/age100';
 import LocationMapPicker from './LocationMapPicker';
 import ChinaCitySelector from './ChinaCitySelector';
 import TelegramLoginButton from './TelegramLoginButton';
@@ -781,6 +782,9 @@ ${chartInfo}
             throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
         }
 
+        // 🔄 强制替换 100 岁的 reason 文案为标准文案
+        data.chartPoints = replaceAge100Reason(data.chartPoints);
+
         // 根据模式设置不同的默认文案
         const isTrader = currentMode === 'trader';
 
@@ -1165,6 +1169,9 @@ ${chartInfo}
                 if (!validation.valid) {
                     throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
                 }
+
+                // 🔄 强制替换 100 岁的 reason 文案为标准文案（流式生成）
+                data.chartPoints = replaceAge100Reason(data.chartPoints);
 
                 // 根据模式设置不同的默认文案
                 const isTrader = mode === 'trader';

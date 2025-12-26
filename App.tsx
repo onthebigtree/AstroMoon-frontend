@@ -10,6 +10,7 @@ import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
 import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut } from 'lucide-react';
+import { replaceAge100Reason } from './constants/age100';
 
 const App: React.FC = () => {
   const { currentUser, logout } = useAuth();
@@ -285,6 +286,11 @@ const App: React.FC = () => {
       });
       console.log('AnalysisResult 会显示为:', !!reportContent.analysis.traderVitality ? '交易员模式' : '普通人生模式');
       console.groupEnd();
+
+      // 🔄 强制替换 100 岁的 reason 文案为标准文案（历史报告）
+      if (reportContent.chartData && Array.isArray(reportContent.chartData)) {
+        reportContent.chartData = replaceAge100Reason(reportContent.chartData);
+      }
 
       // 设置结果数据
       setResult(reportContent);
@@ -719,11 +725,6 @@ const App: React.FC = () => {
                       </td>
                       <td className="p-2 border border-gray-100 text-gray-700 text-justify text-xs leading-relaxed">
                         {item.reason}
-                        {item.age === 100 && (
-                          <div className="mt-2 pt-2 border-t border-amber-200 text-amber-700 font-medium italic">
-                            💫 100岁的K线就像人生最后一抹绚烂，是告别阳间的谢幕之作，以极致繁华清零重启，拔吊投胎开启新生。看懂它，就看懂了人生轮回的荒诞与玄妙。
-                          </div>
-                        )}
                       </td>
                     </tr>
                   ))}
