@@ -92,6 +92,32 @@ const App: React.FC = () => {
         hasPersonality: !!reportContent.analysis.personality
       });
 
+      // 🔍 打印从数据库加载的原始数据结构（详细调试）
+      console.group('🗄️ 数据库原始数据');
+      console.log('所有 analysis 字段:', Object.keys(reportContent.analysis));
+      console.log('交易员字段存在性:', {
+        traderVitality: !!reportContent.analysis.traderVitality,
+        wealthPotential: !!reportContent.analysis.wealthPotential,
+        fortuneLuck: !!reportContent.analysis.fortuneLuck,
+        leverageRisk: !!reportContent.analysis.leverageRisk,
+        platformTeam: !!reportContent.analysis.platformTeam,
+        tradingStyle: !!reportContent.analysis.tradingStyle,
+      });
+      console.log('普通字段存在性:', {
+        personality: !!reportContent.analysis.personality,
+        industry: !!reportContent.analysis.industry,
+        wealth: !!reportContent.analysis.wealth,
+        marriage: !!reportContent.analysis.marriage,
+        health: !!reportContent.analysis.health,
+        family: !!reportContent.analysis.family,
+      });
+      console.log('新增字段存在性:', {
+        intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+        sexualCharm: !!reportContent.analysis.sexualCharm,
+        favorableDirections: !!reportContent.analysis.favorableDirections,
+      });
+      console.groupEnd();
+
       // 如果是普通版本但使用了交易员字段名，需要重新映射
       if (!isTraderReport && reportContent.analysis) {
         // 检查是否有交易员字段但没有普通字段（旧版本混合数据）
@@ -235,6 +261,30 @@ const App: React.FC = () => {
           });
         }
       }
+
+      // 🔍 打印最终要显示的数据结构（用于调试）
+      console.group('📦 最终显示数据');
+      console.log('所有 analysis 字段:', Object.keys(reportContent.analysis));
+      console.log('交易员字段:', {
+        traderVitality: !!reportContent.analysis.traderVitality,
+        wealthPotential: !!reportContent.analysis.wealthPotential,
+        fortuneLuck: !!reportContent.analysis.fortuneLuck,
+      });
+      console.log('普通字段:', {
+        personality: !!reportContent.analysis.personality,
+        industry: !!reportContent.analysis.industry,
+        wealth: !!reportContent.analysis.wealth,
+        marriage: !!reportContent.analysis.marriage,
+        health: !!reportContent.analysis.health,
+        family: !!reportContent.analysis.family,
+      });
+      console.log('新增字段:', {
+        intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+        sexualCharm: !!reportContent.analysis.sexualCharm,
+        favorableDirections: !!reportContent.analysis.favorableDirections,
+      });
+      console.log('AnalysisResult 会显示为:', !!reportContent.analysis.traderVitality ? '交易员模式' : '普通人生模式');
+      console.groupEnd();
 
       // 设置结果数据
       setResult(reportContent);
