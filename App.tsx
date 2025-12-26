@@ -652,13 +652,28 @@ const App: React.FC = () => {
                 </thead>
                 <tbody>
                   {result.chartData.map((item) => (
-                    <tr key={item.age} className="border-b border-gray-100 break-inside-avoid">
-                      <td className="p-2 border border-gray-100 text-center font-mono">{item.age}</td>
+                    <tr
+                      key={item.age}
+                      className={`border-b border-gray-100 break-inside-avoid ${
+                        item.age === 100 ? 'bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300' : ''
+                      }`}
+                    >
+                      <td className="p-2 border border-gray-100 text-center font-mono">
+                        {item.age}
+                        {item.age === 100 && (
+                          <div className="text-xs text-amber-600 font-bold mt-1">谢幕</div>
+                        )}
+                      </td>
                       <td className={`p-2 border border-gray-100 text-center font-bold ${item.close >= item.open ? 'text-green-600' : 'text-red-600'}`}>
                         {item.score}
                       </td>
                       <td className="p-2 border border-gray-100 text-gray-700 text-justify text-xs leading-relaxed">
                         {item.reason}
+                        {item.age === 100 && (
+                          <div className="mt-2 pt-2 border-t border-amber-200 text-amber-700 font-medium italic">
+                            💫 100岁的K线就像人生最后一抹绚烂，是告别阳间的谢幕之作，以极致繁华清零重启，拔吊投胎开启新生。看懂它，就看懂了人生轮回的荒诞与玄妙。
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
