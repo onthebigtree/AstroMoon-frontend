@@ -763,6 +763,14 @@ ${chartInfo}
         try {
             data = robustParseJSON(content);
             console.log('✅ JSON 解析成功');
+
+            // 🔍 打印完整的数据对象（用于调试）
+            console.group('📊 AI 返回的完整数据结构');
+            console.log('所有顶层字段:', Object.keys(data));
+            console.log('intimacyEnergy:', data.intimacyEnergy ? '有内容' : '无');
+            console.log('sexualCharm:', data.sexualCharm ? '有内容' : '无');
+            console.log('favorableDirections:', data.favorableDirections ? '有内容' : '无');
+            console.groupEnd();
         } catch (err: any) {
             throw new Error(err.message);
         }
@@ -821,21 +829,32 @@ ${chartInfo}
             // 财富量级（仅交易员报告）
             result.analysis.wealthLevel = data.wealthLevel;
 
-            // 新增的两个维度（交易员也可能有）
+            // 新增的三个维度（交易员也可能有）
+            console.log('🔍 检查新增维度字段:', {
+                intimacyEnergy: !!data.intimacyEnergy,
+                sexualCharm: !!data.sexualCharm,
+                favorableDirections: !!data.favorableDirections
+            });
+
             if (data.intimacyEnergy) {
-                result.analysis.intimacyEnergyTitle = "亲密能量与深度连接能力";
+                console.log('✅ 找到 intimacyEnergy 字段');
+                result.analysis.intimacyEnergyTitle = data.intimacyEnergyTitle || "亲密能量与深度连接能力";
                 result.analysis.intimacyEnergy = data.intimacyEnergy;
                 result.analysis.intimacyEnergyScore = data.intimacyEnergyScore || 85;
             }
 
             if (data.sexualCharm) {
-                result.analysis.sexualCharmTitle = "性能力与吸引力";
+                console.log('✅ 找到 sexualCharm 字段');
+                result.analysis.sexualCharmTitle = data.sexualCharmTitle || "性能力与吸引力";
                 result.analysis.sexualCharm = data.sexualCharm;
                 result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
+            } else {
+                console.warn('⚠️ 未找到 sexualCharm 字段，AI 返回的数据中可能没有这个字段');
             }
 
             if (data.favorableDirections) {
-                result.analysis.favorableDirectionsTitle = "适宜发展方位";
+                console.log('✅ 找到 favorableDirections 字段');
+                result.analysis.favorableDirectionsTitle = data.favorableDirectionsTitle || "适宜发展方位";
                 result.analysis.favorableDirections = data.favorableDirections;
                 result.analysis.favorableDirectionsScore = data.favorableDirectionsScore || 85;
             }
@@ -884,24 +903,42 @@ ${chartInfo}
             }
 
             // 新增的三个维度（仅普通盘）
+            console.log('🔍 检查新增维度字段（普通模式）:', {
+                intimacyEnergy: !!data.intimacyEnergy,
+                sexualCharm: !!data.sexualCharm,
+                favorableDirections: !!data.favorableDirections
+            });
+
             if (data.intimacyEnergy) {
-                result.analysis.intimacyEnergyTitle = "亲密能量与深度连接能力";
+                console.log('✅ 找到 intimacyEnergy 字段');
+                result.analysis.intimacyEnergyTitle = data.intimacyEnergyTitle || "亲密能量与深度连接能力";
                 result.analysis.intimacyEnergy = data.intimacyEnergy;
                 result.analysis.intimacyEnergyScore = data.intimacyEnergyScore || 85;
             }
 
             if (data.sexualCharm) {
-                result.analysis.sexualCharmTitle = "性能力与吸引力";
+                console.log('✅ 找到 sexualCharm 字段');
+                result.analysis.sexualCharmTitle = data.sexualCharmTitle || "性能力与吸引力";
                 result.analysis.sexualCharm = data.sexualCharm;
                 result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
+            } else {
+                console.warn('⚠️ 未找到 sexualCharm 字段，AI 返回的数据中可能没有这个字段');
             }
 
             if (data.favorableDirections) {
-                result.analysis.favorableDirectionsTitle = "适宜发展方位";
+                console.log('✅ 找到 favorableDirections 字段');
+                result.analysis.favorableDirectionsTitle = data.favorableDirectionsTitle || "适宜发展方位";
                 result.analysis.favorableDirections = data.favorableDirections;
                 result.analysis.favorableDirectionsScore = data.favorableDirectionsScore || 85;
             }
         }
+
+        // 🔍 打印最终处理后的结果（用于调试）
+        console.group('📦 处理后的分析数据');
+        console.log('intimacyEnergy:', !!result.analysis.intimacyEnergy);
+        console.log('sexualCharm:', !!result.analysis.sexualCharm);
+        console.log('favorableDirections:', !!result.analysis.favorableDirections);
+        console.groupEnd();
 
         return result;
     };

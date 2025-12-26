@@ -28,6 +28,17 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: false,
+      // 确保每次构建生成不同的文件名 hash
+      rollupOptions: {
+        output: {
+          // 为 JS 文件添加 hash
+          entryFileNames: 'assets/[name]-[hash].js',
+          // 为代码分割的 chunk 添加 hash
+          chunkFileNames: 'assets/[name]-[hash].js',
+          // 为静态资源添加 hash
+          assetFileNames: 'assets/[name]-[hash].[ext]'
+        }
+      }
     },
     server: {
       // 增加服务器超时时间
