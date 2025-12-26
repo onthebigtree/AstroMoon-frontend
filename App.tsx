@@ -98,6 +98,16 @@ const App: React.FC = () => {
         const hasTraderFields = !!reportContent.analysis.traderVitality;
         const hasNormalFields = !!reportContent.analysis.personality;
 
+        // 🔍 打印历史报告的完整数据结构（用于调试）
+        console.group('📊 历史报告数据结构');
+        console.log('报告类型:', { isTraderReport, hasTraderFields, hasNormalFields });
+        console.log('新增维度字段检查:', {
+          intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+          sexualCharm: !!reportContent.analysis.sexualCharm,
+          favorableDirections: !!reportContent.analysis.favorableDirections
+        });
+        console.groupEnd();
+
         if (hasTraderFields && !hasNormalFields) {
           // 将交易员字段映射到普通人生字段
           console.log('🔄 检测到旧版本数据格式，进行字段映射...');
@@ -148,29 +158,51 @@ const App: React.FC = () => {
           }
 
           // 保留新增的三个维度
+          console.log('🔍 保留新增维度字段（历史报告-旧版映射）:', {
+            intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+            sexualCharm: !!reportContent.analysis.sexualCharm,
+            favorableDirections: !!reportContent.analysis.favorableDirections
+          });
+
           if (reportContent.analysis.intimacyEnergy) {
+            console.log('✅ 保留 intimacyEnergy 字段');
             mappedAnalysis.intimacyEnergy = reportContent.analysis.intimacyEnergy;
             mappedAnalysis.intimacyEnergyScore = reportContent.analysis.intimacyEnergyScore;
-            mappedAnalysis.intimacyEnergyTitle = reportContent.analysis.intimacyEnergyTitle;
+            mappedAnalysis.intimacyEnergyTitle = reportContent.analysis.intimacyEnergyTitle || "亲密能量与深度连接能力";
           }
 
           if (reportContent.analysis.sexualCharm) {
+            console.log('✅ 保留 sexualCharm 字段');
             mappedAnalysis.sexualCharm = reportContent.analysis.sexualCharm;
             mappedAnalysis.sexualCharmScore = reportContent.analysis.sexualCharmScore;
-            mappedAnalysis.sexualCharmTitle = reportContent.analysis.sexualCharmTitle;
+            mappedAnalysis.sexualCharmTitle = reportContent.analysis.sexualCharmTitle || "性能力与吸引力";
+          } else {
+            console.warn('⚠️ 历史报告中未找到 sexualCharm 字段');
           }
 
           if (reportContent.analysis.favorableDirections) {
+            console.log('✅ 保留 favorableDirections 字段');
             mappedAnalysis.favorableDirections = reportContent.analysis.favorableDirections;
             mappedAnalysis.favorableDirectionsScore = reportContent.analysis.favorableDirectionsScore;
-            mappedAnalysis.favorableDirectionsTitle = reportContent.analysis.favorableDirectionsTitle;
+            mappedAnalysis.favorableDirectionsTitle = reportContent.analysis.favorableDirectionsTitle || "适宜发展方位";
           }
 
           reportContent.analysis = mappedAnalysis;
-          console.log('✅ 字段映射完成');
+          console.log('✅ 字段映射完成，新增维度保留结果:', {
+            intimacyEnergy: !!mappedAnalysis.intimacyEnergy,
+            sexualCharm: !!mappedAnalysis.sexualCharm,
+            favorableDirections: !!mappedAnalysis.favorableDirections
+          });
         } else if (hasTraderFields) {
           // 删除交易员特定字段，避免被误判为交易员模式
-          console.log('🗑️ 删除交易员字段...');
+          // 但保留新增的三个维度字段（intimacyEnergy, sexualCharm, favorableDirections）
+          console.log('🗑️ 删除交易员字段（但保留新增维度）...');
+          console.log('🔍 删除前新增维度字段:', {
+            intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+            sexualCharm: !!reportContent.analysis.sexualCharm,
+            favorableDirections: !!reportContent.analysis.favorableDirections
+          });
+
           const {
             traderVitality,
             traderVitalityScore,
@@ -195,6 +227,12 @@ const App: React.FC = () => {
           } = reportContent.analysis;
 
           reportContent.analysis = restAnalysis;
+
+          console.log('✅ 交易员字段删除完成，新增维度保留结果:', {
+            intimacyEnergy: !!restAnalysis.intimacyEnergy,
+            sexualCharm: !!restAnalysis.sexualCharm,
+            favorableDirections: !!restAnalysis.favorableDirections
+          });
         }
       }
 
