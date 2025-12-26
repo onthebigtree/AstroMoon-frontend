@@ -829,7 +829,7 @@ ${chartInfo}
             }
 
             if (data.sexualCharm) {
-                result.analysis.sexualCharmTitle = "性魅力与吸引力";
+                result.analysis.sexualCharmTitle = "性能力与吸引力";
                 result.analysis.sexualCharm = data.sexualCharm;
                 result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
             }
@@ -891,7 +891,7 @@ ${chartInfo}
             }
 
             if (data.sexualCharm) {
-                result.analysis.sexualCharmTitle = "性魅力与吸引力";
+                result.analysis.sexualCharmTitle = "性能力与吸引力";
                 result.analysis.sexualCharm = data.sexualCharm;
                 result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
             }
@@ -1185,7 +1185,7 @@ ${chartInfo}
                     }
 
                     if (data.sexualCharm) {
-                        result.analysis.sexualCharmTitle = "性魅力与吸引力";
+                        result.analysis.sexualCharmTitle = "性能力与吸引力";
                         result.analysis.sexualCharm = data.sexualCharm;
                         result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
                     }
@@ -1247,7 +1247,7 @@ ${chartInfo}
                     }
 
                     if (data.sexualCharm) {
-                        result.analysis.sexualCharmTitle = "性魅力与吸引力";
+                        result.analysis.sexualCharmTitle = "性能力与吸引力";
                         result.analysis.sexualCharm = data.sexualCharm;
                         result.analysis.sexualCharmScore = data.sexualCharmScore || 85;
                     }

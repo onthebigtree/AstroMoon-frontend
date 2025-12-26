@@ -208,10 +208,10 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
               />
             )}
 
-            {/* 新增维度：性魅力 */}
+            {/* 新增维度：性能力 */}
             {analysis.sexualCharm && (
               <Card
-                title={analysis.sexualCharmTitle || "性魅力与吸引力"}
+                title={analysis.sexualCharmTitle || "性能力与吸引力"}
                 icon={Flame}
                 content={analysis.sexualCharm}
                 score={analysis.sexualCharmScore}

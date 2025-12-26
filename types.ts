@@ -100,7 +100,7 @@ export interface AnalysisData {
   intimacyEnergyScore?: number;        // 0-100
 
   sexualCharmTitle?: string;           // 维度标题
-  sexualCharm?: string;                // 性魅力与吸引力分析
+  sexualCharm?: string;                // 性能力与吸引力分析
   sexualCharmScore?: number;           // 0-100
 
   favorableDirectionsTitle?: string;   // 维度标题

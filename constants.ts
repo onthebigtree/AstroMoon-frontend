@@ -185,7 +185,7 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
      - 心理深度、敏感度与共情能力。
      - 对伴侣的情感支持能力与接受他人支持的开放度。
 
-8. 性魅力与吸引力
+8. 性能力与吸引力
    - 重点参考：
      - 火星（性欲望、行动力、身体能量）的星座、宫位及相位；
      - 金星（美感、吸引力、感官享受）的星座、宫位及相位；
@@ -194,7 +194,7 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
      - 上升星座与上升主星（外在形象、气质）；
      - 冥王星（深层磁性吸引、性能量）的状态。
    - 分析内容：
-     - 性魅力的类型：如阳光活力型、神秘深沉型、优雅精致型、野性自由型等。
+     - 性能力的类型：如阳光活力型、神秘深沉型、优雅精致型、野性自由型等。
      - 吸引他人的方式：外表、气质、能量场、言行举止等。
      - 性态度与性能量表达：开放/保守、主动/被动、热情/冷静等。
      - 在亲密关系中的吸引力持久度与变化。
@@ -219,7 +219,7 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
 
 **输出要求：**
 - 在报告中为每个领域给出「主课题关键词」和简要总结，
-  例如：情感课题为"界限感与亲密感平衡"、事业课题为"自我价值与责任"、亲密能量为"深度连接与情感融合"、性魅力为"磁性吸引与身体自信"、适宜方位为"南方事业拓展 · 东方家宅安稳"等。
+  例如：情感课题为"界限感与亲密感平衡"、事业课题为"自我价值与责任"、亲密能量为"深度连接与情感融合"、性能力为"磁性吸引与身体自信"、适宜方位为"南方事业拓展 · 东方家宅安稳"等。
 
 --------------------------------
 第三阶段：人生阶段与年度起伏（行运 + 推运）
@@ -313,8 +313,8 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
    - tradingStyleScore：健康指数评分（0-100）
    - intimacyEnergy：亲密能量与深度连接能力分析
    - intimacyEnergyScore：亲密能量评分（0-100）
-   - sexualCharm：性魅力与吸引力分析
-   - sexualCharmScore：性魅力评分（0-100）
+   - sexualCharm：性能力与吸引力分析
+   - sexualCharmScore：性能力评分（0-100）
    - favorableDirections：适宜发展方位分析
    - favorableDirectionsScore：方位选择评分（0-100）
 5. keyYears：关键年龄节点数组（可选）
@@ -394,7 +394,7 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
   "tradingStyleScore": 85,
   "intimacyEnergy": "亲密能量与深度连接能力分析...",
   "intimacyEnergyScore": 88,
-  "sexualCharm": "性魅力与吸引力分析...",
+  "sexualCharm": "性能力与吸引力分析...",
   "sexualCharmScore": 92,
   "favorableDirections": "适宜发展方位分析...",
   "favorableDirectionsScore": 85,
@@ -673,6 +673,9 @@ export const TRADER_SYSTEM_INSTRUCTION = `
 - high：K线最高价（0~100），应 >= max(open, close)。【必填 - 数字】
 - low：K线最低价（0~100），应 <= min(open, close)。【必填 - 数字】
 - reason：约 60–150 字，详细说明该年的星象结构对交易风格、收益波动与风险的影响。【必填 - 字符串】
+
+⚠️ 特殊说明 - 100岁的描述：
+100岁的绿K就像币圈项目下架前的"谢幕阳线"，是它在阳间留下的最后一抹倔强，它以极致的繁华清零重启（拔吊投胎，开启新生）转世投胎。看懂它，就看懂了人生/币圈一半的荒诞。
 
 ⚠️ 重要提醒：
 1. chartPoints 数组必须包含 100 个元素（age 1~100），一个都不能少
