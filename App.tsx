@@ -692,8 +692,8 @@ const App: React.FC = () => {
               <AnalysisResult analysis={result.analysis} />
             </section>
 
-            {/* Print Only: Detailed Table to substitute interactive tooltips */}
-            <div className="hidden print:block mt-8 break-before-page">
+            {/* 流年详批全表 - 始终显示，打印时分页 */}
+            <div className="mt-8 print:break-before-page">
               <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2 mb-4">
                 <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
                 <h3 className="text-xl font-bold text-gray-800 font-serif-sc">流年详批全表</h3>
