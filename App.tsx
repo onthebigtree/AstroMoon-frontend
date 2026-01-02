@@ -1,12 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import LifeKLineChart from './components/LifeKLineChart';
 import AnalysisResult from './components/AnalysisResult';
 import ImportDataMode from './components/ImportDataMode';
 import Login from './components/Login';
 import ReportHistory from './components/ReportHistory';
 import WealthLevelShare from './components/WealthLevelShare';
-import StarBalance from './components/StarBalance';
+import StarBalance, { StarBalanceRef } from './components/StarBalance';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
@@ -20,12 +20,16 @@ const App: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [showHistory, setShowHistory] = useState(false);
   const [showWealthShare, setShowWealthShare] = useState(false);
+  const starBalanceRef = useRef<StarBalanceRef>(null);
 
   // 处理导入数据
   const handleDataImport = (data: LifeDestinyResult) => {
     setResult(data);
     setUserName('');
     setError(null);
+
+    // 生成报告后刷新星星余额
+    starBalanceRef.current?.refresh();
   };
 
   // 处理选择历史报告
@@ -537,7 +541,7 @@ const App: React.FC = () => {
               合作/简历投递推特私信联系 @AstroMoon1225
             </a>
             {/* 星星余额显示 */}
-            <StarBalance />
+            <StarBalance ref={starBalanceRef} />
             <button
               onClick={() => setShowHistory(true)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all flex-shrink-0"

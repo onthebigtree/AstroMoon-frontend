@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { getUserCredits, type UserCredits } from '../services/api';
 
+export interface StarBalanceRef {
+  refresh: () => Promise<void>;
+}
+
 /**
  * 星星余额显示组件
  */
-export function StarBalance() {
+export const StarBalance = React.forwardRef<StarBalanceRef>((props, ref) => {
   const [credits, setCredits] = useState<UserCredits | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +33,7 @@ export function StarBalance() {
 
   // 暴露刷新方法，供父组件调用
   React.useImperativeHandle(
-    React.useRef(),
+    ref,
     () => ({
       refresh: loadCredits,
     }),
@@ -124,6 +128,8 @@ export function StarBalance() {
       `}</style>
     </div>
   );
-}
+});
+
+StarBalance.displayName = 'StarBalance';
 
 export default StarBalance;
