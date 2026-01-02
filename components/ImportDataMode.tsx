@@ -1103,12 +1103,15 @@ ${chartInfo}
                 // 生成成功后刷新限制状态
                 loadGenerationLimit();
             } catch (streamError: any) {
-                // 检查是否为 429 限流错误
-                if (streamError.message.includes('Daily generation limit reached') ||
+                // 检查是否为星星不足或限流错误
+                if (streamError.message.includes('星星不足') ||
+                    streamError.message.includes('Insufficient stars') ||
+                    streamError.message.includes('Daily generation limit reached') ||
                     streamError.message.includes('生成上限')) {
                     // 刷新限制状态以获取最新信息
                     await loadGenerationLimit();
-                    throw new Error('今日生成次数已用完，请明天再试');
+                    // 直接使用后端返回的错误消息
+                    throw streamError;
                 }
 
                 // 如果新后端失败，回退到旧后端
@@ -1807,45 +1810,7 @@ ${chartInfo}
                         </div>
                     </div>
 
-                    {/* 生成限制提示 */}
-                    {limitStatus && (
-                        <div className={`p-4 rounded-xl border-2 ${
-                            limitStatus.allowed
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-red-50 border-red-200'
-                        }`}>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    {limitStatus.allowed ? (
-                                        <CheckCircle className="w-5 h-5 text-green-600" />
-                                    ) : (
-                                        <AlertCircle className="w-5 h-5 text-red-600" />
-                                    )}
-                                    <div>
-                                        <p className={`text-sm font-bold ${
-                                            limitStatus.allowed ? 'text-green-800' : 'text-red-800'
-                                        }`}>
-                                            今日剩余生成次数：
-                                            <span className="text-lg mx-1">{limitStatus.remaining}/{limitStatus.limit}</span>
-                                        </p>
-                                        {!limitStatus.allowed && (
-                                            <p className="text-xs text-red-600 mt-1">
-                                                将在 {new Date(limitStatus.resetAt).toLocaleString('zh-CN', {
-                                                    month: '2-digit',
-                                                    day: '2-digit',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })} 重置
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                {isLoadingLimit && (
-                                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    {/* 星星余额已在页面header中显示 */}
 
                     {/* 队列状态显示 */}
                     {isInQueue && queuePosition !== null && queuePosition > 0 && (

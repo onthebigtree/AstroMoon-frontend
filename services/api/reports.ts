@@ -159,7 +159,23 @@ export async function deleteReport(id: string): Promise<void> {
 }
 
 /**
- * 查询今日生成限制状态
+ * 获取用户星星余额
+ * @returns 星星配额信息
+ */
+export async function getUserCredits(): Promise<import('./types').UserCredits> {
+  const response = await apiRequest<import('./types').UserCredits>(
+    '/api/reports/credits',
+    {
+      method: 'GET',
+    },
+    true
+  );
+  return response;
+}
+
+/**
+ * 查询今日生成限制状态（已废弃，保留兼容）
+ * @deprecated 请使用 getUserCredits() 代替
  * @returns 生成限制信息（是否允许、剩余次数、重置时间等）
  */
 export async function checkGenerationLimit(): Promise<GenerationLimit> {

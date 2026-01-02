@@ -100,7 +100,24 @@ export interface ExportResponse {
   exportCount: number;
 }
 
-// ==================== 生成限制相关类型 ====================
+// ==================== 星星配额相关类型 ====================
+
+export interface UserCredits {
+  success: boolean;
+  total_stars: number;
+  used_stars: number;
+  remaining_stars: number;
+}
+
+export interface CreditsError {
+  error: string;
+  message: string;
+  total_stars?: number;
+  used_stars?: number;
+  remaining_stars?: number;
+}
+
+// ==================== 生成限制相关类型（已废弃，保留兼容） ====================
 
 export interface GenerationLimit {
   success: boolean;

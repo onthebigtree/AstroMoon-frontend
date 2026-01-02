@@ -6,6 +6,7 @@ import ImportDataMode from './components/ImportDataMode';
 import Login from './components/Login';
 import ReportHistory from './components/ReportHistory';
 import WealthLevelShare from './components/WealthLevelShare';
+import StarBalance from './components/StarBalance';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
@@ -441,6 +442,8 @@ const App: React.FC = () => {
             >
               合作/简历投递推特私信联系 @AstroMoon1225
             </a>
+            {/* 星星余额显示 */}
+            <StarBalance />
             <button
               onClick={() => setShowHistory(true)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all flex-shrink-0"
