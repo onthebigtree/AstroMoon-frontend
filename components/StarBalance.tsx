@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getUserCredits, type UserCredits } from '../services/api';
+import { Plus } from 'lucide-react';
+import BuyStarsModal from './BuyStarsModal';
 
 export interface StarBalanceRef {
   refresh: () => Promise<void>;
@@ -12,6 +14,7 @@ export const StarBalance = React.forwardRef<StarBalanceRef>((props, ref) => {
   const [credits, setCredits] = useState<UserCredits | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showBuyModal, setShowBuyModal] = useState(false);
 
   const loadCredits = async () => {
     try {
@@ -61,16 +64,33 @@ export const StarBalance = React.forwardRef<StarBalanceRef>((props, ref) => {
   }
 
   return (
-    <div className="star-balance">
-      <div className="star-display">
-        <span className="star-icon">⭐</span>
-        <span className="star-count">{credits.remaining_stars}</span>
-        <span className="star-label">颗星星</span>
+    <>
+      <div className="star-balance">
+        <div className="star-display">
+          <span className="star-icon">⭐</span>
+          <span className="star-count">{credits.remaining_stars}</span>
+          <span className="star-label">颗星星</span>
+        </div>
+        <button
+          onClick={() => setShowBuyModal(true)}
+          className="buy-button"
+          title="购买星星"
+        >
+          <Plus size={16} />
+        </button>
       </div>
+
+      <BuyStarsModal
+        isOpen={showBuyModal}
+        onClose={() => setShowBuyModal(false)}
+        onSuccess={loadCredits}
+      />
+
       <style jsx>{`
         .star-balance {
           display: inline-flex;
           align-items: center;
+          gap: 8px;
           padding: 8px 16px;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           border-radius: 20px;
@@ -125,8 +145,27 @@ export const StarBalance = React.forwardRef<StarBalanceRef>((props, ref) => {
         .star-balance:hover .star-icon {
           animation: sparkle 0.6s ease-in-out infinite;
         }
+
+        .buy-button {
+          display: flex;
+          align-items: center;
+          justify-center;
+          width: 24px;
+          height: 24px;
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          color: white;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .buy-button:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: scale(1.1);
+        }
       `}</style>
-    </div>
+    </>
   );
 });
 
