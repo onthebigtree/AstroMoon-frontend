@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>自动生成 OG 图片</title>
+</head>
+<body>
+  <canvas id="canvas" width="1200" height="630" style="border: 1px solid #ccc;"></canvas>
+  <div style="margin-top: 20px;">
+    <button id="downloadBtn" style="padding: 12px 24px; font-size: 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">
+      下载 og-image.png
+    </button>
+    <p style="color: #666; margin-top: 10px;">图片已生成，点击上方按钮下载</p>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 绘制渐变背景
+    const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(0.5, '#764ba2');
+    gradient.addColorStop(1, '#f093fb');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 1200, 630);
+
+    // 添加装饰圆圈
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.beginPath();
+    ctx.arc(1100, 100, 200, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(1050, 550, 150, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // 添加星星效果
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    const stars = [
+      [240, 189, 2], [720, 441, 2], [600, 315, 1],
+      [960, 63, 1], [1080, 378, 2], [396, 504, 1],
+      [180, 420, 1], [840, 140, 1], [480, 560, 1]
+    ];
+    stars.forEach(([x, y, r]) => {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, 2 * Math.PI);
+      ctx.fill();
+    });
+
+    // 绘制月亮 logo (月牙形状)
+    const centerX = 600;
+    const centerY = 240;
+    const moonSize = 60;
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+
+    // 创建白色渐变
+    const moonGradient = ctx.createLinearGradient(-moonSize, -moonSize, moonSize, moonSize);
+    moonGradient.addColorStop(0, '#ffffff');
+    moonGradient.addColorStop(1, '#f0f0f0');
+
+    // 绘制月牙形状
+    ctx.fillStyle = moonGradient;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = 2.5;
+
+    // 外圆弧
+    ctx.beginPath();
+    ctx.arc(-moonSize * 0.2, 0, moonSize * 0.7, Math.PI * 0.3, Math.PI * 1.7);
+
+    // 内凹弧
+    ctx.arc(moonSize * 0.2, 0, moonSize * 0.5, Math.PI * 1.7, Math.PI * 0.3, true);
+
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // 添加月亮阴影效果
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+
+    // 绘制文字
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // 添加文字阴影
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 4;
+
+    ctx.fillText('AstroMoon.xyz', 600, 400);
+
+    // 下载功能
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'og-image.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // 自动提示
+    console.log('OG 图片已生成！点击"下载"按钮保存文件。');
+  </script>
+</body>
+</html>

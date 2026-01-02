@@ -11,6 +11,7 @@ import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
 import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut } from 'lucide-react';
+import { replaceAge100Reason } from './constants/age100';
 
 const App: React.FC = () => {
   const { currentUser, logout } = useAuth();
@@ -93,11 +94,47 @@ const App: React.FC = () => {
         hasPersonality: !!reportContent.analysis.personality
       });
 
+      // 🔍 打印从数据库加载的原始数据结构（详细调试）
+      console.group('🗄️ 数据库原始数据');
+      console.log('所有 analysis 字段:', Object.keys(reportContent.analysis));
+      console.log('交易员字段存在性:', {
+        traderVitality: !!reportContent.analysis.traderVitality,
+        wealthPotential: !!reportContent.analysis.wealthPotential,
+        fortuneLuck: !!reportContent.analysis.fortuneLuck,
+        leverageRisk: !!reportContent.analysis.leverageRisk,
+        platformTeam: !!reportContent.analysis.platformTeam,
+        tradingStyle: !!reportContent.analysis.tradingStyle,
+      });
+      console.log('普通字段存在性:', {
+        personality: !!reportContent.analysis.personality,
+        industry: !!reportContent.analysis.industry,
+        wealth: !!reportContent.analysis.wealth,
+        marriage: !!reportContent.analysis.marriage,
+        health: !!reportContent.analysis.health,
+        family: !!reportContent.analysis.family,
+      });
+      console.log('新增字段存在性:', {
+        intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+        sexualCharm: !!reportContent.analysis.sexualCharm,
+        favorableDirections: !!reportContent.analysis.favorableDirections,
+      });
+      console.groupEnd();
+
       // 如果是普通版本但使用了交易员字段名，需要重新映射
       if (!isTraderReport && reportContent.analysis) {
         // 检查是否有交易员字段但没有普通字段（旧版本混合数据）
         const hasTraderFields = !!reportContent.analysis.traderVitality;
         const hasNormalFields = !!reportContent.analysis.personality;
+
+        // 🔍 打印历史报告的完整数据结构（用于调试）
+        console.group('📊 历史报告数据结构');
+        console.log('报告类型:', { isTraderReport, hasTraderFields, hasNormalFields });
+        console.log('新增维度字段检查:', {
+          intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+          sexualCharm: !!reportContent.analysis.sexualCharm,
+          favorableDirections: !!reportContent.analysis.favorableDirections
+        });
+        console.groupEnd();
 
         if (hasTraderFields && !hasNormalFields) {
           // 将交易员字段映射到普通人生字段
@@ -149,29 +186,51 @@ const App: React.FC = () => {
           }
 
           // 保留新增的三个维度
+          console.log('🔍 保留新增维度字段（历史报告-旧版映射）:', {
+            intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+            sexualCharm: !!reportContent.analysis.sexualCharm,
+            favorableDirections: !!reportContent.analysis.favorableDirections
+          });
+
           if (reportContent.analysis.intimacyEnergy) {
+            console.log('✅ 保留 intimacyEnergy 字段');
             mappedAnalysis.intimacyEnergy = reportContent.analysis.intimacyEnergy;
             mappedAnalysis.intimacyEnergyScore = reportContent.analysis.intimacyEnergyScore;
-            mappedAnalysis.intimacyEnergyTitle = reportContent.analysis.intimacyEnergyTitle;
+            mappedAnalysis.intimacyEnergyTitle = reportContent.analysis.intimacyEnergyTitle || "亲密能量与深度连接能力";
           }
 
           if (reportContent.analysis.sexualCharm) {
+            console.log('✅ 保留 sexualCharm 字段');
             mappedAnalysis.sexualCharm = reportContent.analysis.sexualCharm;
             mappedAnalysis.sexualCharmScore = reportContent.analysis.sexualCharmScore;
-            mappedAnalysis.sexualCharmTitle = reportContent.analysis.sexualCharmTitle;
+            mappedAnalysis.sexualCharmTitle = reportContent.analysis.sexualCharmTitle || "性能力与吸引力";
+          } else {
+            console.warn('⚠️ 历史报告中未找到 sexualCharm 字段');
           }
 
           if (reportContent.analysis.favorableDirections) {
+            console.log('✅ 保留 favorableDirections 字段');
             mappedAnalysis.favorableDirections = reportContent.analysis.favorableDirections;
             mappedAnalysis.favorableDirectionsScore = reportContent.analysis.favorableDirectionsScore;
-            mappedAnalysis.favorableDirectionsTitle = reportContent.analysis.favorableDirectionsTitle;
+            mappedAnalysis.favorableDirectionsTitle = reportContent.analysis.favorableDirectionsTitle || "适宜发展方位";
           }
 
           reportContent.analysis = mappedAnalysis;
-          console.log('✅ 字段映射完成');
+          console.log('✅ 字段映射完成，新增维度保留结果:', {
+            intimacyEnergy: !!mappedAnalysis.intimacyEnergy,
+            sexualCharm: !!mappedAnalysis.sexualCharm,
+            favorableDirections: !!mappedAnalysis.favorableDirections
+          });
         } else if (hasTraderFields) {
           // 删除交易员特定字段，避免被误判为交易员模式
-          console.log('🗑️ 删除交易员字段...');
+          // 但保留新增的三个维度字段（intimacyEnergy, sexualCharm, favorableDirections）
+          console.log('🗑️ 删除交易员字段（但保留新增维度）...');
+          console.log('🔍 删除前新增维度字段:', {
+            intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+            sexualCharm: !!reportContent.analysis.sexualCharm,
+            favorableDirections: !!reportContent.analysis.favorableDirections
+          });
+
           const {
             traderVitality,
             traderVitalityScore,
@@ -196,7 +255,42 @@ const App: React.FC = () => {
           } = reportContent.analysis;
 
           reportContent.analysis = restAnalysis;
+
+          console.log('✅ 交易员字段删除完成，新增维度保留结果:', {
+            intimacyEnergy: !!restAnalysis.intimacyEnergy,
+            sexualCharm: !!restAnalysis.sexualCharm,
+            favorableDirections: !!restAnalysis.favorableDirections
+          });
         }
+      }
+
+      // 🔍 打印最终要显示的数据结构（用于调试）
+      console.group('📦 最终显示数据');
+      console.log('所有 analysis 字段:', Object.keys(reportContent.analysis));
+      console.log('交易员字段:', {
+        traderVitality: !!reportContent.analysis.traderVitality,
+        wealthPotential: !!reportContent.analysis.wealthPotential,
+        fortuneLuck: !!reportContent.analysis.fortuneLuck,
+      });
+      console.log('普通字段:', {
+        personality: !!reportContent.analysis.personality,
+        industry: !!reportContent.analysis.industry,
+        wealth: !!reportContent.analysis.wealth,
+        marriage: !!reportContent.analysis.marriage,
+        health: !!reportContent.analysis.health,
+        family: !!reportContent.analysis.family,
+      });
+      console.log('新增字段:', {
+        intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
+        sexualCharm: !!reportContent.analysis.sexualCharm,
+        favorableDirections: !!reportContent.analysis.favorableDirections,
+      });
+      console.log('AnalysisResult 会显示为:', !!reportContent.analysis.traderVitality ? '交易员模式' : '普通人生模式');
+      console.groupEnd();
+
+      // 🔄 强制替换 100 岁的 reason 文案为标准文案（历史报告）
+      if (reportContent.chartData && Array.isArray(reportContent.chartData)) {
+        reportContent.chartData = replaceAge100Reason(reportContent.chartData);
       }
 
       // 设置结果数据
@@ -601,8 +695,8 @@ const App: React.FC = () => {
               <AnalysisResult analysis={result.analysis} />
             </section>
 
-            {/* Print Only: Detailed Table to substitute interactive tooltips */}
-            <div className="hidden print:block mt-8 break-before-page">
+            {/* 流年详批全表 - 始终显示，打印时分页 */}
+            <div className="mt-8 print:break-before-page">
               <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2 mb-4">
                 <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
                 <h3 className="text-xl font-bold text-gray-800 font-serif-sc">流年详批全表</h3>
@@ -617,8 +711,18 @@ const App: React.FC = () => {
                 </thead>
                 <tbody>
                   {result.chartData.map((item) => (
-                    <tr key={item.age} className="border-b border-gray-100 break-inside-avoid">
-                      <td className="p-2 border border-gray-100 text-center font-mono">{item.age}</td>
+                    <tr
+                      key={item.age}
+                      className={`border-b border-gray-100 break-inside-avoid ${
+                        item.age === 100 ? 'bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300' : ''
+                      }`}
+                    >
+                      <td className="p-2 border border-gray-100 text-center font-mono">
+                        {item.age}
+                        {item.age === 100 && (
+                          <div className="text-xs text-amber-600 font-bold mt-1">谢幕</div>
+                        )}
+                      </td>
                       <td className={`p-2 border border-gray-100 text-center font-bold ${item.close >= item.open ? 'text-green-600' : 'text-red-600'}`}>
                         {item.score}
                       </td>
