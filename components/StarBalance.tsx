@@ -1,44 +1,50 @@
 import React, { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { getUserCredits, type UserCredits } from '../services/api';
 
 export interface StarBalanceRef {
   refresh: () => Promise<void>;
 }
 
+interface StarBalanceProps {
+  onPurchaseClick?: () => void;
+}
+
 /**
  * 星星余额显示组件
  */
-export const StarBalance = React.forwardRef<StarBalanceRef>((props, ref) => {
-  const [credits, setCredits] = useState<UserCredits | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const StarBalance = React.forwardRef<StarBalanceRef, StarBalanceProps>(
+  ({ onPurchaseClick }, ref) => {
+    const [credits, setCredits] = useState<UserCredits | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const loadCredits = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getUserCredits();
-      setCredits(data);
-    } catch (err) {
-      console.error('Failed to load credits:', err);
-      setError(err instanceof Error ? err.message : '获取星星余额失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadCredits = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getUserCredits();
+        setCredits(data);
+      } catch (err) {
+        console.error('Failed to load credits:', err);
+        setError(err instanceof Error ? err.message : '获取星星余额失败');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    loadCredits();
-  }, []);
+    useEffect(() => {
+      loadCredits();
+    }, []);
 
-  // 暴露刷新方法，供父组件调用
-  React.useImperativeHandle(
-    ref,
-    () => ({
-      refresh: loadCredits,
-    }),
-    []
-  );
+    // 暴露刷新方法，供父组件调用
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        refresh: loadCredits,
+      }),
+      []
+    );
 
   if (loading) {
     return (
@@ -61,13 +67,27 @@ export const StarBalance = React.forwardRef<StarBalanceRef>((props, ref) => {
   }
 
   return (
-    <div className="star-balance">
-      <div className="star-display">
-        <span className="star-icon">⭐</span>
-        <span className="star-count">{credits.remaining_stars}</span>
-        <span className="star-label">颗星星</span>
+    <div className="star-balance-container">
+      <div className="star-balance">
+        <div className="star-display">
+          <span className="star-icon">⭐</span>
+          <span className="star-count">{credits.remaining_stars}</span>
+          <span className="star-label">颗星星</span>
+        </div>
+        {onPurchaseClick && (
+          <button
+            onClick={onPurchaseClick}
+            className="purchase-btn"
+            title="充值星星"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        )}
       </div>
       <style jsx>{`
+        .star-balance-container {
+          display: inline-flex;
+        }
         .star-balance {
           display: inline-flex;
           align-items: center;
@@ -124,6 +144,29 @@ export const StarBalance = React.forwardRef<StarBalanceRef>((props, ref) => {
 
         .star-balance:hover .star-icon {
           animation: sparkle 0.6s ease-in-out infinite;
+        }
+
+        .purchase-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: 8px;
+          padding: 6px;
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 8px;
+          color: white;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .purchase-btn:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: scale(1.1);
+        }
+
+        .purchase-btn:active {
+          transform: scale(0.95);
         }
       `}</style>
     </div>

@@ -46,3 +46,11 @@ export type {
   TelegramBindResult,
   TelegramUnbindResult,
 } from './telegram';
+
+// 支付系统
+export {
+  getProducts,
+  createOrder,
+  getOrder,
+  getOrders,
+} from './payments';

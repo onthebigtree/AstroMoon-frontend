@@ -216,3 +216,59 @@ export interface QueueInfo {
   activeCount: number;
   queueLength: number;
 }
+
+// ==================== 支付相关类型 ====================
+
+export interface Product {
+  name: string;
+  price: number;
+  stars: number;
+  description: string;
+  popular?: boolean;
+}
+
+export interface ProductsResponse {
+  success: boolean;
+  products: Record<string, Product>;
+}
+
+export interface CreateOrderRequest {
+  productType: 'stars_10' | 'stars_30' | 'stars_100';
+}
+
+export interface CreateOrderResponse {
+  success: boolean;
+  orderId: number;
+  paymentUrl: string;
+  chargeCode: string;
+  expiresAt: string;
+}
+
+export interface Order {
+  id: number;
+  user_id: number;
+  charge_id: string;
+  charge_code: string;
+  hosted_url: string;
+  product_type: string;
+  stars_amount: number;
+  price_amount: number;
+  price_currency: string;
+  status: 'pending' | 'confirmed' | 'failed' | 'expired';
+  metadata: any;
+  created_at: string;
+  confirmed_at?: string;
+  expires_at?: string;
+  updated_at: string;
+}
+
+export interface OrderResponse {
+  success: boolean;
+  order: Order;
+}
+
+export interface OrdersResponse {
+  success: boolean;
+  orders: Order[];
+  count: number;
+}
