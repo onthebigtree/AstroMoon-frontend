@@ -1,7 +1,7 @@
 import { getAuth } from 'firebase/auth';
 
-// 新后端 Base URL
-export const API_BASE_URL = 'https://astromoon-backend-production.up.railway.app';
+// 新后端 Base URL - Dev 环境
+export const API_BASE_URL = 'https://astromoon-backend-dev.up.railway.app';
 
 /**
  * 获取 Firebase ID Token
