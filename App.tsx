@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import LifeKLineChart from './components/LifeKLineChart';
 import AnalysisResult from './components/AnalysisResult';
 import ImportDataMode from './components/ImportDataMode';
@@ -10,6 +10,7 @@ import { BuyStarsModal } from './components/BuyStarsModal';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
+import { getUserCredits } from './services/api/reports';
 import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star } from 'lucide-react';
 import { replaceAge100Reason } from './constants/age100';
 
@@ -21,6 +22,29 @@ const App: React.FC = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [showWealthShare, setShowWealthShare] = useState(false);
   const [showBuyStars, setShowBuyStars] = useState(false);
+  const [starsBalance, setStarsBalance] = useState<number | null>(null);
+  const [isLoadingStars, setIsLoadingStars] = useState(false);
+
+  const refreshStarsBalance = async () => {
+    if (!currentUser) {
+      setStarsBalance(null);
+      return;
+    }
+
+    setIsLoadingStars(true);
+    try {
+      const credits = await getUserCredits();
+      setStarsBalance(credits.remaining_stars);
+    } catch (err) {
+      console.error('获取星星余额失败:', err);
+    } finally {
+      setIsLoadingStars(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshStarsBalance();
+  }, [currentUser]);
 
   // 处理导入数据
   const handleDataImport = (data: LifeDestinyResult) => {
@@ -537,6 +561,15 @@ const App: React.FC = () => {
             >
               合作/简历投递推特私信联系 @AstroMoon1225
             </a>
+            <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/80 border border-yellow-100 rounded-lg shadow-sm flex-shrink-0">
+              <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-semibold text-gray-900">
+                  {isLoadingStars ? '...' : (starsBalance ?? '--')}
+                </span>
+                <span className="text-[11px] text-gray-500">星星</span>
+              </div>
+            </div>
             <button
               onClick={() => setShowBuyStars(true)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-purple-700 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-all flex-shrink-0 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200"
@@ -588,7 +621,10 @@ const App: React.FC = () => {
             </div>
 
             {/* 导入模式组件 */}
-            <ImportDataMode onDataImport={handleDataImport} />
+            <ImportDataMode
+              onDataImport={handleDataImport}
+              onStarsChange={setStarsBalance}
+            />
 
             {error && (
               <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-100 max-w-md w-full animate-bounce-short">
@@ -790,10 +826,9 @@ const App: React.FC = () => {
       <BuyStarsModal
         isOpen={showBuyStars}
         onClose={() => setShowBuyStars(false)}
-        onSuccess={() => {
-          console.log('支付成功！');
-          // 可以在这里添加刷新星星余额的逻辑
-        }}
+        currentStars={starsBalance}
+        onRefreshStars={refreshStarsBalance}
+        onSuccess={refreshStarsBalance}
       />
     </div>
   );

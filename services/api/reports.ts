@@ -8,6 +8,7 @@ import type {
   ExportResponse,
   SuccessResponse,
   GenerationLimit,
+  UserCredits,
 } from './types';
 
 /**
@@ -156,6 +157,21 @@ export async function deleteReport(id: string): Promise<void> {
     },
     true
   );
+}
+
+/**
+ * 获取用户星星余额
+ * @returns 星星配额信息
+ */
+export async function getUserCredits(): Promise<UserCredits> {
+  const response = await apiRequest<UserCredits>(
+    '/api/reports/credits',
+    {
+      method: 'GET',
+    },
+    true
+  );
+  return response;
 }
 
 /**

@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, Star, Sparkles, Check, ExternalLink, Loader2, CreditCard } from 'lucide-react';
-import type { Product, CreatePaymentRequest, PaymentInvoice } from '../services/api/types';
+import { X, Star, Sparkles, Check, ExternalLink, Loader2, CreditCard, RefreshCw } from 'lucide-react';
+import type { Product, CreatePaymentRequest } from '../services/api/types';
 import { getProducts, createPayment, getPaymentStatus } from '../services/api';
 
 interface BuyStarsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void; // 支付成功后的回调
+  currentStars?: number | null;
+  onRefreshStars?: () => Promise<void> | void;
 }
 
-export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps) {
+export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefreshStars }: BuyStarsModalProps) {
   const [products, setProducts] = useState<Record<string, Product> | null>(null);
   const [selectedProductType, setSelectedProductType] = useState<'stars_10' | 'stars_30' | 'stars_100' | null>(null);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
@@ -17,11 +19,15 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
   const [invoiceId, setInvoiceId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
 
   // 加载产品列表
   useEffect(() => {
     if (isOpen && !products) {
       loadProducts();
+    }
+    if (isOpen && onRefreshStars) {
+      refreshStarsBalance(true);
     }
   }, [isOpen]);
 
@@ -32,6 +38,24 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
     } catch (err: any) {
       console.error('加载产品失败:', err);
       setError('加载产品失败，请刷新重试');
+    }
+  };
+
+  const refreshStarsBalance = async (withLoading: boolean = false) => {
+    if (!onRefreshStars) return;
+
+    if (withLoading) {
+      setIsRefreshingBalance(true);
+    }
+
+    try {
+      await onRefreshStars();
+    } catch (err) {
+      console.error('刷新星星余额失败:', err);
+    } finally {
+      if (withLoading) {
+        setIsRefreshingBalance(false);
+      }
     }
   };
 
@@ -83,6 +107,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
         if (invoice.status === 'finished') {
           clearInterval(intervalId);
           alert(`支付成功！已添加 ${invoice.stars_amount} 颗星星到你的账户 ⭐`);
+          await refreshStarsBalance();
           onSuccess?.();
           handleClose();
         } else if (invoice.status === 'failed' || invoice.status === 'expired') {
@@ -112,6 +137,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
 
       if (invoice.status === 'finished') {
         alert(`支付成功！已添加 ${invoice.stars_amount} 颗星星到你的账户 ⭐`);
+        await refreshStarsBalance();
         onSuccess?.();
         handleClose();
       } else if (invoice.status === 'confirming') {
@@ -161,6 +187,33 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
 
         {/* Content */}
         <div className="p-6">
+          <div className="flex items-center justify-between mb-4 bg-purple-50 p-4 rounded-xl border border-purple-100">
+            <div className="flex items-center gap-3">
+              <div className="bg-white rounded-full p-2 shadow-sm border border-yellow-100">
+                <Star className="w-6 h-6 text-yellow-500 fill-yellow-400" />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">当前星星余额</div>
+                <div className="text-xl font-bold text-gray-900">
+                  {isRefreshingBalance ? '...' : (currentStars ?? '--')}
+                </div>
+              </div>
+            </div>
+            {onRefreshStars && (
+              <button
+                onClick={() => refreshStarsBalance(true)}
+                disabled={isRefreshingBalance}
+                className="flex items-center gap-2 px-3 py-2 bg-white text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-60"
+              >
+                {isRefreshingBalance ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                <span className="text-sm font-medium">刷新</span>
+              </button>
+            )}
+          </div>
           {/* 加载中 */}
           {!products && (
             <div className="flex items-center justify-center py-12">
