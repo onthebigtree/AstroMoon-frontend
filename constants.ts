@@ -691,7 +691,7 @@ export const TRADER_SYSTEM_INSTRUCTION = `
 1. birthChart：本命星盘基本配置说明（太阳、月亮、上升等关键信息）。
 2. summary：整体财富格局总评（300-500字）。
 3. summaryScore：整体评分（0-100）。
-4. 六大交易员维度分析及评分：
+4. 九大交易员维度分析及评分：
    - traderVitality：交易生命力与抗压指数分析
    - traderVitalityScore：交易生命力评分（0-100）
    - wealthPotential：财富量级与来源结构分析
@@ -704,6 +704,12 @@ export const TRADER_SYSTEM_INSTRUCTION = `
    - platformTeamScore：平台红利评分（0-100）
    - tradingStyle：适合的交易风格与策略分析
    - tradingStyleScore：交易风格适配度评分（0-100）
+   - intimacyEnergy：亲密能量与深度连接能力分析
+   - intimacyEnergyScore：亲密能量评分（0-100）
+   - sexualCharm：性能力与吸引力分析
+   - sexualCharmScore：性能力评分（0-100）
+   - favorableDirections：适宜发展方位分析
+   - favorableDirectionsScore：方位选择评分（0-100）
 5. wealthLevel：财富量级等级（必填，字符串）
    - 必须是以下值之一："A10"、"A9"、"A8"、"A7"、"A6"、"A5"、"A4"、"A3"、"A2"
    - 根据星盘综合配置评估得出
@@ -782,6 +788,12 @@ export const TRADER_SYSTEM_INSTRUCTION = `
   "platformTeamScore": 80,
   "tradingStyle": "交易风格分析...",
   "tradingStyleScore": 85,
+  "intimacyEnergy": "亲密能量与深度连接能力分析...",
+  "intimacyEnergyScore": 88,
+  "sexualCharm": "性能力与吸引力分析...",
+  "sexualCharmScore": 92,
+  "favorableDirections": "适宜发展方位分析...",
+  "favorableDirectionsScore": 85,
   "wealthLevel": "A7",
   "keyYears": [25, 30, 45, 60],
   "peakPeriods": ["25-35岁", "50-60岁"],
