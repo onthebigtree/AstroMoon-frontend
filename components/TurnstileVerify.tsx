@@ -11,9 +11,9 @@ const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel })
   const [error, setError] = useState<string>('');
   const [isVerified, setIsVerified] = useState(false);
 
-  // 从环境变量获取 Cloudflare Turnstile Site Key，未配置时默认使用测试密钥
-  const siteKey = (import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA').trim();
-  const isTestKey = siteKey === '1x00000000000000000000AA';
+  // 统一使用测试密钥，不依赖环境变量（开发和生产都用测试密钥）
+  const siteKey = '1x00000000000000000000AA';
+  const isTestKey = true;
 
   const handleSuccess = (token: string) => {
     console.log('✅ Turnstile 验证成功');
@@ -54,15 +54,6 @@ const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel })
         </div>
 
         <div className="space-y-4">
-          {isTestKey && (
-            <div className="flex items-start gap-2 text-amber-700 bg-amber-50 px-4 py-3 rounded-lg border border-amber-200">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-semibold">当前使用 Cloudflare 测试密钥</p>
-                <p>请在部署环境中把 <code className="px-1 py-0.5 bg-amber-100 rounded">VITE_TURNSTILE_SITE_KEY</code> 替换为正式站点的 key，确保验证在生产可用。</p>
-              </div>
-            </div>
-          )}
           {/* Cloudflare Turnstile 验证组件 */}
           <div className="flex justify-center">
             <Turnstile
