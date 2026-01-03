@@ -306,29 +306,10 @@ const App: React.FC = () => {
   const handleExportJson = () => {
     if (!result) return;
 
+    // 直接导出完整的分析数据，包含所有字段（兼容新旧版本和交易员/普通人生模式）
     const exportData = {
-      bazi: result.analysis.bazi,
-      summary: result.analysis.summary,
-      summaryScore: result.analysis.summaryScore,
-      personality: result.analysis.personality,
-      personalityScore: result.analysis.personalityScore,
-      industry: result.analysis.industry,
-      industryScore: result.analysis.industryScore,
-      fengShui: result.analysis.fengShui,
-      fengShuiScore: result.analysis.fengShuiScore,
-      wealth: result.analysis.wealth,
-      wealthScore: result.analysis.wealthScore,
-      marriage: result.analysis.marriage,
-      marriageScore: result.analysis.marriageScore,
-      health: result.analysis.health,
-      healthScore: result.analysis.healthScore,
-      family: result.analysis.family,
-      familyScore: result.analysis.familyScore,
-      crypto: result.analysis.crypto,
-      cryptoScore: result.analysis.cryptoScore,
-      cryptoYear: result.analysis.cryptoYear,
-      cryptoStyle: result.analysis.cryptoStyle,
-      chartPoints: result.chartData,
+      ...result.analysis,  // 包含所有 analysis 字段
+      chartPoints: result.chartData,  // 添加图表数据
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });

@@ -11,8 +11,33 @@ const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel })
   const [error, setError] = useState<string>('');
   const [isVerified, setIsVerified] = useState(false);
 
-  // 从环境变量获取 Cloudflare Turnstile Site Key
-  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'; // 测试密钥
+  // 从环境变量获取 Cloudflare Turnstile Site Key（不再默认测试 key，避免误用）
+  const siteKey = (import.meta.env.VITE_TURNSTILE_SITE_KEY || '').trim();
+  const isTestKey = siteKey === '1x00000000000000000000AA';
+
+  if (!siteKey) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+          <div className="flex items-center gap-3 text-red-700 bg-red-50 border border-red-200 p-4 rounded-xl">
+            <AlertCircle className="w-6 h-6 flex-shrink-0" />
+            <div className="space-y-1">
+              <p className="font-bold">缺少 Turnstile Site Key</p>
+              <p className="text-sm text-red-600">
+                请在环境变量中配置 <code className="px-1 py-0.5 bg-red-100 rounded">VITE_TURNSTILE_SITE_KEY</code>（生产站点的正式 key），否则无法完成验证。
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onCancel}
+            className="w-full mt-4 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all"
+          >
+            返回
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleSuccess = (token: string) => {
     console.log('✅ Turnstile 验证成功');
@@ -53,6 +78,15 @@ const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel })
         </div>
 
         <div className="space-y-4">
+          {isTestKey && (
+            <div className="flex items-start gap-2 text-amber-700 bg-amber-50 px-4 py-3 rounded-lg border border-amber-200">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold">当前使用 Cloudflare 测试密钥</p>
+                <p>请在部署环境中把 <code className="px-1 py-0.5 bg-amber-100 rounded">VITE_TURNSTILE_SITE_KEY</code> 替换为正式站点的 key，确保验证在生产可用。</p>
+              </div>
+            </div>
+          )}
           {/* Cloudflare Turnstile 验证组件 */}
           <div className="flex justify-center">
             <Turnstile
