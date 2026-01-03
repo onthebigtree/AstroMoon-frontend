@@ -10,7 +10,7 @@ import { BuyStarsModal } from './components/BuyStarsModal';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
-import { getUserCredits } from './services/api/reports';
+import { getStarBalance } from './services/api/payments';
 import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star } from 'lucide-react';
 import { replaceAge100Reason } from './constants/age100';
 
@@ -33,8 +33,8 @@ const App: React.FC = () => {
 
     setIsLoadingStars(true);
     try {
-      const credits = await getUserCredits();
-      setStarsBalance(credits.remaining_stars);
+      const { stars } = await getStarBalance();
+      setStarsBalance(stars);
     } catch (err) {
       console.error('获取星星余额失败:', err);
     } finally {

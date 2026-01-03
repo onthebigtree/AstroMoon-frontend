@@ -4,7 +4,8 @@ import { LifeDestinyResult } from '../types';
 import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
 import { generateWithAPI } from '../services/apiService';
-import { streamReportGenerate, getUserCredits } from '../services/api/reports';
+import { streamReportGenerate } from '../services/api/reports';
+import { getStarBalance } from '../services/api/payments';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import { replaceAge100Reason } from '../constants/age100';
 import LocationMapPicker from './LocationMapPicker';
@@ -13,7 +14,6 @@ import TelegramLoginButton from './TelegramLoginButton';
 import TurnstileVerify from './TurnstileVerify';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfiles, createProfile, updateProfile, deleteProfile, type Profile, checkTelegramMembership, bindTelegramAccount } from '../services/api';
-import type { UserCredits } from '../services/api/types';
 
 interface ImportDataModeProps {
     onDataImport: (data: LifeDestinyResult) => void;
@@ -193,9 +193,9 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
     const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
     const [isDeletingProfile, setIsDeletingProfile] = useState(false);
 
-    // 星星配额状态
-    const [userCredits, setUserCredits] = useState<UserCredits | null>(null);
-    const [isLoadingCredits, setIsLoadingCredits] = useState(false);
+    // 星星余额状态
+    const [starsBalance, setStarsBalance] = useState<number | null>(null);
+    const [isLoadingStarsBalance, setIsLoadingStarsBalance] = useState(false);
 
     // 队列状态相关
     const [queuePosition, setQueuePosition] = useState<number | null>(null);
@@ -207,7 +207,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
     useEffect(() => {
         if (currentUser) {
             loadProfiles();
-            loadUserCredits();
+            loadStarsBalance();
         }
     }, [currentUser]);
 
@@ -234,22 +234,22 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
     };
 
     // 加载星星余额
-    const loadUserCredits = async () => {
+    const loadStarsBalance = async () => {
         if (!currentUser) return;
 
-        setIsLoadingCredits(true);
+        setIsLoadingStarsBalance(true);
         try {
-            const credits = await getUserCredits();
-            console.log('✅ 星星余额:', credits);
-            setUserCredits(credits);
-            if (typeof credits.remaining_stars === 'number') {
-                onStarsChange?.(credits.remaining_stars);
+            const balance = await getStarBalance();
+            console.log('✅ 星星余额:', balance);
+            setStarsBalance(balance.stars);
+            if (typeof balance.stars === 'number') {
+                onStarsChange?.(balance.stars);
             }
         } catch (error: any) {
             console.error('❌ 加载星星余额失败:', error);
             // 静默失败，不影响用户使用
         } finally {
-            setIsLoadingCredits(false);
+            setIsLoadingStarsBalance(false);
         }
     };
 
@@ -972,11 +972,11 @@ ${chartInfo}
     const handleAutoGenerate = async () => {
         // 先检查星星余额
         try {
-            const credits = await getUserCredits();
-            setUserCredits(credits);
-            onStarsChange?.(credits.remaining_stars);
+            const balance = await getStarBalance();
+            setStarsBalance(balance.stars);
+            onStarsChange?.(balance.stars);
 
-            if (credits.remaining_stars <= 0) {
+            if (balance.stars <= 0) {
                 setError('星星不足，请先充值再生成报告');
                 return;
             }
@@ -1141,7 +1141,7 @@ ${chartInfo}
                 console.log('✅ 报告生成完成，已自动保存到数据库');
 
                 // 生成成功后刷新星星余额
-                loadUserCredits();
+                loadStarsBalance();
             } catch (streamError: any) {
                 // 检查是否为星星不足或限流错误
                 if (streamError.message.includes('星星不足') ||
@@ -1149,7 +1149,7 @@ ${chartInfo}
                     streamError.message.includes('Daily generation limit reached') ||
                     streamError.message.includes('生成上限')) {
                     // 刷新星星余额以获取最新信息
-                    await loadUserCredits();
+                    await loadStarsBalance();
                     // 直接使用后端返回的错误消息
                     throw streamError;
                 }
@@ -1979,7 +1979,7 @@ ${chartInfo}
                         </button>
                         <button
                             onClick={handleAutoGenerate}
-                            disabled={isLoading || isLoadingCredits || (userCredits?.remaining_stars !== undefined && userCredits.remaining_stars <= 0)}
+                            disabled={isLoading || isLoadingStarsBalance || (starsBalance !== null && starsBalance <= 0)}
                             className="flex-2 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isLoading ? (

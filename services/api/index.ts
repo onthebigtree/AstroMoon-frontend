@@ -53,4 +53,5 @@ export {
   getCurrencies,
   createPayment,
   getPaymentStatus,
+  getStarBalance,
 } from './payments';

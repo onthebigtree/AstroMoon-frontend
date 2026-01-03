@@ -269,3 +269,8 @@ export interface CurrenciesResponse {
   success: boolean;
   currencies: string[];
 }
+
+export interface StarBalanceResponse {
+  success: boolean;
+  stars: number;
+}

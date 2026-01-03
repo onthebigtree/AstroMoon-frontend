@@ -4,7 +4,8 @@ import type {
   CreatePaymentRequest,
   CreatePaymentResponse,
   PaymentStatusResponse,
-  CurrenciesResponse
+  CurrenciesResponse,
+  StarBalanceResponse
 } from './types';
 
 /**
@@ -53,6 +54,19 @@ export async function createPayment(request: CreatePaymentRequest): Promise<Crea
 export async function getPaymentStatus(invoiceId: number): Promise<PaymentStatusResponse> {
   return await apiRequest<PaymentStatusResponse>(
     `/api/payments/status/${invoiceId}`,
+    {
+      method: 'GET',
+    },
+    true
+  );
+}
+
+/**
+ * 获取当前星星余额
+ */
+export async function getStarBalance(): Promise<StarBalanceResponse> {
+  return await apiRequest<StarBalanceResponse>(
+    '/api/payments/stars-balance',
     {
       method: 'GET',
     },
