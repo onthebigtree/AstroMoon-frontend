@@ -217,7 +217,7 @@ export interface ProductsResponse {
 
 export interface CreatePaymentRequest {
   productType: 'stars_10' | 'stars_30' | 'stars_100';
-  payCurrency?: string; // btc, eth, usdt, usdttrc20 等
+  payCurrency?: string; // btc, eth, usdt, usdcbase 等
 }
 
 export interface CreatePaymentResponse {

@@ -51,7 +51,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
     try {
       const request: CreatePaymentRequest = {
         productType: selectedProductType,
-        payCurrency: 'usdttrc20', // 默认使用 USDT TRC20
+        payCurrency: 'usdcbase', // 默认使用 USDT TRC20
       };
 
       const response = await createPayment(request);
