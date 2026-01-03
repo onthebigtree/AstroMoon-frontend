@@ -6,10 +6,11 @@ import ImportDataMode from './components/ImportDataMode';
 import Login from './components/Login';
 import ReportHistory from './components/ReportHistory';
 import WealthLevelShare from './components/WealthLevelShare';
+import { BuyStarsModal } from './components/BuyStarsModal';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
-import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut } from 'lucide-react';
+import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star } from 'lucide-react';
 import { replaceAge100Reason } from './constants/age100';
 
 const App: React.FC = () => {
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [showHistory, setShowHistory] = useState(false);
   const [showWealthShare, setShowWealthShare] = useState(false);
+  const [showBuyStars, setShowBuyStars] = useState(false);
 
   // 处理导入数据
   const handleDataImport = (data: LifeDestinyResult) => {
@@ -536,6 +538,14 @@ const App: React.FC = () => {
               合作/简历投递推特私信联系 @AstroMoon1225
             </a>
             <button
+              onClick={() => setShowBuyStars(true)}
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-purple-700 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-all flex-shrink-0 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200"
+              title="购买星星"
+            >
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-500" />
+              <span className="hidden sm:inline text-sm font-medium">购买</span>
+            </button>
+            <button
               onClick={() => setShowHistory(true)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all flex-shrink-0"
               title="历史报告"
@@ -775,6 +785,16 @@ const App: React.FC = () => {
           userName={userName}
         />
       )}
+
+      {/* Buy Stars Modal */}
+      <BuyStarsModal
+        isOpen={showBuyStars}
+        onClose={() => setShowBuyStars(false)}
+        onSuccess={() => {
+          console.log('支付成功！');
+          // 可以在这里添加刷新星星余额的逻辑
+        }}
+      />
     </div>
   );
 };

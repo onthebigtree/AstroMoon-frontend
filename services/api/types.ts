@@ -199,3 +199,56 @@ export interface QueueInfo {
   activeCount: number;
   queueLength: number;
 }
+
+// ==================== 支付相关类型 ====================
+
+export interface Product {
+  name: string;
+  price: number;
+  stars: number;
+  description: string;
+  popular?: boolean;
+}
+
+export interface ProductsResponse {
+  success: boolean;
+  products: Record<string, Product>;
+}
+
+export interface CreatePaymentRequest {
+  productType: 'stars_10' | 'stars_30' | 'stars_100';
+  payCurrency?: string; // btc, eth, usdt, usdttrc20 等
+}
+
+export interface CreatePaymentResponse {
+  success: boolean;
+  invoiceId: number;
+  paymentUrl: string;
+  orderId: string;
+}
+
+export interface PaymentInvoice {
+  id: number;
+  user_id: number;
+  invoice_id: string;
+  order_id: string;
+  invoice_url: string;
+  product_type: string;
+  stars_amount: number;
+  price_amount: number;
+  pay_currency: string;
+  paid_amount?: number;
+  status: 'waiting' | 'confirming' | 'confirmed' | 'finished' | 'failed' | 'expired';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentStatusResponse {
+  success: boolean;
+  invoice: PaymentInvoice;
+}
+
+export interface CurrenciesResponse {
+  success: boolean;
+  currencies: string[];
+}

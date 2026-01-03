@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { X, Star, Sparkles, Check, ExternalLink, Loader2 } from 'lucide-react';
-import { STAR_PACKAGES, type StarPackage, createCoinbasePayment, getPaymentStatus } from '../services/api/payment';
+import React, { useState, useEffect } from 'react';
+import { X, Star, Sparkles, Check, ExternalLink, Loader2, CreditCard } from 'lucide-react';
+import type { Product, CreatePaymentRequest, PaymentInvoice } from '../services/api/types';
+import { getProducts, createPayment, getPaymentStatus } from '../services/api';
 
 interface BuyStarsModalProps {
   isOpen: boolean;
@@ -9,33 +10,59 @@ interface BuyStarsModalProps {
 }
 
 export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps) {
-  const [selectedPackage, setSelectedPackage] = useState<StarPackage | null>(null);
+  const [products, setProducts] = useState<Record<string, Product> | null>(null);
+  const [selectedProductType, setSelectedProductType] = useState<'stars_10' | 'stars_30' | 'stars_100' | null>(null);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
-  const [chargeId, setChargeId] = useState<string | null>(null);
+  const [invoiceId, setInvoiceId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
+  // 加载产品列表
+  useEffect(() => {
+    if (isOpen && !products) {
+      loadProducts();
+    }
+  }, [isOpen]);
+
+  const loadProducts = async () => {
+    try {
+      const response = await getProducts();
+      setProducts(response.products);
+    } catch (err: any) {
+      console.error('加载产品失败:', err);
+      setError('加载产品失败，请刷新重试');
+    }
+  };
+
   if (!isOpen) return null;
 
-  const handleSelectPackage = (pkg: StarPackage) => {
-    setSelectedPackage(pkg);
+  const handleSelectProduct = (productType: 'stars_10' | 'stars_30' | 'stars_100') => {
+    setSelectedProductType(productType);
     setError(null);
   };
 
   const handleCreatePayment = async () => {
-    if (!selectedPackage) return;
+    if (!selectedProductType) return;
 
     setIsCreatingPayment(true);
     setError(null);
 
     try {
-      const response = await createCoinbasePayment(selectedPackage.id);
-      setPaymentUrl(response.hostedUrl);
-      setChargeId(response.chargeId);
+      const request: CreatePaymentRequest = {
+        productType: selectedProductType,
+        payCurrency: 'usdttrc20', // 默认使用 USDT TRC20
+      };
+
+      const response = await createPayment(request);
+      setPaymentUrl(response.paymentUrl);
+      setInvoiceId(response.invoiceId);
 
       // 自动打开支付页面
-      window.open(response.hostedUrl, '_blank');
+      window.open(response.paymentUrl, '_blank');
+
+      // 开始轮询支付状态
+      startPollingPaymentStatus(response.invoiceId);
     } catch (err: any) {
       console.error('创建支付失败:', err);
       setError(err.message || '创建支付失败，请稍后重试');
@@ -44,24 +71,56 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
     }
   };
 
+  // 轮询支付状态
+  const startPollingPaymentStatus = (id: number) => {
+    const intervalId = setInterval(async () => {
+      try {
+        const statusResponse = await getPaymentStatus(id);
+        const invoice = statusResponse.invoice;
+
+        console.log('支付状态:', invoice.status);
+
+        if (invoice.status === 'finished') {
+          clearInterval(intervalId);
+          alert(`支付成功！已添加 ${invoice.stars_amount} 颗星星到你的账户 ⭐`);
+          onSuccess?.();
+          handleClose();
+        } else if (invoice.status === 'failed' || invoice.status === 'expired') {
+          clearInterval(intervalId);
+          setError(invoice.status === 'failed' ? '支付失败' : '支付已过期');
+        }
+      } catch (err) {
+        console.error('查询支付状态失败:', err);
+      }
+    }, 5000); // 每5秒查询一次
+
+    // 5分钟后停止轮询
+    setTimeout(() => {
+      clearInterval(intervalId);
+    }, 300000);
+  };
+
   const handleCheckStatus = async () => {
-    if (!chargeId) return;
+    if (!invoiceId) return;
 
     setIsCheckingStatus(true);
     setError(null);
 
     try {
-      const status = await getPaymentStatus(chargeId);
+      const statusResponse = await getPaymentStatus(invoiceId);
+      const invoice = statusResponse.invoice;
 
-      if (status.status === 'confirmed') {
-        alert(`支付成功！已添加 ${status.starsAdded} 颗星星到你的账户 ⭐`);
+      if (invoice.status === 'finished') {
+        alert(`支付成功！已添加 ${invoice.stars_amount} 颗星星到你的账户 ⭐`);
         onSuccess?.();
         handleClose();
-      } else if (status.status === 'pending') {
-        alert('支付还在处理中，请稍后再查看');
-      } else if (status.status === 'failed') {
+      } else if (invoice.status === 'confirming') {
+        alert('支付确认中，请稍后再查看');
+      } else if (invoice.status === 'waiting') {
+        alert('等待支付，请完成付款后再查询');
+      } else if (invoice.status === 'failed') {
         setError('支付失败，请重新尝试');
-      } else if (status.status === 'expired') {
+      } else if (invoice.status === 'expired') {
         setError('支付已过期，请重新创建订单');
       }
     } catch (err: any) {
@@ -73,9 +132,9 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
   };
 
   const handleClose = () => {
-    setSelectedPackage(null);
+    setSelectedProductType(null);
     setPaymentUrl(null);
-    setChargeId(null);
+    setInvoiceId(null);
     setError(null);
     onClose();
   };
@@ -102,20 +161,28 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
 
         {/* Content */}
         <div className="p-6">
+          {/* 加载中 */}
+          {!products && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+              <span className="ml-3 text-gray-600">加载中...</span>
+            </div>
+          )}
+
           {/* 套餐列表 */}
-          {!paymentUrl && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {STAR_PACKAGES.map((pkg) => (
+          {products && !paymentUrl && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {Object.entries(products).map(([productType, product]) => (
                 <button
-                  key={pkg.id}
-                  onClick={() => handleSelectPackage(pkg)}
+                  key={productType}
+                  onClick={() => handleSelectProduct(productType as any)}
                   className={`relative p-6 rounded-xl border-2 transition-all text-left ${
-                    selectedPackage?.id === pkg.id
+                    selectedProductType === productType
                       ? 'border-purple-500 bg-purple-50 shadow-lg'
                       : 'border-gray-200 hover:border-purple-300 hover:bg-purple-25'
                   }`}
                 >
-                  {pkg.popular && (
+                  {product.popular && (
                     <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                       🔥 热门
                     </div>
@@ -123,36 +190,27 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
 
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">{pkg.name}</h3>
+                      <h3 className="text-lg font-bold text-gray-900">{product.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                         <span className="text-2xl font-bold text-purple-600">
-                          {pkg.stars}
-                          {pkg.bonus && (
-                            <span className="text-sm text-green-600 ml-1">+{pkg.bonus}</span>
-                          )}
+                          {product.stars}
                         </span>
                         <span className="text-gray-600">颗星星</span>
                       </div>
                     </div>
-                    {selectedPackage?.id === pkg.id && (
+                    {selectedProductType === productType && (
                       <Check className="w-6 h-6 text-purple-600" />
                     )}
                   </div>
 
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    ${pkg.price}
+                    ${product.price}
                     <span className="text-sm font-normal text-gray-500 ml-2">USD</span>
                   </div>
 
-                  {pkg.bonus && (
-                    <div className="inline-block bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
-                      额外赠送 {pkg.bonus} 颗 ⭐
-                    </div>
-                  )}
-
                   <div className="mt-3 text-sm text-gray-500">
-                    约 ${(pkg.price / (pkg.stars + (pkg.bonus || 0))).toFixed(2)} / 星
+                    {product.description}
                   </div>
                 </button>
               ))}
@@ -203,7 +261,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
               </div>
 
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                <strong>提示：</strong>支付完成后，点击"我已完成支付"按钮查询状态
+                <strong>提示：</strong>支付完成后，系统会自动检测并添加星星。你也可以点击"我已完成支付"按钮手动查询状态。
               </div>
             </div>
           )}
@@ -217,7 +275,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
           )}
 
           {/* 操作按钮 */}
-          {!paymentUrl && (
+          {!paymentUrl && products && (
             <div className="flex gap-3">
               <button
                 onClick={handleClose}
@@ -227,7 +285,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
               </button>
               <button
                 onClick={handleCreatePayment}
-                disabled={!selectedPackage || isCreatingPayment}
+                disabled={!selectedProductType || isCreatingPayment}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-medium flex items-center justify-center gap-2"
               >
                 {isCreatingPayment ? (
@@ -237,7 +295,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5" />
+                    <CreditCard className="w-5 h-5" />
                     创建支付订单
                   </>
                 )}
@@ -249,10 +307,10 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess }: BuyStarsModalProps
           <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
             <h4 className="font-semibold text-gray-900 mb-2">💳 支持的支付方式</h4>
             <ul className="space-y-1">
-              <li>• 支持 USDC、USDT、ETH、BTC 等数百种加密货币</li>
-              <li>• 由 Coinbase Commerce 提供安全支付</li>
+              <li>• 支持 BTC、ETH、USDT、USDC 等 300+ 种加密货币</li>
+              <li>• 由 NOWPayments 提供安全支付服务</li>
               <li>• 支付确认后自动添加星星到账户</li>
-              <li>• 订单有效期 1 小时</li>
+              <li>• 安全可靠，订单实时追踪</li>
             </ul>
           </div>
         </div>
