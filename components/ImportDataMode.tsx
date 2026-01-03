@@ -1252,36 +1252,93 @@ ${chartInfo}
                     }
                 } else {
                     // 普通人生模式：设置普通人生字段（不设置交易员字段）
-                    if (data.personality) {
-                        result.analysis.personality = data.personality;
-                        result.analysis.personalityScore = data.personalityScore || 85;
+
+                    // 🔄 检查是否需要字段映射（AI 可能返回了交易员字段名）
+                    const hasTraderFields = !!data.traderVitality;
+                    const hasNormalFields = !!data.personality;
+
+                    console.log('🔍 新生成报告字段检查:', {
+                        hasTraderFields,
+                        hasNormalFields,
+                        traderVitality: !!data.traderVitality,
+                        personality: !!data.personality
+                    });
+
+                    // 如果有交易员字段但没有普通字段，进行映射
+                    if (hasTraderFields && !hasNormalFields) {
+                        console.log('🔄 检测到 AI 返回了交易员字段名，进行字段映射...');
+
+                        // 映射：traderVitality -> personality (性格与天赋)
+                        if (data.traderVitality) {
+                            result.analysis.personality = data.traderVitality;
+                            result.analysis.personalityScore = data.traderVitalityScore || 85;
+                        }
+
+                        // 映射：wealthPotential -> wealth (财运)
+                        if (data.wealthPotential) {
+                            result.analysis.wealth = data.wealthPotential;
+                            result.analysis.wealthScore = data.wealthPotentialScore || 85;
+                        }
+
+                        // 映射：fortuneLuck -> marriage (婚姻感情)
+                        if (data.fortuneLuck) {
+                            result.analysis.marriage = data.fortuneLuck;
+                            result.analysis.marriageScore = data.fortuneLuckScore || 85;
+                        }
+
+                        // 映射：leverageRisk -> industry (事业与职业方向)
+                        if (data.leverageRisk) {
+                            result.analysis.industry = data.leverageRisk;
+                            result.analysis.industryScore = data.leverageRiskScore || 85;
+                        }
+
+                        // 映射：platformTeam -> family (家庭与子女)
+                        if (data.platformTeam) {
+                            result.analysis.family = data.platformTeam;
+                            result.analysis.familyScore = data.platformTeamScore || 85;
+                        }
+
+                        // 映射：tradingStyle -> health (健康)
+                        if (data.tradingStyle) {
+                            result.analysis.health = data.tradingStyle;
+                            result.analysis.healthScore = data.tradingStyleScore || 85;
+                        }
+
+                        console.log('✅ 字段映射完成');
+                    } else {
+                        // 正常使用普通字段
+                        if (data.personality) {
+                            result.analysis.personality = data.personality;
+                            result.analysis.personalityScore = data.personalityScore || 85;
+                        }
+
+                        if (data.industry) {
+                            result.analysis.industry = data.industry;
+                            result.analysis.industryScore = data.industryScore || 85;
+                        }
+
+                        if (data.wealth) {
+                            result.analysis.wealth = data.wealth;
+                            result.analysis.wealthScore = data.wealthScore || 85;
+                        }
+
+                        if (data.marriage) {
+                            result.analysis.marriage = data.marriage;
+                            result.analysis.marriageScore = data.marriageScore || 85;
+                        }
+
+                        if (data.health) {
+                            result.analysis.health = data.health;
+                            result.analysis.healthScore = data.healthScore || 85;
+                        }
+
+                        if (data.family) {
+                            result.analysis.family = data.family;
+                            result.analysis.familyScore = data.familyScore || 85;
+                        }
                     }
 
-                    if (data.industry) {
-                        result.analysis.industry = data.industry;
-                        result.analysis.industryScore = data.industryScore || 85;
-                    }
-
-                    if (data.wealth) {
-                        result.analysis.wealth = data.wealth;
-                        result.analysis.wealthScore = data.wealthScore || 85;
-                    }
-
-                    if (data.marriage) {
-                        result.analysis.marriage = data.marriage;
-                        result.analysis.marriageScore = data.marriageScore || 85;
-                    }
-
-                    if (data.health) {
-                        result.analysis.health = data.health;
-                        result.analysis.healthScore = data.healthScore || 85;
-                    }
-
-                    if (data.family) {
-                        result.analysis.family = data.family;
-                        result.analysis.familyScore = data.familyScore || 85;
-                    }
-
+                    // fengShui 和 crypto 字段（两种情况都保留）
                     if (data.fengShui) {
                         result.analysis.fengShui = data.fengShui;
                         result.analysis.fengShuiScore = data.fengShuiScore || 85;
