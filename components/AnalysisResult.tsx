@@ -326,6 +326,39 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
                 }
               />
             )}
+
+            {/* 新增维度：亲密能量 */}
+            {analysis.intimacyEnergy && (
+              <Card
+                title={analysis.intimacyEnergyTitle || "亲密能量与深度连接能力"}
+                icon={Heart}
+                content={analysis.intimacyEnergy}
+                score={analysis.intimacyEnergyScore}
+                colorClass="text-pink-600"
+              />
+            )}
+
+            {/* 新增维度：性能力 */}
+            {analysis.sexualCharm && (
+              <Card
+                title={analysis.sexualCharmTitle || "性能力与吸引力"}
+                icon={Flame}
+                content={analysis.sexualCharm}
+                score={analysis.sexualCharmScore}
+                colorClass="text-rose-600"
+              />
+            )}
+
+            {/* 新增维度：适宜发展方位 */}
+            {analysis.favorableDirections && (
+              <Card
+                title={analysis.favorableDirectionsTitle || "适宜发展方位"}
+                icon={Compass}
+                content={analysis.favorableDirections}
+                score={analysis.favorableDirectionsScore}
+                colorClass="text-cyan-600"
+              />
+            )}
           </>
         )}
 
