@@ -62,6 +62,20 @@ export async function getPaymentStatus(invoiceId: number): Promise<PaymentStatus
 }
 
 /**
+ * 根据 orderId 查询支付状态
+ * 用于支付回调页面查询订单状态
+ */
+export async function getPaymentStatusByOrder(orderId: string): Promise<PaymentStatusResponse> {
+  return await apiRequest<PaymentStatusResponse>(
+    `/api/payments/status-by-order/${orderId}`,
+    {
+      method: 'GET',
+    },
+    true
+  );
+}
+
+/**
  * 获取当前星星余额
  */
 export async function getStarBalance(): Promise<StarBalanceResponse> {

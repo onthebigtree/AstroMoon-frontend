@@ -7,6 +7,7 @@ import Login from './components/Login';
 import ReportHistory from './components/ReportHistory';
 import WealthLevelShare from './components/WealthLevelShare';
 import { BuyStarsModal } from './components/BuyStarsModal';
+import PaymentCallback from './components/PaymentCallback';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
@@ -22,6 +23,7 @@ const App: React.FC = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [showWealthShare, setShowWealthShare] = useState(false);
   const [showBuyStars, setShowBuyStars] = useState(false);
+  const [showPaymentCallback, setShowPaymentCallback] = useState(false);
   const [starsBalance, setStarsBalance] = useState<number | null>(null);
   const [isLoadingStars, setIsLoadingStars] = useState(false);
 
@@ -45,6 +47,25 @@ const App: React.FC = () => {
   useEffect(() => {
     refreshStarsBalance();
   }, [currentUser]);
+
+  // 检测支付回调 URL 参数
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const orderId = urlParams.get('orderId');
+
+    if (paymentStatus && orderId) {
+      // 检测到支付回调参数，显示支付回调页面
+      setShowPaymentCallback(true);
+    }
+  }, []);
+
+  // 处理支付完成
+  const handlePaymentComplete = () => {
+    setShowPaymentCallback(false);
+    // 清除 URL 参数
+    window.history.replaceState({}, '', window.location.pathname);
+  };
 
   // 处理导入数据
   const handleDataImport = (data: LifeDestinyResult) => {
@@ -505,6 +526,16 @@ const App: React.FC = () => {
     if (!result || !result.chartData.length) return null;
     return result.chartData.reduce((prev, current) => (prev.score > current.score) ? prev : current);
   }, [result]);
+
+  // 如果正在显示支付回调页面，直接返回支付回调组件
+  if (showPaymentCallback) {
+    return (
+      <PaymentCallback
+        onComplete={handlePaymentComplete}
+        onStarsUpdated={(newBalance) => setStarsBalance(newBalance)}
+      />
+    );
+  }
 
   // 如果用户未登录，显示登录页面
   if (!currentUser) {

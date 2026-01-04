@@ -1,0 +1,268 @@
+import React, { useEffect, useState } from 'react';
+import { getPaymentStatusByOrder, getStarBalance } from '../services/api';
+import type { PaymentInvoice } from '../services/api';
+import { CheckCircle, Loader2, XCircle, Clock } from 'lucide-react';
+
+interface PaymentCallbackProps {
+  onComplete: () => void;
+  onStarsUpdated?: (newBalance: number) => void;
+}
+
+type PaymentStatus = 'loading' | 'success' | 'waiting' | 'error';
+
+const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUpdated }) => {
+  const [status, setStatus] = useState<PaymentStatus>('loading');
+  const [invoice, setInvoice] = useState<PaymentInvoice | null>(null);
+  const [error, setError] = useState<string>('');
+  const [countdown, setCountdown] = useState<number>(0);
+
+  useEffect(() => {
+    // 解析 URL 参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment'); // 'success' 或 'cancelled'
+    const orderId = urlParams.get('orderId'); // 'astro_123_1234567890'
+
+    if (!orderId) {
+      setStatus('error');
+      setError('缺少订单 ID');
+      return;
+    }
+
+    if (paymentStatus === 'cancelled') {
+      setStatus('error');
+      setError('支付已取消');
+      return;
+    }
+
+    // 开始查询订单状态
+    checkOrderStatus(orderId);
+  }, []);
+
+  /**
+   * 查询订单状态
+   */
+  const checkOrderStatus = async (orderId: string) => {
+    try {
+      const response = await getPaymentStatusByOrder(orderId);
+
+      if (!response.success) {
+        setStatus('error');
+        setError('查询订单失败');
+        return;
+      }
+
+      const invoiceData = response.invoice;
+      setInvoice(invoiceData);
+
+      // 根据订单状态显示不同的 UI
+      if (invoiceData.status === 'finished') {
+        // 支付成功
+        setStatus('success');
+        await refreshStarBalance();
+      } else if (invoiceData.status === 'waiting' || invoiceData.status === 'confirming') {
+        // 还在等待确认，开始轮询
+        setStatus('waiting');
+        startPolling(orderId);
+      } else if (invoiceData.status === 'failed' || invoiceData.status === 'expired') {
+        // 支付失败或过期
+        setStatus('error');
+        setError(invoiceData.status === 'failed' ? '支付失败' : '支付已过期');
+      } else {
+        // 其他状态
+        setStatus('error');
+        setError(`未知状态: ${invoiceData.status}`);
+      }
+    } catch (err: any) {
+      console.error('查询订单状态失败:', err);
+      setStatus('error');
+      setError(err.message || '查询订单状态失败');
+    }
+  };
+
+  /**
+   * 刷新星星余额
+   */
+  const refreshStarBalance = async () => {
+    try {
+      const balanceResponse = await getStarBalance();
+      if (balanceResponse.success) {
+        onStarsUpdated?.(balanceResponse.stars);
+      }
+    } catch (err) {
+      console.error('刷新余额失败:', err);
+    }
+  };
+
+  /**
+   * 开始轮询订单状态
+   */
+  const startPolling = (orderId: string) => {
+    let attempts = 0;
+    const maxAttempts = 24; // 最多轮询 24 次（2 分钟）
+    const pollInterval = 5000; // 每 5 秒轮询一次
+
+    const intervalId = setInterval(async () => {
+      attempts++;
+      setCountdown(maxAttempts - attempts);
+
+      if (attempts >= maxAttempts) {
+        clearInterval(intervalId);
+        setStatus('error');
+        setError('订单确认超时，请稍后在订单历史中查看');
+        return;
+      }
+
+      try {
+        const response = await getPaymentStatusByOrder(orderId);
+        const invoiceData = response.invoice;
+        setInvoice(invoiceData);
+
+        if (invoiceData.status === 'finished') {
+          clearInterval(intervalId);
+          setStatus('success');
+          await refreshStarBalance();
+        } else if (invoiceData.status === 'failed' || invoiceData.status === 'expired') {
+          clearInterval(intervalId);
+          setStatus('error');
+          setError(invoiceData.status === 'failed' ? '支付失败' : '支付已过期');
+        }
+        // 如果还是 waiting/confirming，继续轮询
+      } catch (err: any) {
+        console.error('轮询订单状态失败:', err);
+        // 不立即报错，继续轮询
+      }
+    }, pollInterval);
+
+    // 清理函数
+    return () => clearInterval(intervalId);
+  };
+
+  /**
+   * 渲染不同状态的 UI
+   */
+  const renderContent = () => {
+    switch (status) {
+      case 'loading':
+        return (
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="w-16 h-16 text-purple-500 animate-spin" />
+            <h2 className="text-2xl font-bold text-gray-800">正在查询订单状态...</h2>
+            <p className="text-gray-600">请稍候</p>
+          </div>
+        );
+
+      case 'waiting':
+        return (
+          <div className="flex flex-col items-center space-y-4">
+            <Clock className="w-16 h-16 text-yellow-500 animate-pulse" />
+            <h2 className="text-2xl font-bold text-gray-800">支付正在确认中</h2>
+            <p className="text-gray-600">
+              区块链交易需要一定时间确认，请耐心等待...
+            </p>
+            {invoice && (
+              <div className="bg-gray-100 rounded-lg p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">订单号:</span>
+                  <span className="font-mono text-gray-800">{invoice.order_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">星星数量:</span>
+                  <span className="font-semibold text-purple-600">{invoice.stars_amount} ⭐</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">状态:</span>
+                  <span className="text-yellow-600 capitalize">{invoice.status}</span>
+                </div>
+              </div>
+            )}
+            {countdown > 0 && (
+              <p className="text-sm text-gray-500">
+                将在 {countdown} 次后停止自动查询
+              </p>
+            )}
+          </div>
+        );
+
+      case 'success':
+        return (
+          <div className="flex flex-col items-center space-y-4">
+            <CheckCircle className="w-16 h-16 text-green-500" />
+            <h2 className="text-2xl font-bold text-gray-800">支付成功!</h2>
+            {invoice && (
+              <p className="text-lg text-gray-700">
+                已成功充值 <span className="font-bold text-purple-600">{invoice.stars_amount} 颗星星</span> 到你的账户
+              </p>
+            )}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2 text-sm">
+              {invoice && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">订单号:</span>
+                    <span className="font-mono text-gray-800">{invoice.order_id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">支付金额:</span>
+                    <span className="font-semibold text-gray-800">
+                      {invoice.paid_amount || invoice.price_amount} {invoice.pay_currency.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">完成时间:</span>
+                    <span className="text-gray-800">
+                      {new Date(invoice.updated_at).toLocaleString('zh-CN')}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              onClick={onComplete}
+              className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              返回首页
+            </button>
+          </div>
+        );
+
+      case 'error':
+        return (
+          <div className="flex flex-col items-center space-y-4">
+            <XCircle className="w-16 h-16 text-red-500" />
+            <h2 className="text-2xl font-bold text-gray-800">支付失败</h2>
+            <p className="text-gray-600">{error || '发生未知错误'}</p>
+            {invoice && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">订单号:</span>
+                  <span className="font-mono text-gray-800">{invoice.order_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">状态:</span>
+                  <span className="text-red-600 capitalize">{invoice.status}</span>
+                </div>
+              </div>
+            )}
+            <button
+              onClick={onComplete}
+              className="mt-4 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              返回首页
+            </button>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        {renderContent()}
+      </div>
+    </div>
+  );
+};
+
+export default PaymentCallback;
