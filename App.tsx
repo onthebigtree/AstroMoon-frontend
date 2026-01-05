@@ -8,11 +8,14 @@ import ReportHistory from './components/ReportHistory';
 import WealthLevelShare from './components/WealthLevelShare';
 import { BuyStarsModal } from './components/BuyStarsModal';
 import PaymentCallback from './components/PaymentCallback';
+import TransactionHistory from './components/TransactionHistory';
+import StarsDetailModal from './components/StarsDetailModal';
+import TwitterLinks from './components/TwitterLinks';
 import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
 import { getStarBalance } from './services/api/payments';
-import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star } from 'lucide-react';
+import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star, Plus } from 'lucide-react';
 import { replaceAge100Reason } from './constants/age100';
 
 const App: React.FC = () => {
@@ -24,6 +27,8 @@ const App: React.FC = () => {
   const [showWealthShare, setShowWealthShare] = useState(false);
   const [showBuyStars, setShowBuyStars] = useState(false);
   const [showPaymentCallback, setShowPaymentCallback] = useState(false);
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+  const [showStarsDetail, setShowStarsDetail] = useState(false);
   const [starsBalance, setStarsBalance] = useState<number | null>(null);
   const [isLoadingStars, setIsLoadingStars] = useState(false);
 
@@ -556,39 +561,21 @@ const App: React.FC = () => {
               <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide sm:tracking-widest">Astrology & Life Analysis</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 justify-end overflow-x-auto">
-            <a
-              href="https://x.com/TheMoonDojo"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all whitespace-nowrap"
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end overflow-x-auto">
+            <TwitterLinks />
+            <button
+              onClick={() => setShowStarsDetail(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-50 to-purple-50 border border-purple-200 rounded-lg hover:shadow-md transition-all group"
+              title="星星中心 - 查看余额、充值、消费记录"
             >
-              十年星盘专家，用独家算法+AI大模型，重新定义你的交易运势 | 推特@TheMoonDojo
-            </a>
-            <a
-              href="https://x.com/AstroMoon1225"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all whitespace-nowrap"
-            >
-              合作/简历投递推特私信联系 @AstroMoon1225
-            </a>
-            <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/80 border border-yellow-100 rounded-lg shadow-sm flex-shrink-0">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />
               <div className="flex items-baseline gap-1">
                 <span className="text-sm font-semibold text-gray-900">
                   {isLoadingStars ? '...' : (starsBalance ?? '--')}
                 </span>
-                <span className="text-[11px] text-gray-500">星星</span>
+                <span className="text-[10px] text-gray-500">星星</span>
               </div>
-            </div>
-            <button
-              onClick={() => setShowBuyStars(true)}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-purple-700 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-all flex-shrink-0 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200"
-              title="购买星星"
-            >
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-500" />
-              <span className="hidden sm:inline text-sm font-medium">购买</span>
+              <Plus className="w-3 h-3 text-purple-600 group-hover:scale-110 transition-transform" />
             </button>
             <button
               onClick={() => setShowHistory(true)}
@@ -834,13 +821,27 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Buy Stars Modal */}
+      {/* Buy Stars Modal (保留,用于兼容性) */}
       <BuyStarsModal
         isOpen={showBuyStars}
         onClose={() => setShowBuyStars(false)}
         currentStars={starsBalance}
         onRefreshStars={refreshStarsBalance}
         onSuccess={refreshStarsBalance}
+      />
+
+      {/* Transaction History Modal (保留,用于兼容性) */}
+      <TransactionHistory
+        isOpen={showTransactionHistory}
+        onClose={() => setShowTransactionHistory(false)}
+      />
+
+      {/* Stars Detail Modal (新的整合模态框) */}
+      <StarsDetailModal
+        isOpen={showStarsDetail}
+        onClose={() => setShowStarsDetail(false)}
+        currentStars={starsBalance}
+        onRefreshStars={refreshStarsBalance}
       />
     </div>
   );

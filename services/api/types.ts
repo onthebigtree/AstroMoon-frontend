@@ -274,3 +274,41 @@ export interface StarBalanceResponse {
   success: boolean;
   stars: number;
 }
+
+// ==================== 交易记录相关类型 ====================
+
+export interface Transaction {
+  id: number;
+  type: 'recharge' | 'consumption';
+  stars: number;
+  timestamp: string;
+  status: string;
+  // 充值记录字段
+  orderId?: string;
+  productType?: string;
+  priceAmount?: number;
+  payCurrency?: string;
+  paidAmount?: number;
+  // 消费记录字段
+  reason?: string;
+  resourceType?: string;
+  resourceId?: number;
+  remainingStars?: number;
+}
+
+export interface TransactionsResponse {
+  success: boolean;
+  transactions: Transaction[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface TransactionsRequest {
+  type?: 'all' | 'recharge' | 'consumption';
+  page?: number;
+  limit?: number;
+}

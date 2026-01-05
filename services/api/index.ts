@@ -55,4 +55,5 @@ export {
   getPaymentStatus,
   getPaymentStatusByOrder,
   getStarBalance,
+  getTransactions,
 } from './payments';

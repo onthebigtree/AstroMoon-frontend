@@ -5,7 +5,9 @@ import type {
   CreatePaymentResponse,
   PaymentStatusResponse,
   CurrenciesResponse,
-  StarBalanceResponse
+  StarBalanceResponse,
+  TransactionsResponse,
+  TransactionsRequest
 } from './types';
 
 /**
@@ -81,6 +83,36 @@ export async function getPaymentStatusByOrder(orderId: string): Promise<PaymentS
 export async function getStarBalance(): Promise<StarBalanceResponse> {
   return await apiRequest<StarBalanceResponse>(
     '/api/payments/stars-balance',
+    {
+      method: 'GET',
+    },
+    true
+  );
+}
+
+/**
+ * 获取交易记录（充值和消费历史）
+ */
+export async function getTransactions(params?: TransactionsRequest): Promise<TransactionsResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.type) {
+    queryParams.append('type', params.type);
+  }
+  if (params?.page) {
+    queryParams.append('page', params.page.toString());
+  }
+  if (params?.limit) {
+    queryParams.append('limit', params.limit.toString());
+  }
+
+  const queryString = queryParams.toString();
+  const endpoint = queryString
+    ? `/api/payments/transactions?${queryString}`
+    : '/api/payments/transactions';
+
+  return await apiRequest<TransactionsResponse>(
+    endpoint,
     {
       method: 'GET',
     },
