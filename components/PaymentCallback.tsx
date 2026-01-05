@@ -98,7 +98,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
    */
   const startPolling = (orderId: string) => {
     let attempts = 0;
-    const maxAttempts = 24; // 最多轮询 24 次（2 分钟）
+    const maxAttempts = 60; // 最多轮询 60 次（5 分钟）- 适配区块链确认时间
     const pollInterval = 5000; // 每 5 秒轮询一次
 
     const intervalId = setInterval(async () => {
