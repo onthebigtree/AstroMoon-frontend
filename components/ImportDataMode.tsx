@@ -1985,6 +1985,12 @@ ${chartInfo}
                         </div>
                     )}
 
+                    {/* 消耗提示 */}
+                    <div className="flex items-center justify-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
+                        <span>⭐</span>
+                        <span>生成完整分析将消耗 1 颗小星星</span>
+                    </div>
+
                     {/* 操作按钮 */}
                     <div className="flex gap-3">
                         <button
