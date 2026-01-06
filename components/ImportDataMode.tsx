@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { LifeDestinyResult } from '../types';
 import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
-import { generateWithAPI } from '../services/apiService';
 import { streamReportGenerate } from '../services/api/reports';
 import { getStarBalance } from '../services/api/payments';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
@@ -1167,16 +1166,9 @@ ${chartInfo}
                     streamError.message.includes('生成上限')) {
                     // 刷新星星余额以获取最新信息
                     await loadStarsBalance();
-                    // 直接使用后端返回的错误消息
-                    throw streamError;
                 }
-
-                // 如果新后端失败，回退到旧后端
-                console.warn('⚠️ 新后端失败，回退到旧后端:', streamError.message);
-                content = await generateWithAPI({
-                    userPrompt,
-                    systemPrompt,
-                });
+                // 直接抛出错误，不再回退到旧后端
+                throw streamError;
             }
 
             // 使用健壮的 JSON 解析工具
