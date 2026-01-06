@@ -520,11 +520,28 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
 
             console.log('🔮 调用后端星盘计算 API (Railway):', url);
 
+            // 准备请求头
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+
+            // 🔐 添加 Firebase JWT Token 认证
+            try {
+                const { getAuth } = await import('firebase/auth');
+                const auth = getAuth();
+                const user = auth.currentUser;
+                if (user) {
+                    const token = await user.getIdToken(true);
+                    headers['Authorization'] = `Bearer ${token}`;
+                    console.log('🔐 已添加 JWT Token 认证');
+                }
+            } catch (authError) {
+                console.warn('⚠️ 无法获取 Firebase Token:', authError);
+            }
+
             const response = await fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({
                     birth_datetime: birthDatetime,
                     latitude: latitude,
