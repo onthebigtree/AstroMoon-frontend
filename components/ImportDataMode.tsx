@@ -569,7 +569,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
             const { meta, bodies, dignity_data } = data;
 
             // 提取太阳状态（从 dignity_data 中获取）
-            const sunDignity = dignity_data?.Sun;
+            const sunDignity = dignity_data?.sun;
             let sunStatus = '中性';
             if (sunDignity) {
                 switch (sunDignity.dignity) {
@@ -596,19 +596,19 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
             // 根据用户选择的分宫制使用对应的宫位数据
             // W = Whole Sign 使用 whole_sign，其他使用 alchabitius（API 返回的是计算后的分宫制结果）
             const sunHouse = houseSystem === 'W'
-                ? bodies.Sun.house_placement.whole_sign
-                : bodies.Sun.house_placement.alchabitius.effective;
+                ? bodies.sun.house_placement.whole_sign
+                : bodies.sun.house_placement.alchabitius.effective;
 
             return {
                 isDiurnal: meta.is_day_chart,
-                sunSign: bodies.Sun.sign,
-                moonSign: bodies.Moon.sign,
-                ascendant: bodies.ASC.sign,
-                mc: bodies.MC.sign,
+                sunSign: bodies.sun.sign,
+                moonSign: bodies.moon.sign,
+                ascendant: bodies.asc.sign,
+                mc: bodies.mc.sign,
                 sunHouse: sunHouse,
                 sunStatus: sunStatus,
-                sunDegree: bodies.Sun.sign_degree,
-                moonDegree: bodies.Moon.sign_degree,
+                sunDegree: bodies.sun.sign_degree,
+                moonDegree: bodies.moon.sign_degree,
             };
 
         } catch (error: any) {
