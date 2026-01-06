@@ -513,12 +513,14 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
 
         try {
             // 调用后端星盘计算 API
-            // 🔥 在生产环境使用相对路径（通过 Vercel Serverless Function 代理），避免 CORS
+            // 🚀 使用 Railway 统一后端
             const isDev = import.meta.env.DEV;
-            const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:8000') : '';
-            const url = backendUrl ? `${backendUrl}/chart/unified` : '/api/calculate-chart';
+            const RAILWAY_BACKEND_URL = isDev && import.meta.env.VITE_BACKEND_URL
+                ? import.meta.env.VITE_BACKEND_URL
+                : 'https://astromoon-backend-production.up.railway.app';
+            const url = `${RAILWAY_BACKEND_URL}/api/chart/unified`;
 
-            console.log('🔮 调用后端星盘计算 API:', url);
+            console.log('🔮 调用后端星盘计算 API (Railway):', url);
 
             const response = await fetch(url, {
                 method: 'POST',
