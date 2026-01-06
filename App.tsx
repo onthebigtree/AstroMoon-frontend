@@ -15,7 +15,7 @@ import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult } from './types';
 import { Report } from './services/api/types';
 import { getStarBalance } from './services/api/payments';
-import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star, Plus } from 'lucide-react';
+import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star, Plus, Loader2 } from 'lucide-react';
 import { replaceAge100Reason } from './constants/age100';
 
 const App: React.FC = () => {
@@ -571,7 +571,7 @@ const App: React.FC = () => {
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />
               <div className="flex items-baseline gap-1">
                 <span className="text-sm font-semibold text-gray-900">
-                  {isLoadingStars ? '...' : (starsBalance ?? '--')}
+                  {isLoadingStars ? <Loader2 className="w-3 h-3 animate-spin" /> : (starsBalance ?? '--')}
                 </span>
                 <span className="text-[10px] text-gray-500">星星</span>
               </div>
