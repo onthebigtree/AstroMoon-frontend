@@ -70,6 +70,11 @@ export async function* streamReportGenerate(
           try {
             const json = JSON.parse(line.slice(6));
 
+            // 忽略心跳事件
+            if (json.type === 'keepalive') {
+              continue;
+            }
+
             // 处理队列信息事件
             if (json.type === 'queue_info') {
               options?.onQueueInfo?.(json.queueInfo);
