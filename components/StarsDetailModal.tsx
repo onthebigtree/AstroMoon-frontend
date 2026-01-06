@@ -201,9 +201,10 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
               <div>
                 <div className="text-sm text-gray-600">当前余额</div>
                 <div className="text-3xl font-bold text-gray-900">
-                  {isRefreshingBalance ? '...' : (currentStars ?? '--')}
+                  {isRefreshingBalance ? <Loader2 className="w-6 h-6 animate-spin inline-block" /> : (currentStars ?? '--')}
                   <span className="text-lg text-gray-500 ml-2">星星</span>
                 </div>
+                <div className="text-xs text-gray-500 mt-1">星星用于生成 AI 分析报告</div>
               </div>
             </div>
             {onRefreshStars && (

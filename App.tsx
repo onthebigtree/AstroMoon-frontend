@@ -569,12 +569,9 @@ const App: React.FC = () => {
               title="星星中心 - 查看余额、充值、消费记录"
             >
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-semibold text-gray-900">
-                  {isLoadingStars ? <Loader2 className="w-3 h-3 animate-spin" /> : (starsBalance ?? '--')}
-                </span>
-                <span className="text-[10px] text-gray-500">星星</span>
-              </div>
+              <span className="text-sm font-semibold text-gray-900">
+                {isLoadingStars ? <Loader2 className="w-3 h-3 animate-spin" /> : (starsBalance ?? '--')}
+              </span>
               <Plus className="w-3 h-3 text-purple-600 group-hover:scale-110 transition-transform" />
             </button>
             <button
