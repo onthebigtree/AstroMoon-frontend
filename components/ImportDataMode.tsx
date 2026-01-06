@@ -514,10 +514,8 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
         try {
             // 调用后端星盘计算 API
             // 🚀 使用 Railway 统一后端
-            const isDev = import.meta.env.DEV;
-            const RAILWAY_BACKEND_URL = isDev && import.meta.env.VITE_BACKEND_URL
-                ? import.meta.env.VITE_BACKEND_URL
-                : 'https://astromoon-backend-production.up.railway.app';
+            const RAILWAY_BACKEND_URL = import.meta.env.VITE_RAILWAY_BACKEND_URL
+                || 'https://astromoon-backend-dev.up.railway.app';
             const url = `${RAILWAY_BACKEND_URL}/api/chart/unified`;
 
             console.log('🔮 调用后端星盘计算 API (Railway):', url);
