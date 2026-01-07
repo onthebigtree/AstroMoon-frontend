@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Star, Sparkles, Check, ExternalLink, Loader2, CreditCard, RefreshCw } from 'lucide-react';
+import { X, Star, Sparkles, Check, ExternalLink, Loader2, CreditCard, RefreshCw, Gift } from 'lucide-react';
 import type { Product, CreatePaymentRequest } from '../services/api/types';
-import { getProducts, createPayment, getPaymentStatus } from '../services/api';
+import { getProducts, createPayment, getPaymentStatus, redeemCode } from '../services/api';
 
 interface BuyStarsModalProps {
   isOpen: boolean;
@@ -20,6 +20,11 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
   const [error, setError] = useState<string | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
+
+  // 兑换码相关状态
+  const [redeemCodeInput, setRedeemCodeInput] = useState('');
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemSuccess, setRedeemSuccess] = useState<string | null>(null);
 
   // 加载产品列表
   useEffect(() => {
@@ -157,11 +162,52 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
     }
   };
 
+  const handleRedeemCode = async () => {
+    if (!redeemCodeInput.trim()) {
+      setError('请输入兑换码');
+      return;
+    }
+
+    setIsRedeeming(true);
+    setError(null);
+    setRedeemSuccess(null);
+
+    try {
+      const response = await redeemCode({ code: redeemCodeInput.trim() });
+
+      console.log('✅ 兑换成功:', response);
+      setRedeemSuccess(`${response.message} 当前余额：${response.currentBalance} 积分`);
+      setRedeemCodeInput(''); // 清空输入框
+
+      // 刷新积分余额
+      if (onRefreshStars) {
+        await refreshStarsBalance(false);
+      }
+
+      // 成功回调
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess();
+        }, 1500);
+      }
+    } catch (err: any) {
+      console.error('❌ 兑换失败:', err);
+
+      // 处理不同的错误类型
+      const errorMessage = err.message || err.error || '兑换失败，请检查兑换码是否正确';
+      setError(errorMessage);
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
+
   const handleClose = () => {
     setSelectedProductType(null);
     setPaymentUrl(null);
     setInvoiceId(null);
     setError(null);
+    setRedeemCodeInput('');
+    setRedeemSuccess(null);
     onClose();
   };
 
@@ -214,6 +260,57 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
               </button>
             )}
           </div>
+
+          {/* 兑换码区域 */}
+          {!paymentUrl && (
+            <div className="mb-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Gift className="w-5 h-5 text-green-600" />
+                <h3 className="font-bold text-gray-900">使用兑换码</h3>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={redeemCodeInput}
+                  onChange={(e) => setRedeemCodeInput(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isRedeeming) {
+                      handleRedeemCode();
+                    }
+                  }}
+                  placeholder="输入兑换码"
+                  className="flex-1 px-4 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm uppercase"
+                  disabled={isRedeeming}
+                />
+                <button
+                  onClick={handleRedeemCode}
+                  disabled={isRedeeming || !redeemCodeInput.trim()}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {isRedeeming ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      兑换中...
+                    </>
+                  ) : (
+                    <>
+                      <Gift className="w-4 h-4" />
+                      兑换
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {redeemSuccess && (
+                <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg flex items-start gap-2">
+                  <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-green-800">{redeemSuccess}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 加载中 */}
           {!products && (
             <div className="flex items-center justify-center py-12">

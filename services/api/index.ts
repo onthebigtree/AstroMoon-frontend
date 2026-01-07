@@ -56,4 +56,5 @@ export {
   getPaymentStatusByOrder,
   getStarBalance,
   getTransactions,
+  redeemCode,
 } from './payments';

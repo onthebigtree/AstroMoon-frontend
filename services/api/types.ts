@@ -312,3 +312,16 @@ export interface TransactionsRequest {
   page?: number;
   limit?: number;
 }
+
+// ==================== 兑换码相关类型 ====================
+
+export interface RedeemCodeRequest {
+  code: string;
+}
+
+export interface RedeemCodeResponse {
+  success: boolean;
+  message: string;
+  starsRedeemed: number;
+  currentBalance: number;
+}

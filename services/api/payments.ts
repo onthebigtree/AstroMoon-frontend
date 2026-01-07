@@ -7,7 +7,9 @@ import type {
   CurrenciesResponse,
   StarBalanceResponse,
   TransactionsResponse,
-  TransactionsRequest
+  TransactionsRequest,
+  RedeemCodeRequest,
+  RedeemCodeResponse
 } from './types';
 
 /**
@@ -115,6 +117,20 @@ export async function getTransactions(params?: TransactionsRequest): Promise<Tra
     endpoint,
     {
       method: 'GET',
+    },
+    true
+  );
+}
+
+/**
+ * 兑换码兑换积分
+ */
+export async function redeemCode(request: RedeemCodeRequest): Promise<RedeemCodeResponse> {
+  return await apiRequest<RedeemCodeResponse>(
+    '/api/redemption/redeem',
+    {
+      method: 'POST',
+      body: JSON.stringify(request),
     },
     true
   );
