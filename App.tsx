@@ -119,12 +119,54 @@ const App: React.FC = () => {
 
       // 检查是否为年运报告
       const isAnnual2026Report = report.report_title?.includes('2026年年运') ||
+                                  reportContent.markdownReport ||
                                   (reportContent.analysis && 'markdownReport' in reportContent.analysis);
 
       if (isAnnual2026Report) {
         console.log('📅 检测到年运报告');
-        // 直接设置年运报告数据
-        setResult(reportContent as Annual2026Result);
+
+        // 年运报告数据可能是扁平结构，需要重构
+        let annualData: Annual2026Result;
+
+        if (reportContent.analysis && reportContent.chartData) {
+          // 已经是正确的结构
+          annualData = reportContent as Annual2026Result;
+        } else {
+          // 扁平结构，需要重构
+          const { chartData, ...restData } = reportContent;
+          annualData = {
+            chartData: chartData || [],
+            analysis: {
+              markdownReport: restData.markdownReport || '',
+              summary: restData.summary || '',
+              summaryScore: restData.summaryScore || 75,
+              traderVitalityTitle: restData.traderVitalityTitle || '年度核心',
+              traderVitality: restData.traderVitality || '',
+              traderVitalityScore: restData.traderVitalityScore || 75,
+              wealthPotentialTitle: restData.wealthPotentialTitle || '事业财富',
+              wealthPotential: restData.wealthPotential || '',
+              wealthPotentialScore: restData.wealthPotentialScore || 75,
+              fortuneLuckTitle: restData.fortuneLuckTitle || '情感关系',
+              fortuneLuck: restData.fortuneLuck || '',
+              fortuneLuckScore: restData.fortuneLuckScore || 75,
+              leverageRiskTitle: restData.leverageRiskTitle || '健康身心',
+              leverageRisk: restData.leverageRisk || '',
+              leverageRiskScore: restData.leverageRiskScore || 75,
+              platformTeamTitle: restData.platformTeamTitle || '贵人机遇',
+              platformTeam: restData.platformTeam || '',
+              platformTeamScore: restData.platformTeamScore || 75,
+              tradingStyleTitle: restData.tradingStyleTitle || '行动建议',
+              tradingStyle: restData.tradingStyle || '',
+              tradingStyleScore: restData.tradingStyleScore || 75,
+              keyMonths: restData.keyMonths,
+              peakMonths: restData.peakMonths,
+              riskMonths: restData.riskMonths,
+            }
+          };
+        }
+
+        console.log('📅 年运报告数据重构完成:', annualData);
+        setResult(annualData);
         setUserName(report.profile_name || '');
         setError(null);
         return;

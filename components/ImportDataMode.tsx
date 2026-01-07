@@ -799,7 +799,7 @@ ${chartInfo}
         // 年运模式：特殊处理（手动导入）
         if (currentMode === 'annual2026') {
             const annualResult: Annual2026Result = {
-                chartData: data.chartPoints || [],
+                chartData: data.chartData || data.chartPoints || [],
                 analysis: {
                     markdownReport: data.markdownReport || '',
                     summary: data.summary || '2026年度运势总评',
@@ -1218,9 +1218,9 @@ ${chartInfo}
 
                 // 年运模式：特殊处理
                 if (mode === 'annual2026') {
-                    // 年运模式的结果结构
+                    // 年运模式的结果结构（AI返回的是 chartData 字段）
                     const annualResult: Annual2026Result = {
-                        chartData: data.chartPoints || [],
+                        chartData: data.chartData || data.chartPoints || [],
                         analysis: {
                             markdownReport: data.markdownReport || '',
                             summary: data.summary || '2026年度运势总评',
