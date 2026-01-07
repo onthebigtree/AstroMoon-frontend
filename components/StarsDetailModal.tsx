@@ -331,13 +331,13 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
                   </div>
 
                   {/* 退款说明 */}
-                  <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                    <h4 className="text-sm font-bold text-gray-700 mb-2">购买须知</h4>
-                    <ul className="text-xs text-gray-500 space-y-1">
+                  <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                    <h4 className="text-sm font-bold text-amber-800 mb-2">购买须知</h4>
+                    <ul className="text-xs text-amber-700 space-y-1">
                       <li>• 积分为虚拟商品，充值成功后即时到账</li>
                       <li>• 积分仅用于本平台AI报告生成服务</li>
-                      <li>• 如遇充值问题，请联系客服处理</li>
-                      <li>• 已消费的积分不支持退款，未消费积分可联系客服协商</li>
+                      <li>• <strong>积分一经充值，不支持退款，请谨慎购买</strong></li>
+                      <li>• 如遇充值未到账等问题，请联系客服处理</li>
                     </ul>
                   </div>
                 </>
