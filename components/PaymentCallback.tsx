@@ -186,16 +186,30 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
       case 'success':
         return (
           <div className="flex flex-col items-center space-y-4">
-            <CheckCircle className="w-16 h-16 text-green-500" />
-            <h2 className="text-2xl font-bold text-gray-800">支付成功!</h2>
-            {invoice && (
-              <p className="text-lg text-gray-700">
-                已成功充值 <span className="font-bold text-purple-600">{invoice.stars_amount} 颗积分</span> 到你的账户
-              </p>
-            )}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2 text-sm">
+            {/* 成功动画 */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-25"></div>
+              <CheckCircle className="w-20 h-20 text-green-500 relative z-10" />
+            </div>
+
+            {/* 成功标题 */}
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-green-600 mb-2">充值成功!</h2>
               {invoice && (
-                <>
+                <p className="text-xl text-gray-700">
+                  已成功充值 <span className="font-bold text-purple-600 text-2xl">{invoice.stars_amount}</span> 积分
+                </p>
+              )}
+            </div>
+
+            {/* 成功提示卡片 */}
+            <div className="w-full bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-5 space-y-3">
+              <div className="flex items-center justify-center gap-2 text-green-700 font-medium">
+                <CheckCircle className="w-5 h-5" />
+                <span>积分已到账，可立即使用</span>
+              </div>
+              {invoice && (
+                <div className="space-y-2 text-sm pt-2 border-t border-green-200">
                   <div className="flex justify-between">
                     <span className="text-gray-600">订单号:</span>
                     <span className="font-mono text-gray-800">{invoice.order_id}</span>
@@ -212,14 +226,15 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
                       {new Date(invoice.updated_at).toLocaleString('zh-CN')}
                     </span>
                   </div>
-                </>
+                </div>
               )}
             </div>
+
             <button
               onClick={onComplete}
-              className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="mt-4 w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
             >
-              返回首页
+              开始使用 →
             </button>
           </div>
         );
