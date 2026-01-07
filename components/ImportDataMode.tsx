@@ -33,6 +33,25 @@ interface BasicChartInfo {
     sunStatus: string; // 太阳状态（庙旺陷落）
     sunDegree: number; // 太阳度数
     moonDegree: number; // 月亮度数
+    // 小限法数据（仅年运模式）
+    profectionData?: {
+        currentAge: number;
+        activatedHouse: {
+            houseNumber: number;
+            sign: string;
+            themes: string[];
+            isAngle: boolean;
+        };
+        timeLord: {
+            planet: string;
+            natalCondition: string;
+            aspects: Array<{
+                planet: string;
+                type: string;
+                orb: number;
+            }>;
+        };
+    };
 }
 
 // 常用城市坐标和时区映射表
@@ -538,17 +557,26 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
                 console.warn('⚠️ 无法获取 Firebase Token:', authError);
             }
 
+            // 构建请求体，年运模式添加 target_year 参数触发小限计算
+            const requestBody: Record<string, any> = {
+                birth_datetime: birthDatetime,
+                latitude: latitude,
+                longitude: longitude,
+                timezone_offset: timezone,
+                house_system: houseSystem,  // 使用用户选择的分宫制
+                gender: astroInfo.gender.toLowerCase(),
+            };
+
+            // 年运模式：添加目标年份，触发后端小限（Profections）计算
+            if (mode === 'annual2026') {
+                requestBody.target_year = 2026;
+                console.log('🔮 年运模式：添加 target_year = 2026');
+            }
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({
-                    birth_datetime: birthDatetime,
-                    latitude: latitude,
-                    longitude: longitude,
-                    timezone_offset: timezone,
-                    house_system: houseSystem,  // 使用用户选择的分宫制
-                    gender: astroInfo.gender.toLowerCase(),
-                }),
+                body: JSON.stringify(requestBody),
             });
 
             if (!response.ok) {
@@ -565,7 +593,12 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
             }
 
             const { data } = apiResponse;
-            const { meta, bodies, dignity_data } = data;
+            const { meta, bodies, dignity_data, profection_data } = data;
+
+            // 打印小限数据（如果有）
+            if (profection_data) {
+                console.log('🔮 小限（Profections）数据:', profection_data);
+            }
 
             // 提取太阳状态（从 dignity_data 中获取）
             const sunDignity = dignity_data?.sun;
@@ -598,7 +631,8 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
                 ? bodies.sun.house_placement.whole_sign
                 : bodies.sun.house_placement.alchabitius.effective;
 
-            return {
+            // 构建基础星盘返回对象
+            const chartInfo: BasicChartInfo = {
                 isDiurnal: meta.is_day_chart,
                 sunSign: bodies.sun.sign,
                 moonSign: bodies.moon.sign,
@@ -609,6 +643,26 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
                 sunDegree: bodies.sun.sign_degree,
                 moonDegree: bodies.moon.sign_degree,
             };
+
+            // 如果有小限数据，转换并添加到返回对象
+            if (profection_data) {
+                chartInfo.profectionData = {
+                    currentAge: profection_data.current_age,
+                    activatedHouse: {
+                        houseNumber: profection_data.activated_house?.house_number,
+                        sign: profection_data.activated_house?.sign,
+                        themes: profection_data.activated_house?.themes || [],
+                        isAngle: profection_data.activated_house?.is_angle || false,
+                    },
+                    timeLord: {
+                        planet: profection_data.time_lord?.planet,
+                        natalCondition: profection_data.time_lord?.natal_condition || '',
+                        aspects: profection_data.time_lord?.aspects || [],
+                    },
+                };
+            }
+
+            return chartInfo;
 
         } catch (error: any) {
             console.error('星盘计算错误:', error);
@@ -707,6 +761,29 @@ ${basicChart.isDiurnal ? '昼盘 (Day Chart) - 太阳在地平线以上，时主
 5. 考虑四轴点（ASC、MC）对人格与人生方向的塑造
 ` : '';
 
+        // 小限（Profections）数据 - 仅在年运模式且有数据时显示
+        const profectionInfo = (mode === 'annual2026' && basicChart?.profectionData) ? `
+【2026年小限推运数据（Profections）】
+
+🔄 小限年（Annual Profection）：
+- 2026年年龄：${basicChart.profectionData.currentAge} 岁
+- 激活宫位：第 ${basicChart.profectionData.activatedHouse.houseNumber} 宫
+- 激活星座：${basicChart.profectionData.activatedHouse.sign}
+- 是否角宫：${basicChart.profectionData.activatedHouse.isAngle ? '是（关键年份）' : '否'}
+- 宫位主题：${basicChart.profectionData.activatedHouse.themes.join('、')}
+
+👑 年主星（Time Lord）：
+- 主星行星：${basicChart.profectionData.timeLord.planet}
+- 本命状态：${basicChart.profectionData.timeLord.natalCondition}
+${basicChart.profectionData.timeLord.aspects.length > 0 ? `- 主要相位：${basicChart.profectionData.timeLord.aspects.map(a => `${a.planet} ${a.type}（容许度 ${a.orb.toFixed(1)}°）`).join('、')}` : ''}
+
+💡 **小限分析要点**：
+1. 第 ${basicChart.profectionData.activatedHouse.houseNumber} 宫在2026年被激活，该宫位主题将成为年度焦点
+2. ${basicChart.profectionData.timeLord.planet} 作为年主星，其本命状态和过境将决定年度整体运势走向
+3. 结合年主星与其他行星的相位关系，判断机遇与挑战时机
+4. ${basicChart.profectionData.activatedHouse.isAngle ? '角宫被激活，预示2026年将有重大事件或转折' : '非角宫年份，运势相对平稳渐进'}
+` : '';
+
         return `请根据以下出生信息进行${analysisType}占星分析。
 
 【基本信息】
@@ -721,6 +798,7 @@ ${basicChart.isDiurnal ? '昼盘 (Day Chart) - 太阳在地平线以上，时主
 ${astroInfo.birthPlace ? `出生地点：${astroInfo.birthPlace}` : ''}
 
 ${chartInfo}
+${profectionInfo}
 【行运阶段参数】
 1. 起运年龄：1 岁 (虚岁)。
 2. 第一阶段行运标签：木星主导扩张期。
