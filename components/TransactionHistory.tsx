@@ -114,7 +114,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ isOpen, onClose
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">交易记录</h2>
-              <p className="text-sm text-gray-500">查看星星充值和消费历史</p>
+              <p className="text-sm text-gray-500">查看积分充值和消费历史</p>
             </div>
           </div>
           <button
@@ -216,12 +216,12 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ isOpen, onClose
                         {transaction.type === 'recharge' ? (
                           <>
                             <h3 className="font-bold text-gray-900 mb-1">
-                              充值星星
+                              充值积分
                             </h3>
                             <div className="space-y-1 text-sm text-gray-600">
                               <p>订单号: {transaction.orderId}</p>
                               {transaction.productType && (
-                                <p>套餐: {transaction.productType.replace('stars_', '') + ' 星星'}</p>
+                                <p>套餐: {transaction.productType.replace('stars_', '') + ' 积分'}</p>
                               )}
                               {transaction.priceAmount && (
                                 <p>
@@ -245,7 +245,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ isOpen, onClose
                                 <p>类型: {transaction.resourceType}</p>
                               )}
                               {transaction.remainingStars !== undefined && (
-                                <p>剩余: {transaction.remainingStars} 星星</p>
+                                <p>剩余: {transaction.remainingStars} 积分</p>
                               )}
                             </div>
                           </>
@@ -271,7 +271,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ isOpen, onClose
                       <p className={`text-2xl font-bold ${getTransactionColor(transaction.type)}`}>
                         {formatStars(transaction.stars)}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">星星</p>
+                      <p className="text-xs text-gray-500 mt-1">积分</p>
                     </div>
                   </div>
                 </div>

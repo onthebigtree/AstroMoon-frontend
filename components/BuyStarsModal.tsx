@@ -51,7 +51,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
     try {
       await onRefreshStars();
     } catch (err) {
-      console.error('刷新星星余额失败:', err);
+      console.error('刷新积分余额失败:', err);
     } finally {
       if (withLoading) {
         setIsRefreshingBalance(false);
@@ -106,7 +106,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
 
         if (invoice.status === 'finished') {
           clearInterval(intervalId);
-          alert(`支付成功！已添加 ${invoice.stars_amount} 颗星星到你的账户 ⭐`);
+          alert(`支付成功！已添加 ${invoice.stars_amount} 颗积分到你的账户 ⭐`);
           await refreshStarsBalance();
           onSuccess?.();
           handleClose();
@@ -136,7 +136,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
       const invoice = statusResponse.invoice;
 
       if (invoice.status === 'finished') {
-        alert(`支付成功！已添加 ${invoice.stars_amount} 颗星星到你的账户 ⭐`);
+        alert(`支付成功！已添加 ${invoice.stars_amount} 颗积分到你的账户 ⭐`);
         await refreshStarsBalance();
         onSuccess?.();
         handleClose();
@@ -173,7 +173,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Sparkles className="w-8 h-8 text-yellow-300" />
-              <h2 className="text-2xl font-bold text-white">购买星星</h2>
+              <h2 className="text-2xl font-bold text-white">购买积分</h2>
             </div>
             <button
               onClick={handleClose}
@@ -182,7 +182,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
               <X className="w-6 h-6" />
             </button>
           </div>
-          <p className="text-purple-100 mt-2">选择套餐，使用加密货币购买星星</p>
+          <p className="text-purple-100 mt-2">选择套餐，使用加密货币购买积分</p>
         </div>
 
         {/* Content */}
@@ -193,7 +193,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                 <Star className="w-6 h-6 text-yellow-500 fill-yellow-400" />
               </div>
               <div>
-                <div className="text-xs text-gray-500">当前星星余额</div>
+                <div className="text-xs text-gray-500">当前积分余额</div>
                 <div className="text-xl font-bold text-gray-900">
                   {isRefreshingBalance ? '...' : (currentStars ?? '--')}
                 </div>
@@ -249,7 +249,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                         <span className="text-2xl font-bold text-purple-600">
                           {product.stars}
                         </span>
-                        <span className="text-gray-600">颗星星</span>
+                        <span className="text-gray-600">颗积分</span>
                       </div>
                     </div>
                     {selectedProductType === productType && (
@@ -314,7 +314,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
               </div>
 
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                <strong>提示：</strong>支付完成后，系统会自动检测并添加星星。你也可以点击"我已完成支付"按钮手动查询状态。
+                <strong>提示：</strong>支付完成后，系统会自动检测并添加积分。你也可以点击"我已完成支付"按钮手动查询状态。
               </div>
             </div>
           )}
@@ -362,7 +362,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
             <ul className="space-y-1">
               <li>• 支持 BTC、ETH、USDT、USDC 等 300+ 种加密货币</li>
               <li>• 由 NOWPayments 提供安全支付服务</li>
-              <li>• 支付确认后自动添加星星到账户</li>
+              <li>• 支付确认后自动添加积分到账户</li>
               <li>• 安全可靠，订单实时追踪</li>
             </ul>
           </div>

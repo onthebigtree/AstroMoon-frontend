@@ -192,7 +192,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
     const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
     const [isDeletingProfile, setIsDeletingProfile] = useState(false);
 
-    // 星星余额状态
+    // 积分余额状态
     const [starsBalance, setStarsBalance] = useState<number | null>(null);
     const [isLoadingStarsBalance, setIsLoadingStarsBalance] = useState(false);
 
@@ -232,20 +232,20 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
         }
     };
 
-    // 加载星星余额
+    // 加载积分余额
     const loadStarsBalance = async () => {
         if (!currentUser) return;
 
         setIsLoadingStarsBalance(true);
         try {
             const balance = await getStarBalance();
-            console.log('✅ 星星余额:', balance);
+            console.log('✅ 积分余额:', balance);
             setStarsBalance(balance.stars);
             if (typeof balance.stars === 'number') {
                 onStarsChange?.(balance.stars);
             }
         } catch (error: any) {
-            console.error('❌ 加载星星余额失败:', error);
+            console.error('❌ 加载积分余额失败:', error);
             // 静默失败，不影响用户使用
         } finally {
             setIsLoadingStarsBalance(false);
@@ -1025,20 +1025,20 @@ ${chartInfo}
         }
     };
 
-    // 点击生成按钮 - 先检查星星余额，再显示验证弹窗
+    // 点击生成按钮 - 先检查积分余额，再显示验证弹窗
     const handleAutoGenerate = async () => {
-        // 先检查星星余额
+        // 先检查积分余额
         try {
             const balance = await getStarBalance();
             setStarsBalance(balance.stars);
             onStarsChange?.(balance.stars);
 
             if (balance.stars <= 0) {
-                setError('星星不足，请先充值再生成报告');
+                setError('积分不足，请先充值再生成报告');
                 return;
             }
         } catch (err: any) {
-            console.error('获取星星余额失败:', err);
+            console.error('获取积分余额失败:', err);
             // 如果检查失败，允许继续（避免影响用户体验）
         }
 
@@ -1197,15 +1197,15 @@ ${chartInfo}
 
                 console.log('✅ 报告生成完成，已自动保存到数据库');
 
-                // 生成成功后刷新星星余额
+                // 生成成功后刷新积分余额
                 loadStarsBalance();
             } catch (streamError: any) {
-                // 检查是否为星星不足或限流错误
-                if (streamError.message.includes('星星不足') ||
+                // 检查是否为积分不足或限流错误
+                if (streamError.message.includes('积分不足') ||
                     streamError.message.includes('Insufficient stars') ||
                     streamError.message.includes('Daily generation limit reached') ||
                     streamError.message.includes('生成上限')) {
-                    // 刷新星星余额以获取最新信息
+                    // 刷新积分余额以获取最新信息
                     await loadStarsBalance();
                 }
                 // 直接抛出错误，不再回退到旧后端
@@ -2051,7 +2051,7 @@ ${chartInfo}
                         </div>
                     </div>
 
-                    {/* 星星余额已在页面header中显示 */}
+                    {/* 积分余额已在页面header中显示 */}
 
                     {/* 队列状态显示 */}
                     {isInQueue && queuePosition !== null && queuePosition > 0 && (
@@ -2090,7 +2090,7 @@ ${chartInfo}
                     {/* 消耗提示 */}
                     <div className="flex items-center justify-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
                         <span>⭐</span>
-                        <span>生成完整分析将消耗 1 颗小星星</span>
+                        <span>生成完整分析将消耗 1 颗小积分</span>
                     </div>
 
                     {/* 操作按钮 */}

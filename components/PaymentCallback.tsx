@@ -80,7 +80,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
   };
 
   /**
-   * 刷新星星余额
+   * 刷新积分余额
    */
   const refreshStarBalance = async () => {
     try {
@@ -166,7 +166,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
                   <span className="font-mono text-gray-800">{invoice.order_id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">星星数量:</span>
+                  <span className="text-gray-600">积分数量:</span>
                   <span className="font-semibold text-purple-600">{invoice.stars_amount} ⭐</span>
                 </div>
                 <div className="flex justify-between">
@@ -190,7 +190,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
             <h2 className="text-2xl font-bold text-gray-800">支付成功!</h2>
             {invoice && (
               <p className="text-lg text-gray-700">
-                已成功充值 <span className="font-bold text-purple-600">{invoice.stars_amount} 颗星星</span> 到你的账户
+                已成功充值 <span className="font-bold text-purple-600">{invoice.stars_amount} 颗积分</span> 到你的账户
               </p>
             )}
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2 text-sm">

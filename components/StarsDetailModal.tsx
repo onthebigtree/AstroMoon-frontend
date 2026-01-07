@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Star, Sparkles, Loader2, RefreshCw, Check, ExternalLink, ArrowDownCircle, ArrowUpCircle, ShoppingBag, Receipt } from 'lucide-react';
+import { X, Star, Sparkles, Loader2, RefreshCw, Check, ExternalLink, ArrowDownCircle, ArrowUpCircle, ShoppingBag, Receipt, MessageCircle } from 'lucide-react';
 import type { Product, CreatePaymentRequest, Transaction } from '../services/api/types';
 import { getProducts, createPayment, getPaymentStatus, getTransactions } from '../services/api';
 
@@ -77,7 +77,7 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
     try {
       await onRefreshStars();
     } catch (err) {
-      console.error('刷新星星余额失败:', err);
+      console.error('刷新积分余额失败:', err);
     } finally {
       if (withLoading) {
         setIsRefreshingBalance(false);
@@ -178,8 +178,8 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
             <div className="flex items-center gap-3">
               <Sparkles className="w-8 h-8 text-yellow-300" />
               <div>
-                <h2 className="text-2xl font-bold text-white">星星中心</h2>
-                <p className="text-purple-100 text-sm mt-1">管理你的星星余额和交易记录</p>
+                <h2 className="text-2xl font-bold text-white">积分中心</h2>
+                <p className="text-purple-100 text-sm mt-1">管理你的积分余额和交易记录</p>
               </div>
             </div>
             <button
@@ -202,9 +202,9 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
                 <div className="text-sm text-gray-600">当前余额</div>
                 <div className="text-3xl font-bold text-gray-900">
                   {isRefreshingBalance ? <Loader2 className="w-6 h-6 animate-spin inline-block" /> : (currentStars ?? '--')}
-                  <span className="text-lg text-gray-500 ml-2">星星</span>
+                  <span className="text-lg text-gray-500 ml-2">积分</span>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">星星用于生成 AI 分析报告</div>
+                <div className="text-xs text-gray-500 mt-1">积分用于生成 AI 分析报告</div>
               </div>
             </div>
             {onRefreshStars && (
@@ -235,7 +235,7 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
             }`}
           >
             <ShoppingBag className="w-4 h-4" />
-            充值星星
+            充值积分
           </button>
           <button
             onClick={() => setActiveTab('history')}
@@ -292,6 +292,7 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
                         <div className="flex items-center gap-2 mb-3">
                           <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                           <span className="text-2xl font-bold text-purple-600">{product.stars}</span>
+                          <span className="text-sm text-gray-500">积分</span>
                         </div>
                         <div className="text-2xl font-bold text-gray-900 mb-2">
                           ${product.price}
@@ -315,6 +316,30 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
                       '创建支付订单'
                     )}
                   </button>
+
+                  {/* 客服联系 */}
+                  <div className="mt-4 flex items-center justify-center">
+                    <a
+                      href="https://t.me/moonmaid"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>遇到问题？联系客服 @moonmaid</span>
+                    </a>
+                  </div>
+
+                  {/* 退款说明 */}
+                  <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <h4 className="text-sm font-bold text-gray-700 mb-2">购买须知</h4>
+                    <ul className="text-xs text-gray-500 space-y-1">
+                      <li>• 积分为虚拟商品，充值成功后即时到账</li>
+                      <li>• 积分仅用于本平台AI报告生成服务</li>
+                      <li>• 如遇充值问题，请联系客服处理</li>
+                      <li>• 已消费的积分不支持退款，未消费积分可联系客服协商</li>
+                    </ul>
+                  </div>
                 </>
               )}
 
@@ -337,6 +362,16 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
                       重新打开支付页面
                     </a>
                   </div>
+                  {/* 支付中也显示客服联系 */}
+                  <a
+                    href="https://t.me/moonmaid"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-purple-600"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    支付遇到问题？联系客服 @moonmaid
+                  </a>
                 </div>
               )}
             </>
@@ -408,7 +443,7 @@ export function StarsDetailModal({ isOpen, onClose, currentStars, onRefreshStars
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {transaction.type === 'recharge' ? '充值星星' : getReasonText(transaction.reason)}
+                            {transaction.type === 'recharge' ? '充值积分' : getReasonText(transaction.reason)}
                           </p>
                           <p className="text-xs text-gray-500">{formatDate(transaction.timestamp)}</p>
                         </div>

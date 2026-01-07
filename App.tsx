@@ -44,7 +44,7 @@ const App: React.FC = () => {
       const { stars } = await getStarBalance();
       setStarsBalance(stars);
     } catch (err) {
-      console.error('获取星星余额失败:', err);
+      console.error('获取积分余额失败:', err);
     } finally {
       setIsLoadingStars(false);
     }
@@ -629,7 +629,7 @@ const App: React.FC = () => {
             <button
               onClick={() => setShowStarsDetail(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-50 to-purple-50 border border-purple-200 rounded-lg hover:shadow-md transition-all group"
-              title="星星中心 - 查看余额、充值、消费记录"
+              title="积分中心 - 查看余额、充值、消费记录"
             >
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />
               <span className="text-sm font-semibold text-gray-900">
