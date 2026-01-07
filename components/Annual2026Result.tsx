@@ -1,8 +1,7 @@
 
 import React from 'react';
-import MonthlyKLineChart from './MonthlyKLineChart';
 import { Annual2026Result as Annual2026ResultType, MonthlyKLinePoint } from '../types';
-import { Calendar, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 interface Annual2026ResultProps {
   result: Annual2026ResultType;
@@ -116,86 +115,74 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
   );
 };
 
+// 根据分数或趋势获取运势状态
+const getFortuneStatus = (item: MonthlyKLinePoint): { label: string; color: string; bgColor: string } => {
+  // 优先使用 trend 字段判断
+  if (item.trend === 'up') {
+    return { label: '好运', color: 'text-green-700', bgColor: 'bg-green-100' };
+  } else if (item.trend === 'down') {
+    return { label: '谨慎', color: 'text-red-700', bgColor: 'bg-red-100' };
+  }
+  // 如果没有 trend 或是 flat，使用分数判断
+  if (item.score >= 75) {
+    return { label: '好运', color: 'text-green-700', bgColor: 'bg-green-100' };
+  } else if (item.score <= 65) {
+    return { label: '谨慎', color: 'text-red-700', bgColor: 'bg-red-100' };
+  }
+  return { label: '普通', color: 'text-yellow-700', bgColor: 'bg-yellow-100' };
+};
+
 // Monthly analysis table
 const MonthlyTable: React.FC<{ data: MonthlyKLinePoint[] }> = ({ data }) => {
-  const getTrendIcon = (trend?: string) => {
-    switch (trend) {
-      case 'up':
-        return <TrendingUp className="w-4 h-4 text-green-600" />;
-      case 'down':
-        return <TrendingDown className="w-4 h-4 text-red-600" />;
-      default:
-        return <Minus className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
-  const getTrendColor = (trend?: string) => {
-    switch (trend) {
-      case 'up':
-        return 'bg-green-50 text-green-700';
-      case 'down':
-        return 'bg-red-50 text-red-700';
-      default:
-        return 'bg-gray-50 text-gray-600';
-    }
-  };
-
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gradient-to-r from-indigo-100 to-purple-100">
             <th className="px-4 py-3 text-left font-semibold text-gray-700">月份</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">趋势</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">评分</th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">运势</th>
             <th className="px-4 py-3 text-left font-semibold text-gray-700">主题</th>
             <th className="px-4 py-3 text-left font-semibold text-gray-700">详细分析</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((item, index) => (
-            <tr
-              key={item.month}
-              className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-              }`}
-            >
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">{item.quarter}</span>
-                  <span className="font-medium text-gray-800">{item.monthName}</span>
-                </div>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${getTrendColor(item.trend)}`}>
-                  {getTrendIcon(item.trend)}
-                </div>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
-                  item.score >= 70 ? 'bg-green-100 text-green-700' :
-                  item.score >= 50 ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-red-100 text-red-700'
-                }`}>
-                  {item.score}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex flex-wrap gap-1">
-                  {item.theme?.map((tag, idx) => (
-                    <span key={idx} className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded-full">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-4 py-3">
-                <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
-                  {item.reason}
-                </p>
-              </td>
-            </tr>
-          ))}
+          {data.map((item, index) => {
+            const fortune = getFortuneStatus(item);
+            return (
+              <tr
+                key={item.month}
+                className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                }`}
+              >
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{item.quarter}</span>
+                    <span className="font-medium text-gray-800">{item.monthName}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${fortune.bgColor} ${fortune.color}`}>
+                    {fortune.label}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1">
+                    {item.theme?.map((tag, idx) => (
+                      <span key={idx} className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
+                    {item.reason}
+                  </p>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -225,34 +212,9 @@ const Annual2026Result: React.FC<Annual2026ResultProps> = ({ result, userName })
         )}
       </div>
 
-      {/* Monthly K-Line Chart */}
-      <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6">
-        <MonthlyKLineChart data={chartData} />
-      </div>
-
       {/* Markdown Report */}
       <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
         <MarkdownRenderer content={analysis.markdownReport} />
-      </div>
-
-      {/* Score Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {[
-          { title: analysis.traderVitalityTitle || '年度核心', score: analysis.traderVitalityScore, color: 'from-purple-500 to-indigo-500' },
-          { title: analysis.wealthPotentialTitle || '事业财富', score: analysis.wealthPotentialScore, color: 'from-amber-500 to-orange-500' },
-          { title: analysis.fortuneLuckTitle || '情感关系', score: analysis.fortuneLuckScore, color: 'from-pink-500 to-rose-500' },
-          { title: analysis.leverageRiskTitle || '健康身心', score: analysis.leverageRiskScore, color: 'from-green-500 to-emerald-500' },
-          { title: analysis.platformTeamTitle || '贵人机遇', score: analysis.platformTeamScore, color: 'from-blue-500 to-cyan-500' },
-          { title: analysis.tradingStyleTitle || '行动建议', score: analysis.tradingStyleScore, color: 'from-violet-500 to-purple-500' },
-        ].map((item, index) => (
-          <div
-            key={index}
-            className={`bg-gradient-to-br ${item.color} rounded-xl p-4 text-white shadow-lg`}
-          >
-            <div className="text-xs opacity-80 mb-1">{item.title}</div>
-            <div className="text-2xl font-bold">{item.score}</div>
-          </div>
-        ))}
       </div>
 
       {/* Key Months */}
@@ -289,7 +251,6 @@ const Annual2026Result: React.FC<Annual2026ResultProps> = ({ result, userName })
             <Calendar className="w-5 h-5 text-indigo-600" />
             流月运势详解
           </h3>
-          <p className="text-sm text-gray-500 mt-1">点击查看每月详细分析</p>
         </div>
         <MonthlyTable data={chartData} />
       </div>
