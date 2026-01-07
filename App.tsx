@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import LifeKLineChart from './components/LifeKLineChart';
 import AnalysisResult from './components/AnalysisResult';
+import Annual2026ResultComponent from './components/Annual2026Result';
 import ImportDataMode from './components/ImportDataMode';
 import Login from './components/Login';
 import ReportHistory from './components/ReportHistory';
@@ -12,7 +13,7 @@ import TransactionHistory from './components/TransactionHistory';
 import StarsDetailModal from './components/StarsDetailModal';
 import TwitterLinks from './components/TwitterLinks';
 import { useAuth } from './contexts/AuthContext';
-import { LifeDestinyResult } from './types';
+import { LifeDestinyResult, Annual2026Result } from './types';
 import { Report } from './services/api/types';
 import { getStarBalance } from './services/api/payments';
 import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star, Plus, Loader2 } from 'lucide-react';
@@ -20,7 +21,7 @@ import { replaceAge100Reason } from './constants/age100';
 
 const App: React.FC = () => {
   const { currentUser, logout } = useAuth();
-  const [result, setResult] = useState<LifeDestinyResult | null>(null);
+  const [result, setResult] = useState<LifeDestinyResult | Annual2026Result | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
   const [showHistory, setShowHistory] = useState(false);
@@ -73,7 +74,7 @@ const App: React.FC = () => {
   };
 
   // 处理导入数据
-  const handleDataImport = (data: LifeDestinyResult) => {
+  const handleDataImport = (data: LifeDestinyResult | Annual2026Result) => {
     setResult(data);
     setUserName('');
     setError(null);
@@ -114,6 +115,19 @@ const App: React.FC = () => {
           chartData: chartPoints,
           analysis: analysisData
         };
+      }
+
+      // 检查是否为年运报告
+      const isAnnual2026Report = report.report_title?.includes('2026年年运') ||
+                                  (reportContent.analysis && 'markdownReport' in reportContent.analysis);
+
+      if (isAnnual2026Report) {
+        console.log('📅 检测到年运报告');
+        // 直接设置年运报告数据
+        setResult(reportContent as Annual2026Result);
+        setUserName(report.profile_name || '');
+        setError(null);
+        return;
       }
 
       // 判断报告类型：优先根据标题判断，然后根据内容判断
@@ -526,11 +540,18 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  // 计算人生巅峰
-  const peakYearItem = useMemo(() => {
-    if (!result || !result.chartData.length) return null;
-    return result.chartData.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+  // 判断是否为年运报告
+  const isAnnualReport = useMemo(() => {
+    if (!result) return false;
+    // 检查是否有 markdownReport 字段（年运报告特有）
+    return 'analysis' in result && 'markdownReport' in result.analysis;
   }, [result]);
+
+  // 计算人生巅峰（仅用于非年运报告）
+  const peakYearItem = useMemo(() => {
+    if (!result || !result.chartData.length || isAnnualReport) return null;
+    return (result as LifeDestinyResult).chartData.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+  }, [result, isAnnualReport]);
 
   // 如果正在显示支付回调页面，直接返回支付回调组件
   if (showPaymentCallback) {
@@ -634,161 +655,192 @@ const App: React.FC = () => {
         {/* Results View */}
         {result && (
           <div className="animate-fade-in space-y-12">
-
-            {/* 财富量级横幅 - 页面最顶部（仅交易员报告） */}
-            {result.analysis.wealthLevel && result.analysis.traderVitality && (
-              <div className="no-print bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-lg">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full p-3 animate-pulse">
-                      <TrendingUp className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-amber-900 mb-1">
-                        🌟 发现你的财富量级潜力
-                      </h3>
-                      <p className="text-sm text-amber-700">
-                        基于你的星盘配置，一键生成专属财富等级分析
-                      </p>
+            {/* 年运报告展示 */}
+            {isAnnualReport ? (
+              <>
+                <div className="flex flex-col md:flex-row justify-between items-end md:items-center border-b border-gray-200 pb-4 gap-4">
+                  <h2 className="text-2xl font-bold font-serif-sc text-gray-800">
+                    {userName ? `${userName}的` : ''}2026年年运报告
+                  </h2>
+                  <div className="flex flex-wrap gap-3 no-print">
+                    <button
+                      onClick={handlePrint}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
+                    >
+                      <Printer className="w-4 h-4" />
+                      保存PDF
+                    </button>
+                    <button
+                      onClick={() => setResult(null)}
+                      className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm"
+                    >
+                      ← 重新排盘
+                    </button>
+                  </div>
+                </div>
+                <Annual2026ResultComponent
+                  result={result as Annual2026Result}
+                  userName={userName || undefined}
+                />
+              </>
+            ) : (
+              <>
+                {/* 财富量级横幅 - 页面最顶部（仅交易员报告） */}
+                {(result as LifeDestinyResult).analysis.wealthLevel && (result as LifeDestinyResult).analysis.traderVitality && (
+                  <div className="no-print bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-lg">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full p-3 animate-pulse">
+                          <TrendingUp className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-amber-900 mb-1">
+                            🌟 发现你的财富量级潜力
+                          </h3>
+                          <p className="text-sm text-amber-700">
+                            基于你的星盘配置，一键生成专属财富等级分析
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowWealthShare(true)}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-xl hover:shadow-2xl transform hover:scale-105 whitespace-nowrap"
+                      >
+                        <Sparkles className="w-5 h-5" />
+                        立即生成
+                      </button>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setShowWealthShare(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-xl hover:shadow-2xl transform hover:scale-105 whitespace-nowrap"
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    立即生成
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col md:flex-row justify-between items-end md:items-center border-b border-gray-200 pb-4 gap-4">
-              <h2 className="text-2xl font-bold font-serif-sc text-gray-800">
-                {userName ? `${userName}的` : ''}Astro Moon 占星报告
-              </h2>
-
-              <div className="flex flex-wrap gap-3 no-print">
-                <button
-                  onClick={handlePrint}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
-                >
-                  <Printer className="w-4 h-4" />
-                  保存PDF
-                </button>
-                <button
-                  onClick={handleSaveHtml}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white border border-emerald-600 rounded-lg hover:bg-emerald-700 transition-all font-medium text-sm shadow-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  下载网页
-                </button>
-                <button
-                  onClick={() => setResult(null)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm"
-                >
-                  ← 重新排盘
-                </button>
-              </div>
-            </div>
-
-            {/* 财富量级潜力按钮 - 页面顶部醒目位置（仅交易员报告） */}
-            {result.analysis.wealthLevel && result.analysis.traderVitality && (
-              <div className="flex justify-center no-print -mt-6">
-                <button
-                  onClick={() => setShowWealthShare(true)}
-                  className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 animate-pulse"
-                >
-                  <TrendingUp className="w-6 h-6" />
-                  一键生成我的财富量级潜力
-                </button>
-              </div>
-            )}
-
-            {/* The Chart */}
-            <section className="space-y-4 break-inside-avoid">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-bold text-gray-700 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-indigo-600 rounded-full"></span>
-                  流年大运走势图 (100年)
-                </h3>
-                {peakYearItem && (
-                  <p className="text-sm font-bold text-indigo-800 bg-indigo-50 border border-indigo-100 rounded px-2 py-1 inline-flex items-center gap-2 self-start mt-1">
-                    <Trophy className="w-3 h-3 text-amber-500" />
-                    人生巅峰年份：{peakYearItem.year}年 ({peakYearItem.ganZhi}) - {peakYearItem.age}岁，评分 <span className="text-amber-600 text-lg">{peakYearItem.score}</span>
-                  </p>
                 )}
-              </div>
 
-              <p className="text-sm text-gray-500 mb-2 no-print">
-                <span className="text-green-600 font-bold">绿色K线</span> 代表运势上涨（吉），
-                <span className="text-red-600 font-bold">红色K线</span> 代表运势下跌（凶）。
-                <span className="text-red-500 font-bold">★</span> 标记为全盘最高运势点。
-              </p>
-              <LifeKLineChart data={result.chartData} />
-            </section>
+                <div className="flex flex-col md:flex-row justify-between items-end md:items-center border-b border-gray-200 pb-4 gap-4">
+                  <h2 className="text-2xl font-bold font-serif-sc text-gray-800">
+                    {userName ? `${userName}的` : ''}Astro Moon 占星报告
+                  </h2>
 
-            {/* The Text Report */}
-            {/* Added ID for HTML extraction */}
-            <section id="analysis-result-container">
-              <AnalysisResult analysis={result.analysis} />
-            </section>
-
-            {/* 流年详批全表 - 始终显示，打印时分页 */}
-            <div className="mt-8 print:break-before-page">
-              <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2 mb-4">
-                <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
-                <h3 className="text-xl font-bold text-gray-800 font-serif-sc">流年详批全表</h3>
-              </div>
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="bg-gray-100 text-gray-600 font-bold uppercase tracking-wider">
-                    <th className="p-2 border border-gray-200 text-center w-16">年龄</th>
-                    <th className="p-2 border border-gray-200 text-center w-16">评分</th>
-                    <th className="p-2 border border-gray-200">运势批断</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.chartData.map((item) => (
-                    <tr
-                      key={item.age}
-                      className={`border-b border-gray-100 break-inside-avoid ${
-                        item.age === 100 ? 'bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300' : ''
-                      }`}
+                  <div className="flex flex-wrap gap-3 no-print">
+                    <button
+                      onClick={handlePrint}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
                     >
-                      <td className="p-2 border border-gray-100 text-center font-mono">
-                        {item.age}
-                        {item.age === 100 && (
-                          <div className="text-xs text-amber-600 font-bold mt-1">谢幕</div>
-                        )}
-                      </td>
-                      <td className={`p-2 border border-gray-100 text-center font-bold ${item.close >= item.open ? 'text-green-600' : 'text-red-600'}`}>
-                        {item.score}
-                      </td>
-                      <td className="p-2 border border-gray-100 text-gray-700 text-justify text-xs leading-relaxed">
-                        {item.reason}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      <Printer className="w-4 h-4" />
+                      保存PDF
+                    </button>
+                    <button
+                      onClick={handleSaveHtml}
+                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white border border-emerald-600 rounded-lg hover:bg-emerald-700 transition-all font-medium text-sm shadow-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      下载网页
+                    </button>
+                    <button
+                      onClick={() => setResult(null)}
+                      className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm"
+                    >
+                      ← 重新排盘
+                    </button>
+                  </div>
+                </div>
 
-              <div className="mt-8 pt-4 border-t border-gray-200 flex justify-center items-center text-xs text-gray-500">
-                <span>生成时间：{new Date().toLocaleString()}</span>
-              </div>
-            </div>
+                {/* 财富量级潜力按钮 - 页面顶部醒目位置（仅交易员报告） */}
+                {(result as LifeDestinyResult).analysis.wealthLevel && (result as LifeDestinyResult).analysis.traderVitality && (
+                  <div className="flex justify-center no-print -mt-6">
+                    <button
+                      onClick={() => setShowWealthShare(true)}
+                      className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 animate-pulse"
+                    >
+                      <TrendingUp className="w-6 h-6" />
+                      一键生成我的财富量级潜力
+                    </button>
+                  </div>
+                )}
 
-            {/* 财富量级潜力按钮 - 放在页面最下方（仅交易员报告） */}
-            {result.analysis.wealthLevel && result.analysis.traderVitality && (
-              <div className="flex justify-center no-print mt-8">
-                <button
-                  onClick={() => setShowWealthShare(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  <TrendingUp className="w-5 h-5" />
-                  一键生成我的财富量级潜力
-                </button>
-              </div>
+                {/* The Chart */}
+                <section className="space-y-4 break-inside-avoid">
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-xl font-bold text-gray-700 flex items-center gap-2">
+                      <span className="w-1 h-6 bg-indigo-600 rounded-full"></span>
+                      流年大运走势图 (100年)
+                    </h3>
+                    {peakYearItem && (
+                      <p className="text-sm font-bold text-indigo-800 bg-indigo-50 border border-indigo-100 rounded px-2 py-1 inline-flex items-center gap-2 self-start mt-1">
+                        <Trophy className="w-3 h-3 text-amber-500" />
+                        人生巅峰年份：{peakYearItem.year}年 ({peakYearItem.ganZhi}) - {peakYearItem.age}岁，评分 <span className="text-amber-600 text-lg">{peakYearItem.score}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-gray-500 mb-2 no-print">
+                    <span className="text-green-600 font-bold">绿色K线</span> 代表运势上涨（吉），
+                    <span className="text-red-600 font-bold">红色K线</span> 代表运势下跌（凶）。
+                    <span className="text-red-500 font-bold">★</span> 标记为全盘最高运势点。
+                  </p>
+                  <LifeKLineChart data={(result as LifeDestinyResult).chartData} />
+                </section>
+
+                {/* The Text Report */}
+                {/* Added ID for HTML extraction */}
+                <section id="analysis-result-container">
+                  <AnalysisResult analysis={(result as LifeDestinyResult).analysis} />
+                </section>
+
+                {/* 流年详批全表 - 始终显示，打印时分页 */}
+                <div className="mt-8 print:break-before-page">
+                  <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2 mb-4">
+                    <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
+                    <h3 className="text-xl font-bold text-gray-800 font-serif-sc">流年详批全表</h3>
+                  </div>
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-gray-100 text-gray-600 font-bold uppercase tracking-wider">
+                        <th className="p-2 border border-gray-200 text-center w-16">年龄</th>
+                        <th className="p-2 border border-gray-200 text-center w-16">评分</th>
+                        <th className="p-2 border border-gray-200">运势批断</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(result as LifeDestinyResult).chartData.map((item) => (
+                        <tr
+                          key={item.age}
+                          className={`border-b border-gray-100 break-inside-avoid ${
+                            item.age === 100 ? 'bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300' : ''
+                          }`}
+                        >
+                          <td className="p-2 border border-gray-100 text-center font-mono">
+                            {item.age}
+                            {item.age === 100 && (
+                              <div className="text-xs text-amber-600 font-bold mt-1">谢幕</div>
+                            )}
+                          </td>
+                          <td className={`p-2 border border-gray-100 text-center font-bold ${item.close >= item.open ? 'text-green-600' : 'text-red-600'}`}>
+                            {item.score}
+                          </td>
+                          <td className="p-2 border border-gray-100 text-gray-700 text-justify text-xs leading-relaxed">
+                            {item.reason}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div className="mt-8 pt-4 border-t border-gray-200 flex justify-center items-center text-xs text-gray-500">
+                    <span>生成时间：{new Date().toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* 财富量级潜力按钮 - 放在页面最下方（仅交易员报告） */}
+                {(result as LifeDestinyResult).analysis.wealthLevel && (result as LifeDestinyResult).analysis.traderVitality && (
+                  <div className="flex justify-center no-print mt-8">
+                    <button
+                      onClick={() => setShowWealthShare(true)}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <TrendingUp className="w-5 h-5" />
+                      一键生成我的财富量级潜力
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

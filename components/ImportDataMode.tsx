@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { LifeDestinyResult } from '../types';
-import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter } from 'lucide-react';
-import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
+import { LifeDestinyResult, Annual2026Result } from '../types';
+import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter, Calendar } from 'lucide-react';
+import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION, ANNUAL_2026_SYSTEM_INSTRUCTION } from '../constants';
 import { streamReportGenerate } from '../services/api/reports';
 import { getStarBalance } from '../services/api/payments';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
@@ -15,11 +15,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { getProfiles, createProfile, updateProfile, deleteProfile, type Profile, checkTelegramMembership, bindTelegramAccount } from '../services/api';
 
 interface ImportDataModeProps {
-    onDataImport: (data: LifeDestinyResult) => void;
+    onDataImport: (data: LifeDestinyResult | Annual2026Result) => void;
     onStarsChange?: (stars: number) => void;
 }
 
-type Mode = 'choose' | 'trader' | 'normal';
+type Mode = 'choose' | 'trader' | 'normal' | 'annual2026';
 type Step = 1 | 2;
 
 // 基础星盘信息接口
@@ -669,7 +669,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
     // 生成用户提示词
     const generateUserPrompt = () => {
         const genderStr = astroInfo.gender === 'Male' ? '男' : '女';
-        const analysisType = mode === 'trader' ? '交易员财富' : '人生';
+        const analysisType = mode === 'trader' ? '交易员财富' : mode === 'annual2026' ? '2026年年运' : '人生';
 
         // 如果有基础星盘信息，包含到 prompt 中
         const chartInfo = basicChart ? `
@@ -731,7 +731,7 @@ ${chartInfo}
 
     // 复制完整提示词
     const copyFullPrompt = async () => {
-        const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
+        const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : mode === 'annual2026' ? ANNUAL_2026_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
         const fullPrompt = `=== 系统指令 (System Prompt) ===\n\n${systemPrompt}\n\n=== 用户提示词 (User Prompt) ===\n\n${generateUserPrompt()}`;
 
         try {
@@ -744,7 +744,7 @@ ${chartInfo}
     };
 
     // 解析 JSON 内容的辅助函数
-    const parseJSONContent = (jsonContent: string, currentMode: Mode): LifeDestinyResult => {
+    const parseJSONContent = (jsonContent: string, currentMode: Mode): LifeDestinyResult | Annual2026Result => {
         // 尝试从可能包含 markdown 的内容中提取 JSON
         let content = jsonContent.trim();
 
@@ -796,7 +796,48 @@ ${chartInfo}
             throw new Error(err.message);
         }
 
-        // 校验数据结构
+        // 年运模式：特殊处理（手动导入）
+        if (currentMode === 'annual2026') {
+            const annualResult: Annual2026Result = {
+                chartData: data.chartPoints || [],
+                analysis: {
+                    markdownReport: data.markdownReport || '',
+                    summary: data.summary || '2026年度运势总评',
+                    summaryScore: data.summaryScore || 85,
+
+                    traderVitalityTitle: data.traderVitalityTitle || '年度核心',
+                    traderVitality: data.traderVitality || '',
+                    traderVitalityScore: data.traderVitalityScore || 80,
+
+                    wealthPotentialTitle: data.wealthPotentialTitle || '事业财富',
+                    wealthPotential: data.wealthPotential || '',
+                    wealthPotentialScore: data.wealthPotentialScore || 80,
+
+                    fortuneLuckTitle: data.fortuneLuckTitle || '情感关系',
+                    fortuneLuck: data.fortuneLuck || '',
+                    fortuneLuckScore: data.fortuneLuckScore || 80,
+
+                    leverageRiskTitle: data.leverageRiskTitle || '健康身心',
+                    leverageRisk: data.leverageRisk || '',
+                    leverageRiskScore: data.leverageRiskScore || 80,
+
+                    platformTeamTitle: data.platformTeamTitle || '贵人机遇',
+                    platformTeam: data.platformTeam || '',
+                    platformTeamScore: data.platformTeamScore || 80,
+
+                    tradingStyleTitle: data.tradingStyleTitle || '行动建议',
+                    tradingStyle: data.tradingStyle || '',
+                    tradingStyleScore: data.tradingStyleScore || 80,
+
+                    keyMonths: data.keyMonths,
+                    peakMonths: data.peakMonths,
+                    riskMonths: data.riskMonths,
+                },
+            };
+            return annualResult as any; // Type assertion for union return
+        }
+
+        // 校验数据结构（非年运模式）
         const validation = validateAstroData(data);
         if (!validation.valid) {
             throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
@@ -1120,10 +1161,10 @@ ${chartInfo}
             const userPrompt = generateUserPrompt();
 
             // 根据模式选择系统指令
-            const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
+            const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : mode === 'annual2026' ? ANNUAL_2026_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
 
             // 生成报告标题
-            const reportTitle = `${astroInfo.name || '匿名用户'}的${mode === 'trader' ? '交易员财富' : '综合人生'}占星报告`;
+            const reportTitle = `${astroInfo.name || '匿名用户'}的${mode === 'trader' ? '交易员财富' : mode === 'annual2026' ? '2026年年运' : '综合人生'}占星报告`;
 
             // 调用新后端流式生成 API（会自动保存到数据库）
             console.log('🚀 调用新后端生成报告（会自动保存到数据库）...');
@@ -1175,7 +1216,52 @@ ${chartInfo}
             try {
                 const data = robustParseJSON(content);
 
-                // 校验数据结构
+                // 年运模式：特殊处理
+                if (mode === 'annual2026') {
+                    // 年运模式的结果结构
+                    const annualResult: Annual2026Result = {
+                        chartData: data.chartPoints || [],
+                        analysis: {
+                            markdownReport: data.markdownReport || '',
+                            summary: data.summary || '2026年度运势总评',
+                            summaryScore: data.summaryScore || 85,
+
+                            traderVitalityTitle: data.traderVitalityTitle || '年度核心',
+                            traderVitality: data.traderVitality || '',
+                            traderVitalityScore: data.traderVitalityScore || 80,
+
+                            wealthPotentialTitle: data.wealthPotentialTitle || '事业财富',
+                            wealthPotential: data.wealthPotential || '',
+                            wealthPotentialScore: data.wealthPotentialScore || 80,
+
+                            fortuneLuckTitle: data.fortuneLuckTitle || '情感关系',
+                            fortuneLuck: data.fortuneLuck || '',
+                            fortuneLuckScore: data.fortuneLuckScore || 80,
+
+                            leverageRiskTitle: data.leverageRiskTitle || '健康身心',
+                            leverageRisk: data.leverageRisk || '',
+                            leverageRiskScore: data.leverageRiskScore || 80,
+
+                            platformTeamTitle: data.platformTeamTitle || '贵人机遇',
+                            platformTeam: data.platformTeam || '',
+                            platformTeamScore: data.platformTeamScore || 80,
+
+                            tradingStyleTitle: data.tradingStyleTitle || '行动建议',
+                            tradingStyle: data.tradingStyle || '',
+                            tradingStyleScore: data.tradingStyleScore || 80,
+
+                            keyMonths: data.keyMonths,
+                            peakMonths: data.peakMonths,
+                            riskMonths: data.riskMonths,
+                        },
+                    };
+
+                    console.log('✅ 年运数据解析和转换成功');
+                    onDataImport(annualResult);
+                    break;
+                }
+
+                // 校验数据结构（非年运模式）
                 const validation = validateAstroData(data);
                 if (!validation.valid) {
                     throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
@@ -1455,7 +1541,7 @@ ${chartInfo}
                         <p className="text-gray-500 text-sm">请选择您想要的占星分析模式</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* 专业交易者模式 */}
                         <button
                             onClick={() => { setMode('trader'); setStep(1); setHouseSystem('W'); }}
@@ -1503,6 +1589,30 @@ ${chartInfo}
                                 </div>
                             </div>
                         </button>
+
+                        {/* 2026年运模式 */}
+                        <button
+                            onClick={() => { setMode('annual2026'); setStep(1); setHouseSystem('W'); }}
+                            className="group relative bg-gradient-to-br from-cyan-500 via-teal-500 to-emerald-500 hover:from-cyan-600 hover:via-teal-600 hover:to-emerald-600 text-white p-6 rounded-2xl shadow-lg transition-all transform hover:scale-105 hover:shadow-2xl"
+                        >
+                            <div className="absolute inset-0 bg-black/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="relative z-10">
+                                <div className="flex justify-center mb-4">
+                                    <div className="p-4 bg-white/20 rounded-full">
+                                        <Calendar className="w-10 h-10" />
+                                    </div>
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">📅 2026年运</h3>
+                                <p className="text-sm text-white/90 mb-4">
+                                    基于小限法的年度运势深度解读
+                                </p>
+                                <div className="text-xs text-white/80 space-y-1">
+                                    <div>🎯 年度核心课题</div>
+                                    <div>📅 关键月份预警</div>
+                                    <div>💫 12月运势走势</div>
+                                </div>
+                            </div>
+                        </button>
                     </div>
                 </div>
             )}
@@ -1546,7 +1656,7 @@ ${chartInfo}
                             输入出生信息
                         </h2>
                         <p className="text-gray-500 text-sm">
-                            填写出生信息后即可一键生成 {mode === 'trader' ? '交易员财富' : '人生'}分析报告
+                            填写出生信息后即可一键生成 {mode === 'trader' ? '交易员财富' : mode === 'annual2026' ? '2026年年运' : '人生'}分析报告
                         </p>
                     </div>
 
@@ -1792,7 +1902,7 @@ ${chartInfo}
                             <label className="block text-xs font-bold text-gray-600 mb-2">
                                 选择分宫制
                                 <span className="ml-2 text-xs font-normal text-purple-600">
-                                    {mode === 'trader' ? '(交易员版本默认：整宫制)' : '(普通版本默认：普拉西度)'}
+                                    {mode === 'trader' || mode === 'annual2026' ? '(默认：整宫制)' : '(普通版本默认：普拉西度)'}
                                 </span>
                             </label>
                             <select
@@ -1810,7 +1920,7 @@ ${chartInfo}
                             </select>
                         </div>
                         <div className="mt-2 text-xs text-purple-600/80 bg-white/50 p-2 rounded">
-                            💡 不同分宫制会影响宫位的划分方式。{mode === 'trader' ? '交易员版本推荐使用整宫制(W)。' : '普通版本推荐使用普拉西度制(P)。'}
+                            💡 不同分宫制会影响宫位的划分方式。{mode === 'trader' || mode === 'annual2026' ? '推荐使用整宫制(W)。' : '普通版本推荐使用普拉西度制(P)。'}
                         </div>
                     </div>
 
