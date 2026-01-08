@@ -266,6 +266,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                     src="/tier-list-2026.jpeg"
                     alt="2026运势排行榜"
                     className="w-full h-auto"
+                    crossOrigin="anonymous"
                   />
                   {/* "你"的位置标记 - 放在排行榜内部，和名人并排 */}
                   <div
@@ -279,29 +280,17 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                       transform: 'translate(-50%, -50%)',
                     }}
                   >
-                    <div className="flex flex-col items-center">
-                      {/* 头像框 */}
-                      <div className={`
-                        w-14 h-14 md:w-16 md:h-16 rounded-lg border-4
-                        flex items-center justify-center text-2xl md:text-3xl
-                        shadow-xl
-                        ${result.tier === 'T0' ? 'bg-red-100 border-red-500' :
-                          result.tier === 'T1' ? 'bg-orange-100 border-orange-500' :
-                          result.tier === 'T2' ? 'bg-yellow-100 border-yellow-500' :
-                          result.tier === 'T3' ? 'bg-green-100 border-green-500' : 'bg-gray-100 border-gray-500'}
-                      `}>
-                        {result.emoji}
-                      </div>
-                      {/* "你"的标签 */}
-                      <div className={`
-                        -mt-1 px-3 py-0.5 rounded-full text-xs font-bold text-white shadow-lg
-                        ${result.tier === 'T0' ? 'bg-red-500' :
-                          result.tier === 'T1' ? 'bg-orange-500' :
-                          result.tier === 'T2' ? 'bg-yellow-600' :
-                          result.tier === 'T3' ? 'bg-green-500' : 'bg-gray-500'}
-                      `}>
-                        你
-                      </div>
+                    {/* "你"字头像框 */}
+                    <div className={`
+                      w-14 h-14 md:w-16 md:h-16 rounded-lg border-4
+                      flex items-center justify-center text-xl md:text-2xl font-black
+                      shadow-xl
+                      ${result.tier === 'T0' ? 'bg-red-500 border-red-300 text-white' :
+                        result.tier === 'T1' ? 'bg-orange-500 border-orange-300 text-white' :
+                        result.tier === 'T2' ? 'bg-yellow-500 border-yellow-300 text-white' :
+                        result.tier === 'T3' ? 'bg-green-500 border-green-300 text-white' : 'bg-gray-500 border-gray-300 text-white'}
+                    `}>
+                      你
                     </div>
                   </div>
                 </div>
@@ -350,6 +339,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                       src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://www.astromoon.xyz/"
                       alt="网站二维码"
                       className="w-16 h-16"
+                      crossOrigin="anonymous"
                     />
                     <p className="text-[10px] text-gray-400">扫码查看完整星盘</p>
                   </div>
