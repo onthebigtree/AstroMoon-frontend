@@ -17,6 +17,7 @@ import { getProfiles, createProfile, updateProfile, deleteProfile, type Profile,
 interface ImportDataModeProps {
     onDataImport: (data: LifeDestinyResult | Annual2026Result) => void;
     onStarsChange?: (stars: number) => void;
+    defaultMode?: 'choose' | 'trader' | 'normal' | 'annual2026';
 }
 
 type Mode = 'choose' | 'trader' | 'normal' | 'annual2026';
@@ -141,9 +142,9 @@ const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; ti
     'default': { latitude: 39.9042, longitude: 116.4074, timezone: 8.0 }
 };
 
-const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsChange }) => {
+const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsChange, defaultMode }) => {
     const { currentUser } = useAuth();
-    const [mode, setMode] = useState<Mode>('choose');
+    const [mode, setMode] = useState<Mode>(defaultMode || 'choose');
     const [step, setStep] = useState<Step>(1);
     const [basicChart, setBasicChart] = useState<BasicChartInfo | null>(null);
     const [houseSystem, setHouseSystem] = useState<string>('P'); // 默认使用 Placidus

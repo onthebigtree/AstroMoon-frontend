@@ -32,6 +32,7 @@ const App: React.FC = () => {
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [showStarsDetail, setShowStarsDetail] = useState(false);
   const [showZodiacFortune, setShowZodiacFortune] = useState(false);
+  const [importDefaultMode, setImportDefaultMode] = useState<'choose' | 'trader' | 'normal' | 'annual2026'>('choose');
   const [starsBalance, setStarsBalance] = useState<number | null>(null);
   const [isLoadingStars, setIsLoadingStars] = useState(false);
 
@@ -715,8 +716,10 @@ const App: React.FC = () => {
 
             {/* 导入模式组件 */}
             <ImportDataMode
+              key={importDefaultMode}
               onDataImport={handleDataImport}
               onStarsChange={setStarsBalance}
+              defaultMode={importDefaultMode}
             />
 
             {error && (
@@ -973,6 +976,10 @@ const App: React.FC = () => {
       <ZodiacFortune2026
         isOpen={showZodiacFortune}
         onClose={() => setShowZodiacFortune(false)}
+        onGoToDetailedTest={() => {
+          setShowZodiacFortune(false);
+          setImportDefaultMode('annual2026');
+        }}
       />
     </div>
   );

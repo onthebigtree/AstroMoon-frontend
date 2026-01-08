@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Download, Flame, Calendar, ChevronDown } from 'lucide-react';
+import { X, Download, Flame, Calendar, ChevronDown, Sparkles } from 'lucide-react';
 import {
   getZodiacFortuneInfo,
   getZodiacSignByDate,
@@ -11,11 +11,13 @@ import html2canvas from 'html2canvas';
 interface ZodiacFortune2026Props {
   isOpen: boolean;
   onClose: () => void;
+  onGoToDetailedTest?: () => void;
 }
 
 const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   isOpen,
   onClose,
+  onGoToDetailedTest,
 }) => {
   const [birthMonth, setBirthMonth] = useState<number>(1);
   const [birthDay, setBirthDay] = useState<number>(1);
@@ -195,14 +197,14 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                 </div>
 
                 {/* Tier List 图片 + "你"的标记 */}
-                <div className="relative mb-4 rounded-xl overflow-hidden shadow-lg" style={{ margin: '-1rem -1.5rem', width: 'calc(100% + 3rem)' }}>
+                <div className="relative mb-6 rounded-xl overflow-hidden shadow-lg">
                   <img
                     src="/tier-list-2026.jpeg"
                     alt="2026运势排行榜"
                     className="w-full h-auto"
                     crossOrigin="anonymous"
                   />
-                  {/* "你"的位置标记 - 放在名人头像右侧 */}
+                  {/* "你"的位置标记 - 放在名人头像正右边 */}
                   <div
                     className="absolute flex items-center justify-center"
                     style={{
@@ -211,8 +213,8 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                            result.tier === 'T1' ? '30%' :
                            result.tier === 'T2' ? '50%' :
                            result.tier === 'T3' ? '70%' : '90%',
-                      // 放在名人头像右侧（名人大约在 10%-40% 区域）
-                      left: '55%',
+                      // 名人头像区域约 8%-35%，放在紧挨右边 38%
+                      left: '38%',
                       transform: 'translateY(-50%)',
                     }}
                   >
@@ -307,6 +309,17 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                       长按图片保存到相册
                     </p>
                   </div>
+                )}
+
+                {/* 深度测试入口 */}
+                {onGoToDetailedTest && (
+                  <button
+                    onClick={onGoToDetailedTest}
+                    className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold shadow-lg transition-all"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    <span>深度测试 2026 年运</span>
+                  </button>
                 )}
 
                 <button
