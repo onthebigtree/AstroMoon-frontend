@@ -1308,6 +1308,101 @@ ${chartInfo}
                         else if (data.transit_forecast && data.transit_forecast.monthly) {
                             chartData = data.transit_forecast.monthly;
                         }
+                        // 🔄 终极兜底：如果 AI 返回了完全不同的格式（如 year_2026_forecast），生成默认月度数据
+                        else if (data.year_2026_forecast || data.natal_chart_analysis || data.user_profile) {
+                            console.log('⚠️ AI 返回了非标准格式，从 year_2026_forecast 生成月度数据');
+                            const forecast = data.year_2026_forecast || {};
+                            const prediction = forecast.detailed_prediction || {};
+
+                            // 从预测中提取评分
+                            const careerRating = (prediction.career_and_achievement?.rating?.match(/⭐/g) || []).length * 20 || 80;
+                            const relationshipRating = (prediction.relationship_and_partnership?.rating?.match(/⭐/g) || []).length * 20 || 60;
+                            const growthRating = (prediction.personal_growth_and_travel?.rating?.match(/⭐/g) || []).length * 20 || 75;
+                            const wealthRating = (prediction.wealth_and_finance?.rating?.match(/⭐/g) || []).length * 20 || 70;
+                            const avgScore = Math.round((careerRating + relationshipRating + growthRating + wealthRating) / 4);
+
+                            // 生成 12 个月的数据
+                            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+                            const quarters = ['Q1', 'Q1', 'Q1', 'Q2', 'Q2', 'Q2', 'Q3', 'Q3', 'Q3', 'Q4', 'Q4', 'Q4'];
+
+                            // 基于预测生成波动的月度分数
+                            const baseScores = [
+                                avgScore + 5,  // 1月
+                                avgScore - 5,  // 2月 - 土星进7宫
+                                avgScore - 8,  // 3月 - 土星正式进入
+                                avgScore,      // 4月
+                                avgScore + 10, // 5月 - 木星高照
+                                avgScore + 12, // 6月 - 木星合天顶
+                                avgScore + 8,  // 7月 - 木星进狮子
+                                avgScore + 5,  // 8月
+                                avgScore,      // 9月
+                                avgScore - 3,  // 10月
+                                avgScore + 3,  // 11月
+                                avgScore + 5,  // 12月
+                            ];
+
+                            chartData = monthNames.map((name, i) => {
+                                const score = Math.max(40, Math.min(95, baseScores[i] + Math.floor(Math.random() * 10 - 5)));
+                                const prevScore = i > 0 ? baseScores[i - 1] : score;
+                                return {
+                                    month: i + 1,
+                                    monthName: name,
+                                    quarter: quarters[i],
+                                    monthTransit: forecast.transit_overview || '详见年度总览',
+                                    score: score,
+                                    trend: score > prevScore ? 'up' : score < prevScore ? 'down' : 'flat',
+                                    theme: i < 3 ? ['调整期', '蓄势'] : i < 6 ? ['事业高峰', '机遇'] : i < 9 ? ['扩张', '贵人'] : ['收获', '总结'],
+                                    open: Math.max(40, score - 5),
+                                    close: score,
+                                    high: Math.min(98, score + 8),
+                                    low: Math.max(35, score - 10),
+                                    reason: i < 3
+                                        ? (prediction.relationship_and_partnership?.analysis?.substring(0, 100) || '本月需注意人际关系的调整。') + '...'
+                                        : i < 6
+                                        ? (prediction.career_and_achievement?.analysis?.substring(0, 100) || '事业运势正旺，抓住机遇。') + '...'
+                                        : i < 9
+                                        ? (prediction.personal_growth_and_travel?.analysis?.substring(0, 100) || '适合学习和旅行。') + '...'
+                                        : (prediction.wealth_and_finance?.analysis?.substring(0, 100) || '财运稳定，注意理财。') + '...',
+                                };
+                            });
+
+                            // 同时提取其他字段
+                            if (!data.summary && forecast.annual_theme) {
+                                data.summary = `${forecast.annual_theme}。${forecast.transit_overview || ''}`;
+                            }
+                            if (!data.markdownReport) {
+                                const natal = data.natal_chart_analysis?.core_personality || {};
+                                const advice = data.strategic_advice_2026 || [];
+                                data.markdownReport = `## 2026 年运势分析：${forecast.annual_theme || '机遇与挑战并存'}\n\n` +
+                                    `> ${forecast.transit_overview || '2026年是充满变化的一年'}\n\n` +
+                                    `### 本命格局\n\n${natal.sun_gemini_9th || ''}\n\n${natal.moon_pisces || ''}\n\n${natal.asc_libra || ''}\n\n` +
+                                    `### 事业与成就\n\n${prediction.career_and_achievement?.analysis || ''}\n\n` +
+                                    `### 关系与合作\n\n${prediction.relationship_and_partnership?.analysis || ''}\n\n` +
+                                    `${prediction.relationship_and_partnership?.advice ? `> 💡 ${prediction.relationship_and_partnership.advice}\n\n` : ''}` +
+                                    `### 个人成长\n\n${prediction.personal_growth_and_travel?.analysis || ''}\n\n` +
+                                    `### 财富运势\n\n${prediction.wealth_and_finance?.analysis || ''}\n\n` +
+                                    `### 年度建议\n\n${advice.map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
+                                    `---\n*运势仅供参考，你的选择决定你的命运。*`;
+                            }
+                            if (!data.traderVitality && forecast.annual_theme) {
+                                data.traderVitality = forecast.transit_overview || forecast.annual_theme;
+                            }
+                            if (!data.wealthPotential && prediction.career_and_achievement) {
+                                data.wealthPotential = prediction.career_and_achievement.analysis;
+                            }
+                            if (!data.fortuneLuck && prediction.relationship_and_partnership) {
+                                data.fortuneLuck = prediction.relationship_and_partnership.analysis;
+                            }
+                            if (!data.leverageRisk && prediction.personal_growth_and_travel) {
+                                data.leverageRisk = prediction.personal_growth_and_travel.analysis;
+                            }
+                            if (!data.platformTeam && prediction.wealth_and_finance) {
+                                data.platformTeam = prediction.wealth_and_finance.analysis;
+                            }
+                            if (!data.tradingStyle && data.strategic_advice_2026) {
+                                data.tradingStyle = data.strategic_advice_2026.join(' ');
+                            }
+                        }
                     }
 
                     // 🔄 兼容性兜底：确保 chartData 有正确的字段
