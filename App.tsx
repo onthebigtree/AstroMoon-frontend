@@ -7,6 +7,7 @@ import ImportDataMode from './components/ImportDataMode';
 import Login from './components/Login';
 import ReportHistory from './components/ReportHistory';
 import WealthLevelShare from './components/WealthLevelShare';
+import ZodiacFortune2026 from './components/ZodiacFortune2026';
 import { BuyStarsModal } from './components/BuyStarsModal';
 import PaymentCallback from './components/PaymentCallback';
 import TransactionHistory from './components/TransactionHistory';
@@ -16,7 +17,7 @@ import { useAuth } from './contexts/AuthContext';
 import { LifeDestinyResult, Annual2026Result } from './types';
 import { Report } from './services/api/types';
 import { getStarBalance } from './services/api/payments';
-import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star, Plus, Loader2 } from 'lucide-react';
+import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star, Plus, Loader2, Flame } from 'lucide-react';
 import { replaceAge100Reason } from './constants/age100';
 
 const App: React.FC = () => {
@@ -30,6 +31,7 @@ const App: React.FC = () => {
   const [showPaymentCallback, setShowPaymentCallback] = useState(false);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [showStarsDetail, setShowStarsDetail] = useState(false);
+  const [showZodiacFortune, setShowZodiacFortune] = useState(false);
   const [starsBalance, setStarsBalance] = useState<number | null>(null);
   const [isLoadingStars, setIsLoadingStars] = useState(false);
 
@@ -665,6 +667,38 @@ const App: React.FC = () => {
         {/* If no result, show intro and form */}
         {!result && (
           <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-fade-in">
+            {/* 2026 赤马红羊运势速测 Banner */}
+            <div
+              onClick={() => setShowZodiacFortune(true)}
+              className="w-full max-w-2xl cursor-pointer group"
+            >
+              <div className="relative overflow-hidden bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-2xl p-4 md:p-5 shadow-lg hover:shadow-2xl transform hover:scale-[1.02] transition-all">
+                {/* 装饰性背景 */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+
+                <div className="relative z-10 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5 group-hover:scale-110 transition-transform">
+                      <Flame className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg md:text-xl font-bold text-white mb-0.5">
+                        2026 赤马红羊运势速测
+                      </h3>
+                      <p className="text-xs md:text-sm text-white/80">
+                        点击测试你的 2026 年到底夯还是拉
+                      </p>
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-white text-sm font-medium group-hover:bg-white/30 transition-all">
+                    <span>免费测</span>
+                    <span className="text-lg">→</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="text-center max-w-2xl flex flex-col items-center">
               <h2 className="text-4xl md:text-5xl font-serif-sc font-bold text-gray-900 mb-6">
                 财富占星分析 <br />
@@ -933,6 +967,12 @@ const App: React.FC = () => {
         onClose={() => setShowStarsDetail(false)}
         currentStars={starsBalance}
         onRefreshStars={refreshStarsBalance}
+      />
+
+      {/* 2026 赤马红羊运势速测 Modal */}
+      <ZodiacFortune2026
+        isOpen={showZodiacFortune}
+        onClose={() => setShowZodiacFortune(false)}
       />
     </div>
   );
