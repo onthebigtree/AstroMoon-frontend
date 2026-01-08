@@ -1027,6 +1027,9 @@ ${chartInfo}
 
     // 点击生成按钮 - 先检查积分余额，再显示验证弹窗
     const handleAutoGenerate = async () => {
+        // 立即设置加载状态，避免延迟感
+        setIsLoadingStarsBalance(true);
+
         // 先检查积分余额
         try {
             const balance = await getStarBalance();
@@ -1035,6 +1038,7 @@ ${chartInfo}
 
             if (balance.stars <= 0) {
                 setError('积分不足，请先充值再生成报告');
+                setIsLoadingStarsBalance(false);
                 return;
             }
         } catch (err: any) {
@@ -1042,6 +1046,7 @@ ${chartInfo}
             // 如果检查失败，允许继续（避免影响用户体验）
         }
 
+        setIsLoadingStarsBalance(false);
         setShowVerifyModal(true);
         setHasClickedTelegramFollow(false);
         setHasClickedTwitterFollow(false);
@@ -1933,12 +1938,21 @@ ${chartInfo}
 
                     <button
                         onClick={handleViewChart}
-                        disabled={!isStep1Valid}
+                        disabled={!isStep1Valid || isLoading}
                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3.5 rounded-xl shadow-lg transform transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        <Sparkles className="w-5 h-5" />
-                        <span>查看基础星盘</span>
-                        <ArrowRight className="w-5 h-5" />
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span>计算星盘中...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="w-5 h-5" />
+                                <span>查看基础星盘</span>
+                                <ArrowRight className="w-5 h-5" />
+                            </>
+                        )}
                     </button>
                 </div>
             )}
@@ -2111,6 +2125,11 @@ ${chartInfo}
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                     <span>AI 分析中... {loadingTime}秒</span>
+                                </>
+                            ) : isLoadingStarsBalance ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <span>加载中...</span>
                                 </>
                             ) : (
                                 <>
