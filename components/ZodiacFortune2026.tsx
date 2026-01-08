@@ -261,40 +261,47 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                 </div>
 
                 {/* Tier List 图片 + "你"的标记 */}
-                <div className="relative mb-4 rounded-xl overflow-hidden shadow-lg">
+                <div className="relative mb-4 rounded-xl overflow-hidden shadow-lg" style={{ margin: '-1rem -1.5rem', width: 'calc(100% + 3rem)' }}>
                   <img
                     src="/tier-list-2026.jpeg"
                     alt="2026运势排行榜"
                     className="w-full h-auto"
                   />
-                  {/* "你"的位置标记 */}
+                  {/* "你"的位置标记 - 放在排行榜内部，和名人并排 */}
                   <div
-                    className="absolute right-4 flex items-center justify-center"
+                    className="absolute flex items-center justify-center"
                     style={{
                       top: result.tier === 'T0' ? '10%' :
                            result.tier === 'T1' ? '30%' :
                            result.tier === 'T2' ? '50%' :
                            result.tier === 'T3' ? '70%' : '90%',
-                      transform: 'translateY(-50%)',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
                     }}
                   >
-                    <div className={`
-                      relative px-4 py-2 rounded-lg font-bold text-white text-lg shadow-lg
-                      animate-pulse
-                      ${result.tier === 'T0' ? 'bg-red-500' :
-                        result.tier === 'T1' ? 'bg-orange-500' :
-                        result.tier === 'T2' ? 'bg-yellow-500' :
-                        result.tier === 'T3' ? 'bg-green-500' : 'bg-gray-500'}
-                    `}>
-                      <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent border-r-current"
-                        style={{
-                          borderRightColor: result.tier === 'T0' ? '#ef4444' :
-                            result.tier === 'T1' ? '#f97316' :
-                            result.tier === 'T2' ? '#eab308' :
-                            result.tier === 'T3' ? '#22c55e' : '#6b7280'
-                        }}
-                      />
-                      你 {result.emoji}
+                    <div className="flex flex-col items-center">
+                      {/* 头像框 */}
+                      <div className={`
+                        w-14 h-14 md:w-16 md:h-16 rounded-lg border-4
+                        flex items-center justify-center text-2xl md:text-3xl
+                        shadow-xl
+                        ${result.tier === 'T0' ? 'bg-red-100 border-red-500' :
+                          result.tier === 'T1' ? 'bg-orange-100 border-orange-500' :
+                          result.tier === 'T2' ? 'bg-yellow-100 border-yellow-500' :
+                          result.tier === 'T3' ? 'bg-green-100 border-green-500' : 'bg-gray-100 border-gray-500'}
+                      `}>
+                        {result.emoji}
+                      </div>
+                      {/* "你"的标签 */}
+                      <div className={`
+                        -mt-1 px-3 py-0.5 rounded-full text-xs font-bold text-white shadow-lg
+                        ${result.tier === 'T0' ? 'bg-red-500' :
+                          result.tier === 'T1' ? 'bg-orange-500' :
+                          result.tier === 'T2' ? 'bg-yellow-600' :
+                          result.tier === 'T3' ? 'bg-green-500' : 'bg-gray-500'}
+                      `}>
+                        你
+                      </div>
                     </div>
                   </div>
                 </div>
