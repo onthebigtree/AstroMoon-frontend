@@ -260,36 +260,59 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                   </h3>
                 </div>
 
-                {/* Tier 标签 */}
-                <div className="text-center mb-4">
-                  <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r ${TIER_CONFIG[result.tier].gradient} text-white shadow-md`}>
-                    {result.tierEmoji} {result.tier} · {result.tierName}
-                  </span>
+                {/* Tier List 图片 + "你"的标记 */}
+                <div className="relative mb-4 rounded-xl overflow-hidden shadow-lg">
+                  <img
+                    src="/tier-list-2026.jpeg"
+                    alt="2026运势排行榜"
+                    className="w-full h-auto"
+                  />
+                  {/* "你"的位置标记 */}
+                  <div
+                    className="absolute right-4 flex items-center justify-center"
+                    style={{
+                      top: result.tier === 'T0' ? '10%' :
+                           result.tier === 'T1' ? '30%' :
+                           result.tier === 'T2' ? '50%' :
+                           result.tier === 'T3' ? '70%' : '90%',
+                      transform: 'translateY(-50%)',
+                    }}
+                  >
+                    <div className={`
+                      relative px-4 py-2 rounded-lg font-bold text-white text-lg shadow-lg
+                      animate-pulse
+                      ${result.tier === 'T0' ? 'bg-red-500' :
+                        result.tier === 'T1' ? 'bg-orange-500' :
+                        result.tier === 'T2' ? 'bg-yellow-500' :
+                        result.tier === 'T3' ? 'bg-green-500' : 'bg-gray-500'}
+                    `}>
+                      <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent border-r-current"
+                        style={{
+                          borderRightColor: result.tier === 'T0' ? '#ef4444' :
+                            result.tier === 'T1' ? '#f97316' :
+                            result.tier === 'T2' ? '#eab308' :
+                            result.tier === 'T3' ? '#22c55e' : '#6b7280'
+                        }}
+                      />
+                      你 {result.emoji}
+                    </div>
+                  </div>
                 </div>
 
-                {/* 等级卡片 */}
-                <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${result.gradient} p-6 mb-4 shadow-xl`}>
-                  {/* 装饰性背景 */}
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                  <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full -ml-10 -mb-10"></div>
-
-                  <div className="relative z-10 text-center text-white">
-                    {/* Emoji */}
-                    <div className="text-5xl mb-3">{result.emoji}</div>
-
-                    {/* 星座名称 */}
-                    <h4 className="text-2xl font-bold mb-1 drop-shadow-lg">
-                      {result.name}
-                    </h4>
-
-                    {/* 日期范围 */}
-                    <p className="text-sm opacity-80 mb-2">
-                      {result.dateRange}
-                    </p>
-
-                    {/* 副标题 */}
-                    <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                      <span className="text-sm font-bold">{result.subtitle}</span>
+                {/* 星座信息卡片 */}
+                <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${result.gradient} p-4 mb-4 shadow-xl`}>
+                  <div className="relative z-10 flex items-center gap-4 text-white">
+                    <div className="text-4xl">{result.emoji}</div>
+                    <div>
+                      <h4 className="text-xl font-bold drop-shadow-lg">
+                        {result.name}
+                      </h4>
+                      <p className="text-sm opacity-80">
+                        {result.dateRange} · {result.subtitle}
+                      </p>
+                    </div>
+                    <div className="ml-auto bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                      <span className="text-sm font-bold">{result.tier}</span>
                     </div>
                   </div>
                 </div>
