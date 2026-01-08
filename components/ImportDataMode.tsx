@@ -799,43 +799,91 @@ ${chartInfo}
 
         // 年运模式：特殊处理（手动导入）
         if (currentMode === 'annual2026') {
+            console.log('🔍 年运模式（手动导入）：开始解析数据...');
+
+            // 🔄 兼容性兜底：处理各种可能的包装格式
+            if (data.status && data.data) {
+                console.log('⚠️ 检测到包装格式 {status, data}，提取内部数据');
+                data = data.data;
+            }
+            if (data.data && !data.chartData && !data.chartPoints) {
+                console.log('⚠️ 检测到嵌套 data 字段，提取内部数据');
+                data = data.data;
+            }
+            if (data.result && !data.chartData && !data.chartPoints) {
+                console.log('⚠️ 检测到 result 字段包装，提取内部数据');
+                data = data.result;
+            }
+
+            // 🔄 兼容性兜底：提取 chartData
+            let chartData = data.chartData || data.chartPoints || data.chart_data || data.monthlyData || [];
+            if (!chartData || chartData.length === 0) {
+                if (data.months && Array.isArray(data.months)) chartData = data.months;
+                else if (data.forecast && Array.isArray(data.forecast)) chartData = data.forecast;
+                else if (data.transit_forecast && data.transit_forecast.monthly) chartData = data.transit_forecast.monthly;
+            }
+
+            // 🔄 兼容性兜底：确保 chartData 有正确的字段
+            if (chartData && chartData.length > 0) {
+                chartData = chartData.map((item: any, index: number) => ({
+                    month: item.month || index + 1,
+                    monthName: item.monthName || item.month_name || `${['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'][index]}月`,
+                    quarter: item.quarter || `Q${Math.ceil((index + 1) / 3)}`,
+                    monthTransit: item.monthTransit || item.month_transit || item.transit || '',
+                    score: item.score || item.close || 70,
+                    trend: item.trend || 'flat',
+                    theme: item.theme || item.themes || ['运势平稳'],
+                    open: item.open || item.score || 70,
+                    close: item.close || item.score || 70,
+                    high: item.high || Math.max(item.open || 70, item.close || 70) + 5,
+                    low: item.low || Math.min(item.open || 70, item.close || 70) - 5,
+                    reason: item.reason || item.description || item.analysis || '本月运势详情请参考总体分析。',
+                }));
+            }
+
             const annualResult: Annual2026Result = {
-                chartData: data.chartData || data.chartPoints || [],
+                chartData: chartData,
                 analysis: {
-                    markdownReport: data.markdownReport || '',
-                    summary: data.summary || '2026年度运势总评',
-                    summaryScore: data.summaryScore || 85,
+                    markdownReport: data.markdownReport || data.markdown_report || data.report || '',
+                    summary: data.summary || data.overview || '2026年度运势总评',
+                    summaryScore: data.summaryScore || data.summary_score || 75,
 
-                    traderVitalityTitle: data.traderVitalityTitle || '年度核心',
-                    traderVitality: data.traderVitality || '',
-                    traderVitalityScore: data.traderVitalityScore || 80,
+                    traderVitalityTitle: data.traderVitalityTitle || '年度核心课题',
+                    traderVitality: data.traderVitality || data.core_theme || '',
+                    traderVitalityScore: data.traderVitalityScore || 75,
 
-                    wealthPotentialTitle: data.wealthPotentialTitle || '事业财富',
-                    wealthPotential: data.wealthPotential || '',
-                    wealthPotentialScore: data.wealthPotentialScore || 80,
+                    wealthPotentialTitle: data.wealthPotentialTitle || '事业与财富运势',
+                    wealthPotential: data.wealthPotential || data.career_wealth || '',
+                    wealthPotentialScore: data.wealthPotentialScore || 75,
 
-                    fortuneLuckTitle: data.fortuneLuckTitle || '情感关系',
-                    fortuneLuck: data.fortuneLuck || '',
-                    fortuneLuckScore: data.fortuneLuckScore || 80,
+                    fortuneLuckTitle: data.fortuneLuckTitle || '情感与关系运势',
+                    fortuneLuck: data.fortuneLuck || data.relationship || '',
+                    fortuneLuckScore: data.fortuneLuckScore || 75,
 
-                    leverageRiskTitle: data.leverageRiskTitle || '健康身心',
-                    leverageRisk: data.leverageRisk || '',
-                    leverageRiskScore: data.leverageRiskScore || 80,
+                    leverageRiskTitle: data.leverageRiskTitle || '健康与身心',
+                    leverageRisk: data.leverageRisk || data.health || '',
+                    leverageRiskScore: data.leverageRiskScore || 75,
 
-                    platformTeamTitle: data.platformTeamTitle || '贵人机遇',
-                    platformTeam: data.platformTeam || '',
-                    platformTeamScore: data.platformTeamScore || 80,
+                    platformTeamTitle: data.platformTeamTitle || '贵人与机遇',
+                    platformTeam: data.platformTeam || data.opportunities || '',
+                    platformTeamScore: data.platformTeamScore || 75,
 
-                    tradingStyleTitle: data.tradingStyleTitle || '行动建议',
-                    tradingStyle: data.tradingStyle || '',
-                    tradingStyleScore: data.tradingStyleScore || 80,
+                    tradingStyleTitle: data.tradingStyleTitle || '年度行动建议',
+                    tradingStyle: data.tradingStyle || data.advice || '',
+                    tradingStyleScore: data.tradingStyleScore || 75,
 
-                    keyMonths: data.keyMonths,
-                    peakMonths: data.peakMonths,
-                    riskMonths: data.riskMonths,
+                    keyMonths: data.keyMonths || data.key_months || '',
+                    peakMonths: data.peakMonths || data.peak_months || '',
+                    riskMonths: data.riskMonths || data.risk_months || '',
                 },
             };
-            return annualResult as any; // Type assertion for union return
+
+            if (!annualResult.chartData || annualResult.chartData.length === 0) {
+                throw new Error('年运数据解析失败：未找到有效的月度数据');
+            }
+
+            console.log('✅ 年运数据（手动导入）解析成功，共', annualResult.chartData.length, '个月数据');
+            return annualResult as any;
         }
 
         // 校验数据结构（非年运模式）
@@ -1220,49 +1268,131 @@ ${chartInfo}
 
             // 使用健壮的 JSON 解析工具
             try {
-                const data = robustParseJSON(content);
+                let data = robustParseJSON(content);
 
                 // 年运模式：特殊处理
                 if (mode === 'annual2026') {
+                    console.log('🔍 年运模式：开始解析数据...');
+
+                    // 🔄 兼容性兜底：处理各种可能的包装格式
+                    // 1. 处理 {"status": "success", "data": {...}} 格式
+                    if (data.status && data.data) {
+                        console.log('⚠️ 检测到包装格式 {status, data}，提取内部数据');
+                        data = data.data;
+                    }
+                    // 2. 处理嵌套的 data 字段
+                    if (data.data && !data.chartData && !data.chartPoints) {
+                        console.log('⚠️ 检测到嵌套 data 字段，提取内部数据');
+                        data = data.data;
+                    }
+                    // 3. 处理 result 字段包装
+                    if (data.result && !data.chartData && !data.chartPoints) {
+                        console.log('⚠️ 检测到 result 字段包装，提取内部数据');
+                        data = data.result;
+                    }
+
+                    // 🔄 兼容性兜底：提取 chartData
+                    let chartData = data.chartData || data.chartPoints || data.chart_data || data.monthlyData || [];
+
+                    // 如果 chartData 仍然为空，尝试从其他字段提取
+                    if (!chartData || chartData.length === 0) {
+                        // 尝试从 months 字段提取
+                        if (data.months && Array.isArray(data.months)) {
+                            chartData = data.months;
+                        }
+                        // 尝试从 forecast 字段提取
+                        else if (data.forecast && Array.isArray(data.forecast)) {
+                            chartData = data.forecast;
+                        }
+                        // 尝试从 transit_forecast 字段提取
+                        else if (data.transit_forecast && data.transit_forecast.monthly) {
+                            chartData = data.transit_forecast.monthly;
+                        }
+                    }
+
+                    // 🔄 兼容性兜底：确保 chartData 有正确的字段
+                    if (chartData && chartData.length > 0) {
+                        chartData = chartData.map((item: any, index: number) => ({
+                            month: item.month || index + 1,
+                            monthName: item.monthName || item.month_name || `${['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'][index]}月`,
+                            quarter: item.quarter || `Q${Math.ceil((index + 1) / 3)}`,
+                            monthTransit: item.monthTransit || item.month_transit || item.transit || '',
+                            score: item.score || item.close || 70,
+                            trend: item.trend || 'flat',
+                            theme: item.theme || item.themes || ['运势平稳'],
+                            open: item.open || item.score || 70,
+                            close: item.close || item.score || 70,
+                            high: item.high || Math.max(item.open || 70, item.close || 70) + 5,
+                            low: item.low || Math.min(item.open || 70, item.close || 70) - 5,
+                            reason: item.reason || item.description || item.analysis || '本月运势详情请参考总体分析。',
+                        }));
+                    }
+
+                    // 🔄 兼容性兜底：提取 markdownReport
+                    let markdownReport = data.markdownReport || data.markdown_report || data.report || '';
+                    // 如果没有 markdownReport，尝试从 wealth_analysis_report 等字段生成
+                    if (!markdownReport && data.wealth_analysis_report) {
+                        const report = data.wealth_analysis_report;
+                        markdownReport = `## 2026年运势分析\n\n${report.core_archetype || ''}\n\n${JSON.stringify(report.personality_structure || {}, null, 2)}`;
+                    }
+
+                    // 🔄 兼容性兜底：提取 summary
+                    let summary = data.summary || data.overview || data.general_summary || '';
+                    if (!summary && data.wealth_analysis_report) {
+                        summary = data.wealth_analysis_report.core_archetype || '2026年度运势总评';
+                    }
+
+                    console.log('📊 解析结果:', {
+                        chartDataLength: chartData?.length || 0,
+                        hasMarkdownReport: !!markdownReport,
+                        hasSummary: !!summary,
+                    });
+
                     // 年运模式的结果结构（AI返回的是 chartData 字段）
                     const annualResult: Annual2026Result = {
-                        chartData: data.chartData || data.chartPoints || [],
+                        chartData: chartData,
                         analysis: {
-                            markdownReport: data.markdownReport || '',
-                            summary: data.summary || '2026年度运势总评',
-                            summaryScore: data.summaryScore || 85,
+                            markdownReport: markdownReport,
+                            summary: summary || '2026年度运势总评',
+                            summaryScore: data.summaryScore || data.summary_score || 75,
 
-                            traderVitalityTitle: data.traderVitalityTitle || '年度核心',
-                            traderVitality: data.traderVitality || '',
-                            traderVitalityScore: data.traderVitalityScore || 80,
+                            traderVitalityTitle: data.traderVitalityTitle || '年度核心课题',
+                            traderVitality: data.traderVitality || data.core_theme || '',
+                            traderVitalityScore: data.traderVitalityScore || 75,
 
-                            wealthPotentialTitle: data.wealthPotentialTitle || '事业财富',
-                            wealthPotential: data.wealthPotential || '',
-                            wealthPotentialScore: data.wealthPotentialScore || 80,
+                            wealthPotentialTitle: data.wealthPotentialTitle || '事业与财富运势',
+                            wealthPotential: data.wealthPotential || data.career_wealth || '',
+                            wealthPotentialScore: data.wealthPotentialScore || 75,
 
-                            fortuneLuckTitle: data.fortuneLuckTitle || '情感关系',
-                            fortuneLuck: data.fortuneLuck || '',
-                            fortuneLuckScore: data.fortuneLuckScore || 80,
+                            fortuneLuckTitle: data.fortuneLuckTitle || '情感与关系运势',
+                            fortuneLuck: data.fortuneLuck || data.relationship || '',
+                            fortuneLuckScore: data.fortuneLuckScore || 75,
 
-                            leverageRiskTitle: data.leverageRiskTitle || '健康身心',
-                            leverageRisk: data.leverageRisk || '',
-                            leverageRiskScore: data.leverageRiskScore || 80,
+                            leverageRiskTitle: data.leverageRiskTitle || '健康与身心',
+                            leverageRisk: data.leverageRisk || data.health || '',
+                            leverageRiskScore: data.leverageRiskScore || 75,
 
-                            platformTeamTitle: data.platformTeamTitle || '贵人机遇',
-                            platformTeam: data.platformTeam || '',
-                            platformTeamScore: data.platformTeamScore || 80,
+                            platformTeamTitle: data.platformTeamTitle || '贵人与机遇',
+                            platformTeam: data.platformTeam || data.opportunities || '',
+                            platformTeamScore: data.platformTeamScore || 75,
 
-                            tradingStyleTitle: data.tradingStyleTitle || '行动建议',
-                            tradingStyle: data.tradingStyle || '',
-                            tradingStyleScore: data.tradingStyleScore || 80,
+                            tradingStyleTitle: data.tradingStyleTitle || '年度行动建议',
+                            tradingStyle: data.tradingStyle || data.advice || '',
+                            tradingStyleScore: data.tradingStyleScore || 75,
 
-                            keyMonths: data.keyMonths,
-                            peakMonths: data.peakMonths,
-                            riskMonths: data.riskMonths,
+                            keyMonths: data.keyMonths || data.key_months || '',
+                            peakMonths: data.peakMonths || data.peak_months || '',
+                            riskMonths: data.riskMonths || data.risk_months || '',
                         },
                     };
 
-                    console.log('✅ 年运数据解析和转换成功');
+                    // 验证 chartData 是否有效
+                    if (!annualResult.chartData || annualResult.chartData.length === 0) {
+                        console.error('❌ chartData 为空，原始数据:', JSON.stringify(data).substring(0, 500));
+                        throw new Error('年运数据解析失败：未找到有效的月度数据。AI 返回的格式可能不正确，请重试。');
+                    }
+
+                    console.log('✅ 年运数据解析和转换成功，共', annualResult.chartData.length, '个月数据');
                     onDataImport(annualResult);
                     break;
                 }
