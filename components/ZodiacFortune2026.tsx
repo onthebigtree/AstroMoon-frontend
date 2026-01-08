@@ -96,7 +96,6 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   // 关闭时重置状态
   const handleClose = () => {
     setResult(null);
-    setSelectedSign('');
     setGeneratedImage(null);
     onClose();
   };
