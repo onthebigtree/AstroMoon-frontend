@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { X, Download, Flame, Calendar, ChevronDown } from 'lucide-react';
 import {
   getZodiacFortuneInfo,
-  getZodiacList,
   getZodiacSignByDate,
   TIER_CONFIG,
   ZodiacFortuneInfo
@@ -14,14 +13,10 @@ interface ZodiacFortune2026Props {
   onClose: () => void;
 }
 
-type InputMode = 'select' | 'date';
-
 const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   isOpen,
   onClose,
 }) => {
-  const [inputMode, setInputMode] = useState<InputMode>('select');
-  const [selectedSign, setSelectedSign] = useState<string>('');
   const [birthMonth, setBirthMonth] = useState<number>(1);
   const [birthDay, setBirthDay] = useState<number>(1);
   const [result, setResult] = useState<ZodiacFortuneInfo | null>(null);
@@ -31,28 +26,16 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
 
   if (!isOpen) return null;
 
-  const zodiacList = getZodiacList();
-
   // 获取当月最大天数
   const getDaysInMonth = (month: number): number => {
-    // 使用非闰年的天数
     const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     return daysInMonth[month - 1];
-  };
-
-  // 处理星座选择
-  const handleSignSelect = (signId: string) => {
-    setSelectedSign(signId);
-    const fortune = getZodiacFortuneInfo(signId);
-    setResult(fortune);
-    setGeneratedImage(null);
   };
 
   // 处理日期选择后计算星座
   const handleDateSubmit = () => {
     const signId = getZodiacSignByDate(birthMonth, birthDay);
     if (signId) {
-      setSelectedSign(signId);
       const fortune = getZodiacFortuneInfo(signId);
       setResult(fortune);
       setGeneratedImage(null);
@@ -62,7 +45,6 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   // 重置结果
   const handleReset = () => {
     setResult(null);
-    setSelectedSign('');
     setGeneratedImage(null);
   };
 
@@ -137,106 +119,58 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
         {/* 内容区域 */}
         <div className="p-6">
           {!result ? (
-            // 输入界面
+            // 输入界面 - 只保留日期选择
             <div className="space-y-6">
-              {/* 模式切换 */}
-              <div className="flex rounded-xl overflow-hidden border border-gray-200">
-                <button
-                  onClick={() => setInputMode('select')}
-                  className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
-                    inputMode === 'select'
-                      ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  选择星座
-                </button>
-                <button
-                  onClick={() => setInputMode('date')}
-                  className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
-                    inputMode === 'date'
-                      ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  输入生日
-                </button>
+              <div className="text-center">
+                <p className="text-gray-600 mb-2">输入你的出生日期</p>
+                <p className="text-sm text-gray-400">自动判断你的 2026 运势等级</p>
               </div>
 
-              {inputMode === 'select' ? (
-                // 星座选择网格
-                <div className="grid grid-cols-3 gap-3">
-                  {zodiacList.map((zodiac) => (
-                    <button
-                      key={zodiac.id}
-                      onClick={() => handleSignSelect(zodiac.id)}
-                      className="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-gray-100 hover:border-orange-300 hover:bg-orange-50 transition-all group"
-                    >
-                      <span className="text-2xl group-hover:scale-110 transition-transform">
-                        {zodiac.emoji}
-                      </span>
-                      <span className="text-sm font-medium text-gray-700">
-                        {zodiac.name}
-                      </span>
-                      <span className="text-[10px] text-gray-400">
-                        {zodiac.dateRange}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                // 日期输入
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-500 text-center">
-                    输入你的出生月份和日期，自动判断星座
-                  </p>
-                  <div className="flex gap-4 items-center justify-center">
-                    <div className="relative">
-                      <select
-                        value={birthMonth}
-                        onChange={(e) => {
-                          const newMonth = Number(e.target.value);
-                          setBirthMonth(newMonth);
-                          // 如果当前日期超过新月份的最大天数，调整日期
-                          const maxDay = getDaysInMonth(newMonth);
-                          if (birthDay > maxDay) {
-                            setBirthDay(maxDay);
-                          }
-                        }}
-                        className="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-10 text-lg font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                          <option key={m} value={m}>
-                            {m}月
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-                    <div className="relative">
-                      <select
-                        value={birthDay}
-                        onChange={(e) => setBirthDay(Number(e.target.value))}
-                        className="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-10 text-lg font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        {Array.from({ length: getDaysInMonth(birthMonth) }, (_, i) => i + 1).map((d) => (
-                          <option key={d} value={d}>
-                            {d}日
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleDateSubmit}
-                    className="w-full py-4 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+              <div className="flex gap-4 items-center justify-center">
+                <div className="relative">
+                  <select
+                    value={birthMonth}
+                    onChange={(e) => {
+                      const newMonth = Number(e.target.value);
+                      setBirthMonth(newMonth);
+                      const maxDay = getDaysInMonth(newMonth);
+                      if (birthDay > maxDay) {
+                        setBirthDay(maxDay);
+                      }
+                    }}
+                    className="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-6 py-4 pr-12 text-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
-                    <Calendar className="w-5 h-5" />
-                    测一测我的 2026
-                  </button>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                      <option key={m} value={m}>
+                        {m}月
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
-              )}
+                <div className="relative">
+                  <select
+                    value={birthDay}
+                    onChange={(e) => setBirthDay(Number(e.target.value))}
+                    className="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-6 py-4 pr-12 text-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  >
+                    {Array.from({ length: getDaysInMonth(birthMonth) }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>
+                        {d}日
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              <button
+                onClick={handleDateSubmit}
+                className="w-full py-4 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+              >
+                <Calendar className="w-5 h-5" />
+                测一测我的 2026
+              </button>
 
               {/* 说明文字 */}
               <div className="text-center text-xs text-gray-400 pt-2">
@@ -268,27 +202,29 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                     className="w-full h-auto"
                     crossOrigin="anonymous"
                   />
-                  {/* "你"的位置标记 - 放在排行榜内部，和名人并排 */}
+                  {/* "你"的位置标记 - 放在名人头像右侧 */}
                   <div
                     className="absolute flex items-center justify-center"
                     style={{
+                      // 每行高度约20%，计算中心位置
                       top: result.tier === 'T0' ? '10%' :
                            result.tier === 'T1' ? '30%' :
                            result.tier === 'T2' ? '50%' :
                            result.tier === 'T3' ? '70%' : '90%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
+                      // 放在名人头像右侧（名人大约在 10%-40% 区域）
+                      left: '55%',
+                      transform: 'translateY(-50%)',
                     }}
                   >
-                    {/* "你"字头像框 */}
+                    {/* "你"字头像框 - 模拟名人头像大小 */}
                     <div className={`
-                      w-14 h-14 md:w-16 md:h-16 rounded-lg border-4
-                      flex items-center justify-center text-xl md:text-2xl font-black
-                      shadow-xl
-                      ${result.tier === 'T0' ? 'bg-red-500 border-red-300 text-white' :
-                        result.tier === 'T1' ? 'bg-orange-500 border-orange-300 text-white' :
-                        result.tier === 'T2' ? 'bg-yellow-500 border-yellow-300 text-white' :
-                        result.tier === 'T3' ? 'bg-green-500 border-green-300 text-white' : 'bg-gray-500 border-gray-300 text-white'}
+                      w-10 h-10 md:w-12 md:h-12 rounded
+                      flex items-center justify-center text-base md:text-lg font-black
+                      shadow-lg border-2 border-white
+                      ${result.tier === 'T0' ? 'bg-red-500 text-white' :
+                        result.tier === 'T1' ? 'bg-orange-500 text-white' :
+                        result.tier === 'T2' ? 'bg-yellow-500 text-white' :
+                        result.tier === 'T3' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}
                     `}>
                       你
                     </div>
