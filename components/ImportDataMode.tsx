@@ -147,7 +147,10 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsCh
     const [mode, setMode] = useState<Mode>(defaultMode || 'choose');
     const [step, setStep] = useState<Step>(1);
     const [basicChart, setBasicChart] = useState<BasicChartInfo | null>(null);
-    const [houseSystem, setHouseSystem] = useState<string>('P'); // 默认使用 Placidus
+    // 交易员模式和2026年运模式默认使用整宫制(W)，其他模式默认普拉西度制(P)
+    const [houseSystem, setHouseSystem] = useState<string>(
+        defaultMode === 'trader' || defaultMode === 'annual2026' ? 'W' : 'P'
+    );
     const [astroInfo, setAstroInfo] = useState({
         name: '测试用户',
         gender: 'Male',
@@ -2344,7 +2347,7 @@ ${chartInfo}
                         </button>
                         <button
                             onClick={handleAutoGenerate}
-                            disabled={isLoading || isLoadingStarsBalance || (starsBalance !== null && starsBalance <= 0)}
+                            disabled={isLoading || isLoadingStarsBalance}
                             className="flex-2 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
@@ -2355,7 +2358,7 @@ ${chartInfo}
                             ) : isLoadingStarsBalance ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>加载中...</span>
+                                    <span>检查积分中...</span>
                                 </>
                             ) : (
                                 <>
