@@ -76,14 +76,14 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
       // 绘制底图
       ctx.drawImage(background, 0, 0);
 
-      // 标签区域宽度（底图左侧的彩色标签，约 200px）
-      const labelWidth = 200;
-      // 头像大小（与行高匹配）
-      const avatarSize = 190;
+      // 标签区域宽度（底图左侧的彩色标签，约 250px）
+      const labelWidth = 250;
+      // 头像大小
+      const avatarSize = 180;
       // 头像间距
-      const avatarGap = 10;
+      const avatarGap = 8;
       // 头像起始 X 位置
-      const startX = labelWidth + 10;
+      const startX = labelWidth + 5;
 
       // 加载并绘制每个 Tier 的人物头像
       for (const [tier, avatars] of Object.entries(TIER_AVATARS)) {
