@@ -14,11 +14,11 @@ interface ZodiacFortune2026Props {
 
 // Tier List 人物配置
 const TIER_AVATARS: Record<string, string[]> = {
-  'T0': ['trump.jpg', 'jiucai.jpg', 'buffett.jpg'],
-  'T1': ['cz.jpg', 'saylor.jpg'],
-  'T2': ['vitalik.jpg'],
-  'T3': [],
-  'T4': ['saylor2.jpg', 'lixiaolai.jpg'],
+  'T0': ['cz.jpg', 'vitalik.jpg'],              // 夯: CZ, Vitalik
+  'T1': ['sunyuchen.jpg'],                      // 顶级: 孙宇晨
+  'T2': ['saylor.jpg', 'buffett.jpg'],          // 人上人: Saylor, Buffett
+  'T3': ['lixiaolai.jpg'],                      // NPC: 李笑来
+  'T4': ['trump.jpg', 'jiucai.jpg'],            // 拉: Trump, 韭菜
 };
 
 // Tier 行的 Y 坐标配置（基于 1201px 高度的底图，每行约 240px）
