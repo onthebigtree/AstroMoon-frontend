@@ -21,13 +21,13 @@ const TIER_AVATARS: Record<string, string[]> = {
   'T4': ['saylor2.jpg', 'lixiaolai.jpg'],
 };
 
-// Tier 行的 Y 坐标配置（基于 607px 高度的底图）
+// Tier 行的 Y 坐标配置（基于 607px 高度的底图，每行约 121px）
 const TIER_Y_POSITIONS: Record<string, { y: number; height: number }> = {
-  'T0': { y: 0, height: 121 },
-  'T1': { y: 121, height: 121 },
-  'T2': { y: 242, height: 122 },
-  'T3': { y: 364, height: 121 },
-  'T4': { y: 485, height: 122 },
+  'T0': { y: 2, height: 119 },
+  'T1': { y: 123, height: 119 },
+  'T2': { y: 244, height: 119 },
+  'T3': { y: 365, height: 119 },
+  'T4': { y: 486, height: 119 },
 };
 
 const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
@@ -76,16 +76,14 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
       // 绘制底图
       ctx.drawImage(background, 0, 0);
 
-      // 标签区域宽度（底图左侧的彩色标签）
-      const labelWidth = 100;
-      // 内容区域宽度
-      const contentWidth = canvas.width - labelWidth;
-      // 头像大小（放大一点）
-      const avatarSize = 95;
+      // 标签区域宽度（底图左侧的彩色标签，约 90px）
+      const labelWidth = 92;
+      // 头像大小（与行高匹配）
+      const avatarSize = 100;
       // 头像间距
-      const avatarGap = 8;
-      // 头像起始 X 位置
-      const startX = labelWidth + 15;
+      const avatarGap = 6;
+      // 头像起始 X 位置（紧贴标签区域）
+      const startX = labelWidth + 5;
 
       // 加载并绘制每个 Tier 的人物头像
       for (const [tier, avatars] of Object.entries(TIER_AVATARS)) {
