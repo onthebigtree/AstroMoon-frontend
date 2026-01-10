@@ -1,18 +1,34 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Download, Flame, Calendar, ChevronDown, Sparkles } from 'lucide-react';
 import {
   getZodiacFortuneInfo,
   getZodiacSignByDate,
-  TIER_CONFIG,
   ZodiacFortuneInfo
 } from '../utils/zodiacFortune2026';
-import html2canvas from 'html2canvas';
 
 interface ZodiacFortune2026Props {
   isOpen: boolean;
   onClose: () => void;
   onGoToDetailedTest?: () => void;
 }
+
+// Tier List 人物配置
+const TIER_AVATARS: Record<string, string[]> = {
+  'T0': ['trump.jpg', 'jiucai.jpg', 'buffett.jpg'],
+  'T1': ['cz.jpg', 'saylor.jpg'],
+  'T2': ['vitalik.jpg'],
+  'T3': [],
+  'T4': ['saylor2.jpg', 'lixiaolai.jpg'],
+};
+
+// Tier 行的 Y 坐标配置（基于 607px 高度的底图）
+const TIER_Y_POSITIONS: Record<string, { y: number; height: number }> = {
+  'T0': { y: 0, height: 121 },
+  'T1': { y: 121, height: 121 },
+  'T2': { y: 242, height: 122 },
+  'T3': { y: 364, height: 121 },
+  'T4': { y: 485, height: 122 },
+};
 
 const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   isOpen,
@@ -24,7 +40,128 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   const [result, setResult] = useState<ZodiacFortuneInfo | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [tierListImage, setTierListImage] = useState<string | null>(null);
+  const [isLoadingTierList, setIsLoadingTierList] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // 加载图片的辅助函数
+  const loadImage = (src: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  };
+
+  // 生成 Tier List 图片
+  const generateTierListImage = useCallback(async (userTier: string): Promise<string | null> => {
+    try {
+      setIsLoadingTierList(true);
+
+      // 加载底图
+      const background = await loadImage('/tier-list/background.jpg');
+
+      // 创建 Canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      // 设置 Canvas 尺寸
+      canvas.width = background.width;
+      canvas.height = background.height;
+
+      // 绘制底图
+      ctx.drawImage(background, 0, 0);
+
+      // 标签区域宽度（底图左侧的彩色标签）
+      const labelWidth = 100;
+      // 内容区域宽度
+      const contentWidth = canvas.width - labelWidth;
+      // 头像大小（放大一点）
+      const avatarSize = 95;
+      // 头像间距
+      const avatarGap = 8;
+      // 头像起始 X 位置
+      const startX = labelWidth + 15;
+
+      // 加载并绘制每个 Tier 的人物头像
+      for (const [tier, avatars] of Object.entries(TIER_AVATARS)) {
+        const position = TIER_Y_POSITIONS[tier];
+        if (!position || avatars.length === 0) continue;
+
+        // 计算该行的垂直居中位置
+        const centerY = position.y + (position.height - avatarSize) / 2;
+
+        for (let i = 0; i < avatars.length; i++) {
+          try {
+            const avatar = await loadImage(`/tier-list/${avatars[i]}`);
+            const x = startX + i * (avatarSize + avatarGap);
+
+            // 绘制头像（保持比例裁剪为正方形）
+            const size = Math.min(avatar.width, avatar.height);
+            const sx = (avatar.width - size) / 2;
+            const sy = (avatar.height - size) / 2;
+
+            ctx.drawImage(avatar, sx, sy, size, size, x, centerY, avatarSize, avatarSize);
+          } catch (e) {
+            console.error(`加载头像失败: ${avatars[i]}`, e);
+          }
+        }
+      }
+
+      // 绘制用户的"你"标记
+      const userPosition = TIER_Y_POSITIONS[userTier];
+      if (userPosition) {
+        const userAvatars = TIER_AVATARS[userTier] || [];
+        const userX = startX + userAvatars.length * (avatarSize + avatarGap);
+        const userY = userPosition.y + (userPosition.height - avatarSize) / 2;
+
+        // 根据 Tier 设置颜色
+        const tierColors: Record<string, string> = {
+          'T0': '#ef4444', // red-500
+          'T1': '#f97316', // orange-500
+          'T2': '#eab308', // yellow-500
+          'T3': '#22c55e', // green-500
+          'T4': '#6b7280', // gray-500
+        };
+
+        // 绘制"你"的背景框
+        ctx.fillStyle = tierColors[userTier] || '#6b7280';
+        ctx.fillRect(userX, userY, avatarSize, avatarSize);
+
+        // 绘制白色边框
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(userX, userY, avatarSize, avatarSize);
+
+        // 绘制"你"字
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 48px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('你', userX + avatarSize / 2, userY + avatarSize / 2);
+      }
+
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      console.error('生成 Tier List 图片失败:', error);
+      return null;
+    } finally {
+      setIsLoadingTierList(false);
+    }
+  }, []);
+
+  // 当结果变化时生成 Tier List 图片
+  useEffect(() => {
+    if (result) {
+      generateTierListImage(result.tier).then(setTierListImage);
+    } else {
+      setTierListImage(null);
+    }
+  }, [result, generateTierListImage]);
 
   if (!isOpen) return null;
 
@@ -48,13 +185,15 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   const handleReset = () => {
     setResult(null);
     setGeneratedImage(null);
+    setTierListImage(null);
   };
 
-  // 生成图片
+  // 生成分享图片
   const generateImage = async (): Promise<string | null> => {
     if (!cardRef.current) return null;
 
     try {
+      const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: '#ffffff',
         scale: 2,
@@ -97,6 +236,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   const handleClose = () => {
     setResult(null);
     setGeneratedImage(null);
+    setTierListImage(null);
     onClose();
   };
 
@@ -195,41 +335,24 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                   </h3>
                 </div>
 
-                {/* Tier List 图片 + "你"的标记 */}
+                {/* 动态生成的 Tier List 图片 */}
                 <div className="relative mb-6 rounded-xl overflow-hidden shadow-lg">
-                  <img
-                    src="/tier-list-2026.jpeg"
-                    alt="2026运势排行榜"
-                    className="w-full h-auto"
-                    crossOrigin="anonymous"
-                  />
-                  {/* "你"的位置标记 - 放在名人头像正右边 */}
-                  <div
-                    className="absolute flex items-center justify-center"
-                    style={{
-                      // 每行高度约20%，计算中心位置
-                      top: result.tier === 'T0' ? '10%' :
-                           result.tier === 'T1' ? '30%' :
-                           result.tier === 'T2' ? '50%' :
-                           result.tier === 'T3' ? '70%' : '90%',
-                      // 名人头像区域约 8%-35%，放在紧挨右边 38%
-                      left: '38%',
-                      transform: 'translateY(-50%)',
-                    }}
-                  >
-                    {/* "你"字头像框 - 模拟名人头像大小 */}
-                    <div className={`
-                      w-10 h-10 md:w-12 md:h-12 rounded
-                      flex items-center justify-center text-base md:text-lg font-black
-                      shadow-lg border-2 border-white
-                      ${result.tier === 'T0' ? 'bg-red-500 text-white' :
-                        result.tier === 'T1' ? 'bg-orange-500 text-white' :
-                        result.tier === 'T2' ? 'bg-yellow-500 text-white' :
-                        result.tier === 'T3' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}
-                    `}>
-                      你
+                  {isLoadingTierList ? (
+                    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                      <div className="text-gray-500">加载中...</div>
                     </div>
-                  </div>
+                  ) : tierListImage ? (
+                    <img
+                      src={tierListImage}
+                      alt="2026运势排行榜"
+                      className="w-full h-auto"
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                      <div className="text-gray-500">图片加载失败</div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 星座信息卡片 */}
@@ -287,7 +410,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
               <div className="space-y-3">
                 <button
                   onClick={handleDownload}
-                  disabled={isDownloading}
+                  disabled={isDownloading || isLoadingTierList}
                   className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white rounded-xl hover:from-red-600 hover:via-orange-600 hover:to-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold shadow-lg text-lg"
                 >
                   <Download className="w-5 h-5" />
@@ -332,6 +455,8 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
           )}
         </div>
       </div>
+      {/* 隐藏的 Canvas */}
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 };
