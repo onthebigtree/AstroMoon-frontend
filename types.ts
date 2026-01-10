@@ -250,3 +250,67 @@ export interface ArabicPartData {
     };
   };
 }
+
+// ==================== 2026年运模式相关类型 ====================
+
+// 月度K线数据点（12个月）
+export interface MonthlyKLinePoint {
+  month: number;           // 1-12
+  monthName: string;       // "一月" ~ "十二月"
+  quarter: string;         // 季度标签 "Q1" | "Q2" | "Q3" | "Q4"
+  monthTransit?: string;   // 当月行运概述
+  open: number;            // K线开盘价
+  close: number;           // K线收盘价
+  high: number;            // K线最高价
+  low: number;             // K线最低价
+  score: number;           // 当月综合评分 (0-100)
+  trend?: 'up' | 'down' | 'flat'; // 相比前月趋势
+  theme?: string[];        // 关键词标签
+  reason: string;          // 40-100字月度分析
+}
+
+// 年运分析数据 - 复用现有维度评分体系
+export interface Annual2026Analysis {
+  // Markdown格式的完整年运报告
+  markdownReport: string;      // 完整的Markdown文章
+
+  // 结构化数据（用于评分展示）
+  summary: string;
+  summaryScore: number;
+
+  // 复用现有6个维度（年运版本标题会不同）
+  traderVitalityTitle?: string;
+  traderVitality: string;
+  traderVitalityScore: number;
+
+  wealthPotentialTitle?: string;
+  wealthPotential: string;
+  wealthPotentialScore: number;
+
+  fortuneLuckTitle?: string;
+  fortuneLuck: string;
+  fortuneLuckScore: number;
+
+  leverageRiskTitle?: string;
+  leverageRisk: string;
+  leverageRiskScore: number;
+
+  platformTeamTitle?: string;
+  platformTeam: string;
+  platformTeamScore: number;
+
+  tradingStyleTitle?: string;
+  tradingStyle: string;
+  tradingStyleScore: number;
+
+  // 关键月份
+  keyMonths?: string;
+  peakMonths?: string;
+  riskMonths?: string;
+}
+
+// 年运结果
+export interface Annual2026Result {
+  chartData: MonthlyKLinePoint[];  // 12个月K线
+  analysis: Annual2026Analysis;
+}

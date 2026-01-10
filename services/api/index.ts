@@ -24,6 +24,7 @@ export {
   getReport,
   markReportExported,
   deleteReport,
+  getUserCredits,
 } from './reports';
 
 // 统计数据
@@ -45,3 +46,15 @@ export type {
   TelegramBindResult,
   TelegramUnbindResult,
 } from './telegram';
+
+// 支付管理
+export {
+  getProducts,
+  getCurrencies,
+  createPayment,
+  getPaymentStatus,
+  getPaymentStatusByOrder,
+  getStarBalance,
+  getTransactions,
+  redeemCode,
+} from './payments';

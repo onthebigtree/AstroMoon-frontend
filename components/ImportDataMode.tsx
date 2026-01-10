@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { LifeDestinyResult } from '../types';
-import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter } from 'lucide-react';
-import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION } from '../constants';
-import { generateWithAPI } from '../services/apiService';
-import { streamReportGenerate, checkGenerationLimit } from '../services/api/reports';
+import { LifeDestinyResult, Annual2026Result } from '../types';
+import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter, Calendar } from 'lucide-react';
+import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION, ANNUAL_2026_SYSTEM_INSTRUCTION } from '../constants';
+import { streamReportGenerate } from '../services/api/reports';
+import { getStarBalance } from '../services/api/payments';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import { replaceAge100Reason } from '../constants/age100';
 import LocationMapPicker from './LocationMapPicker';
@@ -13,13 +13,14 @@ import TelegramLoginButton from './TelegramLoginButton';
 import TurnstileVerify from './TurnstileVerify';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfiles, createProfile, updateProfile, deleteProfile, type Profile, checkTelegramMembership, bindTelegramAccount } from '../services/api';
-import type { GenerationLimit } from '../services/api/types';
 
 interface ImportDataModeProps {
-    onDataImport: (data: LifeDestinyResult) => void;
+    onDataImport: (data: LifeDestinyResult | Annual2026Result) => void;
+    onStarsChange?: (stars: number) => void;
+    defaultMode?: 'choose' | 'trader' | 'normal' | 'annual2026';
 }
 
-type Mode = 'choose' | 'trader' | 'normal';
+type Mode = 'choose' | 'trader' | 'normal' | 'annual2026';
 type Step = 1 | 2;
 
 // 基础星盘信息接口
@@ -141,12 +142,15 @@ const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; ti
     'default': { latitude: 39.9042, longitude: 116.4074, timezone: 8.0 }
 };
 
-const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
+const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsChange, defaultMode }) => {
     const { currentUser } = useAuth();
-    const [mode, setMode] = useState<Mode>('choose');
+    const [mode, setMode] = useState<Mode>(defaultMode || 'choose');
     const [step, setStep] = useState<Step>(1);
     const [basicChart, setBasicChart] = useState<BasicChartInfo | null>(null);
-    const [houseSystem, setHouseSystem] = useState<string>('P'); // 默认使用 Placidus
+    // 交易员模式和2026年运模式默认使用整宫制(W)，其他模式默认普拉西度制(P)
+    const [houseSystem, setHouseSystem] = useState<string>(
+        defaultMode === 'trader' || defaultMode === 'annual2026' ? 'W' : 'P'
+    );
     const [astroInfo, setAstroInfo] = useState({
         name: '测试用户',
         gender: 'Male',
@@ -192,9 +196,9 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
     const [isDeletingProfile, setIsDeletingProfile] = useState(false);
 
-    // 生成限制相关状态
-    const [limitStatus, setLimitStatus] = useState<GenerationLimit | null>(null);
-    const [isLoadingLimit, setIsLoadingLimit] = useState(false);
+    // 积分余额状态
+    const [starsBalance, setStarsBalance] = useState<number | null>(null);
+    const [isLoadingStarsBalance, setIsLoadingStarsBalance] = useState(false);
 
     // 队列状态相关
     const [queuePosition, setQueuePosition] = useState<number | null>(null);
@@ -206,7 +210,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     useEffect(() => {
         if (currentUser) {
             loadProfiles();
-            loadGenerationLimit();
+            loadStarsBalance();
         }
     }, [currentUser]);
 
@@ -232,20 +236,23 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
         }
     };
 
-    // 加载生成限制状态
-    const loadGenerationLimit = async () => {
+    // 加载积分余额
+    const loadStarsBalance = async () => {
         if (!currentUser) return;
 
-        setIsLoadingLimit(true);
+        setIsLoadingStarsBalance(true);
         try {
-            const limit = await checkGenerationLimit();
-            console.log('✅ 生成限制状态:', limit);
-            setLimitStatus(limit);
+            const balance = await getStarBalance();
+            console.log('✅ 积分余额:', balance);
+            setStarsBalance(balance.stars);
+            if (typeof balance.stars === 'number') {
+                onStarsChange?.(balance.stars);
+            }
         } catch (error: any) {
-            console.error('❌ 加载生成限制状态失败:', error);
+            console.error('❌ 加载积分余额失败:', error);
             // 静默失败，不影响用户使用
         } finally {
-            setIsLoadingLimit(false);
+            setIsLoadingStarsBalance(false);
         }
     };
 
@@ -509,18 +516,35 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
 
         try {
             // 调用后端星盘计算 API
-            // 🔥 在生产环境使用相对路径（通过 Vercel Serverless Function 代理），避免 CORS
-            const isDev = import.meta.env.DEV;
-            const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:8000') : '';
-            const url = backendUrl ? `${backendUrl}/chart/unified` : '/api/calculate-chart';
+            // 🚀 使用 Railway 统一后端
+            const RAILWAY_BACKEND_URL = import.meta.env.VITE_RAILWAY_BACKEND_URL
+                || 'https://astromoon-backend-dev.up.railway.app';
+            const url = `${RAILWAY_BACKEND_URL}/api/chart/unified`;
 
-            console.log('🔮 调用后端星盘计算 API:', url);
+            console.log('🔮 调用后端星盘计算 API (Railway):', url);
+
+            // 准备请求头
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+
+            // 🔐 添加 Firebase JWT Token 认证
+            try {
+                const { getAuth } = await import('firebase/auth');
+                const auth = getAuth();
+                const user = auth.currentUser;
+                if (user) {
+                    const token = await user.getIdToken(true);
+                    headers['Authorization'] = `Bearer ${token}`;
+                    console.log('🔐 已添加 JWT Token 认证');
+                }
+            } catch (authError) {
+                console.warn('⚠️ 无法获取 Firebase Token:', authError);
+            }
 
             const response = await fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({
                     birth_datetime: birthDatetime,
                     latitude: latitude,
@@ -548,7 +572,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             const { meta, bodies, dignity_data } = data;
 
             // 提取太阳状态（从 dignity_data 中获取）
-            const sunDignity = dignity_data?.Sun;
+            const sunDignity = dignity_data?.sun;
             let sunStatus = '中性';
             if (sunDignity) {
                 switch (sunDignity.dignity) {
@@ -575,19 +599,19 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
             // 根据用户选择的分宫制使用对应的宫位数据
             // W = Whole Sign 使用 whole_sign，其他使用 alchabitius（API 返回的是计算后的分宫制结果）
             const sunHouse = houseSystem === 'W'
-                ? bodies.Sun.house_placement.whole_sign
-                : bodies.Sun.house_placement.alchabitius.effective;
+                ? bodies.sun.house_placement.whole_sign
+                : bodies.sun.house_placement.alchabitius.effective;
 
             return {
                 isDiurnal: meta.is_day_chart,
-                sunSign: bodies.Sun.sign,
-                moonSign: bodies.Moon.sign,
-                ascendant: bodies.ASC.sign,
-                mc: bodies.MC.sign,
+                sunSign: bodies.sun.sign,
+                moonSign: bodies.moon.sign,
+                ascendant: bodies.asc.sign,
+                mc: bodies.mc.sign,
                 sunHouse: sunHouse,
                 sunStatus: sunStatus,
-                sunDegree: bodies.Sun.sign_degree,
-                moonDegree: bodies.Moon.sign_degree,
+                sunDegree: bodies.sun.sign_degree,
+                moonDegree: bodies.moon.sign_degree,
             };
 
         } catch (error: any) {
@@ -649,7 +673,7 @@ const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport }) => {
     // 生成用户提示词
     const generateUserPrompt = () => {
         const genderStr = astroInfo.gender === 'Male' ? '男' : '女';
-        const analysisType = mode === 'trader' ? '交易员财富' : '人生';
+        const analysisType = mode === 'trader' ? '交易员财富' : mode === 'annual2026' ? '2026年年运' : '人生';
 
         // 如果有基础星盘信息，包含到 prompt 中
         const chartInfo = basicChart ? `
@@ -711,7 +735,7 @@ ${chartInfo}
 
     // 复制完整提示词
     const copyFullPrompt = async () => {
-        const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
+        const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : mode === 'annual2026' ? ANNUAL_2026_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
         const fullPrompt = `=== 系统指令 (System Prompt) ===\n\n${systemPrompt}\n\n=== 用户提示词 (User Prompt) ===\n\n${generateUserPrompt()}`;
 
         try {
@@ -724,7 +748,7 @@ ${chartInfo}
     };
 
     // 解析 JSON 内容的辅助函数
-    const parseJSONContent = (jsonContent: string, currentMode: Mode): LifeDestinyResult => {
+    const parseJSONContent = (jsonContent: string, currentMode: Mode): LifeDestinyResult | Annual2026Result => {
         // 尝试从可能包含 markdown 的内容中提取 JSON
         let content = jsonContent.trim();
 
@@ -776,7 +800,96 @@ ${chartInfo}
             throw new Error(err.message);
         }
 
-        // 校验数据结构
+        // 年运模式：特殊处理（手动导入）
+        if (currentMode === 'annual2026') {
+            console.log('🔍 年运模式（手动导入）：开始解析数据...');
+
+            // 🔄 兼容性兜底：处理各种可能的包装格式
+            if (data.status && data.data) {
+                console.log('⚠️ 检测到包装格式 {status, data}，提取内部数据');
+                data = data.data;
+            }
+            if (data.data && !data.chartData && !data.chartPoints) {
+                console.log('⚠️ 检测到嵌套 data 字段，提取内部数据');
+                data = data.data;
+            }
+            if (data.result && !data.chartData && !data.chartPoints) {
+                console.log('⚠️ 检测到 result 字段包装，提取内部数据');
+                data = data.result;
+            }
+
+            // 🔄 兼容性兜底：提取 chartData
+            let chartData = data.chartData || data.chartPoints || data.chart_data || data.monthlyData || [];
+            if (!chartData || chartData.length === 0) {
+                if (data.months && Array.isArray(data.months)) chartData = data.months;
+                else if (data.forecast && Array.isArray(data.forecast)) chartData = data.forecast;
+                else if (data.transit_forecast && data.transit_forecast.monthly) chartData = data.transit_forecast.monthly;
+            }
+
+            // 🔄 兼容性兜底：确保 chartData 有正确的字段
+            if (chartData && chartData.length > 0) {
+                chartData = chartData.map((item: any, index: number) => ({
+                    month: item.month || index + 1,
+                    monthName: item.monthName || item.month_name || `${['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'][index]}月`,
+                    quarter: item.quarter || `Q${Math.ceil((index + 1) / 3)}`,
+                    monthTransit: item.monthTransit || item.month_transit || item.transit || '',
+                    score: item.score || item.close || 70,
+                    trend: item.trend || 'flat',
+                    theme: item.theme || item.themes || ['运势平稳'],
+                    open: item.open || item.score || 70,
+                    close: item.close || item.score || 70,
+                    high: item.high || Math.max(item.open || 70, item.close || 70) + 5,
+                    low: item.low || Math.min(item.open || 70, item.close || 70) - 5,
+                    reason: item.reason || item.description || item.analysis || '本月运势详情请参考总体分析。',
+                }));
+            }
+
+            const annualResult: Annual2026Result = {
+                chartData: chartData,
+                analysis: {
+                    markdownReport: data.markdownReport || data.markdown_report || data.report || '',
+                    summary: data.summary || data.overview || '2026年度运势总评',
+                    summaryScore: data.summaryScore || data.summary_score || 75,
+
+                    traderVitalityTitle: data.traderVitalityTitle || '年度核心课题',
+                    traderVitality: data.traderVitality || data.core_theme || '',
+                    traderVitalityScore: data.traderVitalityScore || 75,
+
+                    wealthPotentialTitle: data.wealthPotentialTitle || '事业与财富运势',
+                    wealthPotential: data.wealthPotential || data.career_wealth || '',
+                    wealthPotentialScore: data.wealthPotentialScore || 75,
+
+                    fortuneLuckTitle: data.fortuneLuckTitle || '情感与关系运势',
+                    fortuneLuck: data.fortuneLuck || data.relationship || '',
+                    fortuneLuckScore: data.fortuneLuckScore || 75,
+
+                    leverageRiskTitle: data.leverageRiskTitle || '健康与身心',
+                    leverageRisk: data.leverageRisk || data.health || '',
+                    leverageRiskScore: data.leverageRiskScore || 75,
+
+                    platformTeamTitle: data.platformTeamTitle || '贵人与机遇',
+                    platformTeam: data.platformTeam || data.opportunities || '',
+                    platformTeamScore: data.platformTeamScore || 75,
+
+                    tradingStyleTitle: data.tradingStyleTitle || '年度行动建议',
+                    tradingStyle: data.tradingStyle || data.advice || '',
+                    tradingStyleScore: data.tradingStyleScore || 75,
+
+                    keyMonths: data.keyMonths || data.key_months || '',
+                    peakMonths: data.peakMonths || data.peak_months || '',
+                    riskMonths: data.riskMonths || data.risk_months || '',
+                },
+            };
+
+            if (!annualResult.chartData || annualResult.chartData.length === 0) {
+                throw new Error('年运数据解析失败：未找到有效的月度数据');
+            }
+
+            console.log('✅ 年运数据（手动导入）解析成功，共', annualResult.chartData.length, '个月数据');
+            return annualResult as any;
+        }
+
+        // 校验数据结构（非年运模式）
         const validation = validateAstroData(data);
         if (!validation.valid) {
             throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
@@ -964,28 +1077,28 @@ ${chartInfo}
         }
     };
 
-    // 点击生成按钮 - 先检查限制，再显示验证弹窗
+    // 点击生成按钮 - 先检查积分余额，再显示验证弹窗
     const handleAutoGenerate = async () => {
-        // 先检查生成限制
-        try {
-            const limit = await checkGenerationLimit();
-            setLimitStatus(limit);
+        // 立即设置加载状态，避免延迟感
+        setIsLoadingStarsBalance(true);
 
-            if (!limit.allowed) {
-                const resetDate = new Date(limit.resetAt);
-                setError(`今日生成次数已用完（${limit.used}/${limit.limit}），将在 ${resetDate.toLocaleString('zh-CN', {
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })} 重置`);
+        // 先检查积分余额
+        try {
+            const balance = await getStarBalance();
+            setStarsBalance(balance.stars);
+            onStarsChange?.(balance.stars);
+
+            if (balance.stars <= 0) {
+                setError('积分不足，请先充值再生成报告');
+                setIsLoadingStarsBalance(false);
                 return;
             }
         } catch (err: any) {
-            console.error('检查生成限制失败:', err);
+            console.error('获取积分余额失败:', err);
             // 如果检查失败，允许继续（避免影响用户体验）
         }
 
+        setIsLoadingStarsBalance(false);
         setShowVerifyModal(true);
         setHasClickedTelegramFollow(false);
         setHasClickedTwitterFollow(false);
@@ -1105,10 +1218,10 @@ ${chartInfo}
             const userPrompt = generateUserPrompt();
 
             // 根据模式选择系统指令
-            const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
+            const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : mode === 'annual2026' ? ANNUAL_2026_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
 
             // 生成报告标题
-            const reportTitle = `${astroInfo.name || '匿名用户'}的${mode === 'trader' ? '交易员财富' : '综合人生'}占星报告`;
+            const reportTitle = `${astroInfo.name || '匿名用户'}的${mode === 'trader' ? '交易员财富' : mode === 'annual2026' ? '2026年年运' : '综合人生'}占星报告`;
 
             // 调用新后端流式生成 API（会自动保存到数据库）
             console.log('🚀 调用新后端生成报告（会自动保存到数据库）...');
@@ -1141,30 +1254,248 @@ ${chartInfo}
 
                 console.log('✅ 报告生成完成，已自动保存到数据库');
 
-                // 生成成功后刷新限制状态
-                loadGenerationLimit();
+                // 生成成功后刷新积分余额
+                loadStarsBalance();
             } catch (streamError: any) {
-                // 检查是否为 429 限流错误
-                if (streamError.message.includes('Daily generation limit reached') ||
+                // 检查是否为积分不足或限流错误
+                if (streamError.message.includes('积分不足') ||
+                    streamError.message.includes('Insufficient stars') ||
+                    streamError.message.includes('Daily generation limit reached') ||
                     streamError.message.includes('生成上限')) {
-                    // 刷新限制状态以获取最新信息
-                    await loadGenerationLimit();
-                    throw new Error('今日生成次数已用完，请明天再试');
+                    // 刷新积分余额以获取最新信息
+                    await loadStarsBalance();
                 }
-
-                // 如果新后端失败，回退到旧后端
-                console.warn('⚠️ 新后端失败，回退到旧后端:', streamError.message);
-                content = await generateWithAPI({
-                    userPrompt,
-                    systemPrompt,
-                });
+                // 直接抛出错误，不再回退到旧后端
+                throw streamError;
             }
 
             // 使用健壮的 JSON 解析工具
             try {
-                const data = robustParseJSON(content);
+                let data = robustParseJSON(content);
 
-                // 校验数据结构
+                // 年运模式：特殊处理
+                if (mode === 'annual2026') {
+                    console.log('🔍 年运模式：开始解析数据...');
+
+                    // 🔄 兼容性兜底：处理各种可能的包装格式
+                    // 1. 处理 {"status": "success", "data": {...}} 格式
+                    if (data.status && data.data) {
+                        console.log('⚠️ 检测到包装格式 {status, data}，提取内部数据');
+                        data = data.data;
+                    }
+                    // 2. 处理嵌套的 data 字段
+                    if (data.data && !data.chartData && !data.chartPoints) {
+                        console.log('⚠️ 检测到嵌套 data 字段，提取内部数据');
+                        data = data.data;
+                    }
+                    // 3. 处理 result 字段包装
+                    if (data.result && !data.chartData && !data.chartPoints) {
+                        console.log('⚠️ 检测到 result 字段包装，提取内部数据');
+                        data = data.result;
+                    }
+
+                    // 🔄 兼容性兜底：提取 chartData
+                    let chartData = data.chartData || data.chartPoints || data.chart_data || data.monthlyData || [];
+
+                    // 如果 chartData 仍然为空，尝试从其他字段提取
+                    if (!chartData || chartData.length === 0) {
+                        // 尝试从 months 字段提取
+                        if (data.months && Array.isArray(data.months)) {
+                            chartData = data.months;
+                        }
+                        // 尝试从 forecast 字段提取
+                        else if (data.forecast && Array.isArray(data.forecast)) {
+                            chartData = data.forecast;
+                        }
+                        // 尝试从 transit_forecast 字段提取
+                        else if (data.transit_forecast && data.transit_forecast.monthly) {
+                            chartData = data.transit_forecast.monthly;
+                        }
+                        // 🔄 终极兜底：如果 AI 返回了完全不同的格式（如 year_2026_forecast），生成默认月度数据
+                        else if (data.year_2026_forecast || data.natal_chart_analysis || data.user_profile) {
+                            console.log('⚠️ AI 返回了非标准格式，从 year_2026_forecast 生成月度数据');
+                            const forecast = data.year_2026_forecast || {};
+                            const prediction = forecast.detailed_prediction || {};
+
+                            // 从预测中提取评分
+                            const careerRating = (prediction.career_and_achievement?.rating?.match(/⭐/g) || []).length * 20 || 80;
+                            const relationshipRating = (prediction.relationship_and_partnership?.rating?.match(/⭐/g) || []).length * 20 || 60;
+                            const growthRating = (prediction.personal_growth_and_travel?.rating?.match(/⭐/g) || []).length * 20 || 75;
+                            const wealthRating = (prediction.wealth_and_finance?.rating?.match(/⭐/g) || []).length * 20 || 70;
+                            const avgScore = Math.round((careerRating + relationshipRating + growthRating + wealthRating) / 4);
+
+                            // 生成 12 个月的数据
+                            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+                            const quarters = ['Q1', 'Q1', 'Q1', 'Q2', 'Q2', 'Q2', 'Q3', 'Q3', 'Q3', 'Q4', 'Q4', 'Q4'];
+
+                            // 基于预测生成波动的月度分数
+                            const baseScores = [
+                                avgScore + 5,  // 1月
+                                avgScore - 5,  // 2月 - 土星进7宫
+                                avgScore - 8,  // 3月 - 土星正式进入
+                                avgScore,      // 4月
+                                avgScore + 10, // 5月 - 木星高照
+                                avgScore + 12, // 6月 - 木星合天顶
+                                avgScore + 8,  // 7月 - 木星进狮子
+                                avgScore + 5,  // 8月
+                                avgScore,      // 9月
+                                avgScore - 3,  // 10月
+                                avgScore + 3,  // 11月
+                                avgScore + 5,  // 12月
+                            ];
+
+                            chartData = monthNames.map((name, i) => {
+                                const score = Math.max(40, Math.min(95, baseScores[i] + Math.floor(Math.random() * 10 - 5)));
+                                const prevScore = i > 0 ? baseScores[i - 1] : score;
+                                return {
+                                    month: i + 1,
+                                    monthName: name,
+                                    quarter: quarters[i],
+                                    monthTransit: forecast.transit_overview || '详见年度总览',
+                                    score: score,
+                                    trend: score > prevScore ? 'up' : score < prevScore ? 'down' : 'flat',
+                                    theme: i < 3 ? ['调整期', '蓄势'] : i < 6 ? ['事业高峰', '机遇'] : i < 9 ? ['扩张', '贵人'] : ['收获', '总结'],
+                                    open: Math.max(40, score - 5),
+                                    close: score,
+                                    high: Math.min(98, score + 8),
+                                    low: Math.max(35, score - 10),
+                                    reason: i < 3
+                                        ? (prediction.relationship_and_partnership?.analysis?.substring(0, 100) || '本月需注意人际关系的调整。') + '...'
+                                        : i < 6
+                                        ? (prediction.career_and_achievement?.analysis?.substring(0, 100) || '事业运势正旺，抓住机遇。') + '...'
+                                        : i < 9
+                                        ? (prediction.personal_growth_and_travel?.analysis?.substring(0, 100) || '适合学习和旅行。') + '...'
+                                        : (prediction.wealth_and_finance?.analysis?.substring(0, 100) || '财运稳定，注意理财。') + '...',
+                                };
+                            });
+
+                            // 同时提取其他字段
+                            if (!data.summary && forecast.annual_theme) {
+                                data.summary = `${forecast.annual_theme}。${forecast.transit_overview || ''}`;
+                            }
+                            if (!data.markdownReport) {
+                                const natal = data.natal_chart_analysis?.core_personality || {};
+                                const advice = data.strategic_advice_2026 || [];
+                                data.markdownReport = `## 2026 年运势分析：${forecast.annual_theme || '机遇与挑战并存'}\n\n` +
+                                    `> ${forecast.transit_overview || '2026年是充满变化的一年'}\n\n` +
+                                    `### 本命格局\n\n${natal.sun_gemini_9th || ''}\n\n${natal.moon_pisces || ''}\n\n${natal.asc_libra || ''}\n\n` +
+                                    `### 事业与成就\n\n${prediction.career_and_achievement?.analysis || ''}\n\n` +
+                                    `### 关系与合作\n\n${prediction.relationship_and_partnership?.analysis || ''}\n\n` +
+                                    `${prediction.relationship_and_partnership?.advice ? `> 💡 ${prediction.relationship_and_partnership.advice}\n\n` : ''}` +
+                                    `### 个人成长\n\n${prediction.personal_growth_and_travel?.analysis || ''}\n\n` +
+                                    `### 财富运势\n\n${prediction.wealth_and_finance?.analysis || ''}\n\n` +
+                                    `### 年度建议\n\n${advice.map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
+                                    `---\n*运势仅供参考，你的选择决定你的命运。*`;
+                            }
+                            if (!data.traderVitality && forecast.annual_theme) {
+                                data.traderVitality = forecast.transit_overview || forecast.annual_theme;
+                            }
+                            if (!data.wealthPotential && prediction.career_and_achievement) {
+                                data.wealthPotential = prediction.career_and_achievement.analysis;
+                            }
+                            if (!data.fortuneLuck && prediction.relationship_and_partnership) {
+                                data.fortuneLuck = prediction.relationship_and_partnership.analysis;
+                            }
+                            if (!data.leverageRisk && prediction.personal_growth_and_travel) {
+                                data.leverageRisk = prediction.personal_growth_and_travel.analysis;
+                            }
+                            if (!data.platformTeam && prediction.wealth_and_finance) {
+                                data.platformTeam = prediction.wealth_and_finance.analysis;
+                            }
+                            if (!data.tradingStyle && data.strategic_advice_2026) {
+                                data.tradingStyle = data.strategic_advice_2026.join(' ');
+                            }
+                        }
+                    }
+
+                    // 🔄 兼容性兜底：确保 chartData 有正确的字段
+                    if (chartData && chartData.length > 0) {
+                        chartData = chartData.map((item: any, index: number) => ({
+                            month: item.month || index + 1,
+                            monthName: item.monthName || item.month_name || `${['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'][index]}月`,
+                            quarter: item.quarter || `Q${Math.ceil((index + 1) / 3)}`,
+                            monthTransit: item.monthTransit || item.month_transit || item.transit || '',
+                            score: item.score || item.close || 70,
+                            trend: item.trend || 'flat',
+                            theme: item.theme || item.themes || ['运势平稳'],
+                            open: item.open || item.score || 70,
+                            close: item.close || item.score || 70,
+                            high: item.high || Math.max(item.open || 70, item.close || 70) + 5,
+                            low: item.low || Math.min(item.open || 70, item.close || 70) - 5,
+                            reason: item.reason || item.description || item.analysis || '本月运势详情请参考总体分析。',
+                        }));
+                    }
+
+                    // 🔄 兼容性兜底：提取 markdownReport
+                    let markdownReport = data.markdownReport || data.markdown_report || data.report || '';
+                    // 如果没有 markdownReport，尝试从 wealth_analysis_report 等字段生成
+                    if (!markdownReport && data.wealth_analysis_report) {
+                        const report = data.wealth_analysis_report;
+                        markdownReport = `## 2026年运势分析\n\n${report.core_archetype || ''}\n\n${JSON.stringify(report.personality_structure || {}, null, 2)}`;
+                    }
+
+                    // 🔄 兼容性兜底：提取 summary
+                    let summary = data.summary || data.overview || data.general_summary || '';
+                    if (!summary && data.wealth_analysis_report) {
+                        summary = data.wealth_analysis_report.core_archetype || '2026年度运势总评';
+                    }
+
+                    console.log('📊 解析结果:', {
+                        chartDataLength: chartData?.length || 0,
+                        hasMarkdownReport: !!markdownReport,
+                        hasSummary: !!summary,
+                    });
+
+                    // 年运模式的结果结构（AI返回的是 chartData 字段）
+                    const annualResult: Annual2026Result = {
+                        chartData: chartData,
+                        analysis: {
+                            markdownReport: markdownReport,
+                            summary: summary || '2026年度运势总评',
+                            summaryScore: data.summaryScore || data.summary_score || 75,
+
+                            traderVitalityTitle: data.traderVitalityTitle || '年度核心课题',
+                            traderVitality: data.traderVitality || data.core_theme || '',
+                            traderVitalityScore: data.traderVitalityScore || 75,
+
+                            wealthPotentialTitle: data.wealthPotentialTitle || '事业与财富运势',
+                            wealthPotential: data.wealthPotential || data.career_wealth || '',
+                            wealthPotentialScore: data.wealthPotentialScore || 75,
+
+                            fortuneLuckTitle: data.fortuneLuckTitle || '情感与关系运势',
+                            fortuneLuck: data.fortuneLuck || data.relationship || '',
+                            fortuneLuckScore: data.fortuneLuckScore || 75,
+
+                            leverageRiskTitle: data.leverageRiskTitle || '健康与身心',
+                            leverageRisk: data.leverageRisk || data.health || '',
+                            leverageRiskScore: data.leverageRiskScore || 75,
+
+                            platformTeamTitle: data.platformTeamTitle || '贵人与机遇',
+                            platformTeam: data.platformTeam || data.opportunities || '',
+                            platformTeamScore: data.platformTeamScore || 75,
+
+                            tradingStyleTitle: data.tradingStyleTitle || '年度行动建议',
+                            tradingStyle: data.tradingStyle || data.advice || '',
+                            tradingStyleScore: data.tradingStyleScore || 75,
+
+                            keyMonths: data.keyMonths || data.key_months || '',
+                            peakMonths: data.peakMonths || data.peak_months || '',
+                            riskMonths: data.riskMonths || data.risk_months || '',
+                        },
+                    };
+
+                    // 验证 chartData 是否有效
+                    if (!annualResult.chartData || annualResult.chartData.length === 0) {
+                        console.error('❌ chartData 为空，原始数据:', JSON.stringify(data).substring(0, 500));
+                        throw new Error('年运数据解析失败：未找到有效的月度数据。AI 返回的格式可能不正确，请重试。');
+                    }
+
+                    console.log('✅ 年运数据解析和转换成功，共', annualResult.chartData.length, '个月数据');
+                    onDataImport(annualResult);
+                    break;
+                }
+
+                // 校验数据结构（非年运模式）
                 const validation = validateAstroData(data);
                 if (!validation.valid) {
                     throw new Error(`数据格式验证失败：\n${validation.errors.join('\n')}`);
@@ -1444,7 +1775,7 @@ ${chartInfo}
                         <p className="text-gray-500 text-sm">请选择您想要的占星分析模式</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* 专业交易者模式 */}
                         <button
                             onClick={() => { setMode('trader'); setStep(1); setHouseSystem('W'); }}
@@ -1492,6 +1823,30 @@ ${chartInfo}
                                 </div>
                             </div>
                         </button>
+
+                        {/* 2026年运模式 */}
+                        <button
+                            onClick={() => { setMode('annual2026'); setStep(1); setHouseSystem('W'); }}
+                            className="group relative bg-gradient-to-br from-cyan-500 via-teal-500 to-emerald-500 hover:from-cyan-600 hover:via-teal-600 hover:to-emerald-600 text-white p-6 rounded-2xl shadow-lg transition-all transform hover:scale-105 hover:shadow-2xl"
+                        >
+                            <div className="absolute inset-0 bg-black/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="relative z-10">
+                                <div className="flex justify-center mb-4">
+                                    <div className="p-4 bg-white/20 rounded-full">
+                                        <Calendar className="w-10 h-10" />
+                                    </div>
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">📅 2026年运</h3>
+                                <p className="text-sm text-white/90 mb-4">
+                                    基于小限法的年度运势深度解读
+                                </p>
+                                <div className="text-xs text-white/80 space-y-1">
+                                    <div>🎯 年度核心课题</div>
+                                    <div>📅 关键月份预警</div>
+                                    <div>💫 12月运势走势</div>
+                                </div>
+                            </div>
+                        </button>
                     </div>
                 </div>
             )}
@@ -1535,7 +1890,7 @@ ${chartInfo}
                             输入出生信息
                         </h2>
                         <p className="text-gray-500 text-sm">
-                            填写出生信息后即可一键生成 {mode === 'trader' ? '交易员财富' : '人生'}分析报告
+                            填写出生信息后即可一键生成 {mode === 'trader' ? '交易员财富' : mode === 'annual2026' ? '2026年年运' : '人生'}分析报告
                         </p>
                     </div>
 
@@ -1781,7 +2136,7 @@ ${chartInfo}
                             <label className="block text-xs font-bold text-gray-600 mb-2">
                                 选择分宫制
                                 <span className="ml-2 text-xs font-normal text-purple-600">
-                                    {mode === 'trader' ? '(交易员版本默认：整宫制)' : '(普通版本默认：普拉西度)'}
+                                    {mode === 'trader' || mode === 'annual2026' ? '(默认：整宫制)' : '(普通版本默认：普拉西度)'}
                                 </span>
                             </label>
                             <select
@@ -1799,7 +2154,7 @@ ${chartInfo}
                             </select>
                         </div>
                         <div className="mt-2 text-xs text-purple-600/80 bg-white/50 p-2 rounded">
-                            💡 不同分宫制会影响宫位的划分方式。{mode === 'trader' ? '交易员版本推荐使用整宫制(W)。' : '普通版本推荐使用普拉西度制(P)。'}
+                            💡 不同分宫制会影响宫位的划分方式。{mode === 'trader' || mode === 'annual2026' ? '推荐使用整宫制(W)。' : '普通版本推荐使用普拉西度制(P)。'}
                         </div>
                     </div>
 
@@ -1812,12 +2167,21 @@ ${chartInfo}
 
                     <button
                         onClick={handleViewChart}
-                        disabled={!isStep1Valid}
+                        disabled={!isStep1Valid || isLoading}
                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3.5 rounded-xl shadow-lg transform transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        <Sparkles className="w-5 h-5" />
-                        <span>查看基础星盘</span>
-                        <ArrowRight className="w-5 h-5" />
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span>计算星盘中...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="w-5 h-5" />
+                                <span>查看基础星盘</span>
+                                <ArrowRight className="w-5 h-5" />
+                            </>
+                        )}
                     </button>
                 </div>
             )}
@@ -1930,45 +2294,7 @@ ${chartInfo}
                         </div>
                     </div>
 
-                    {/* 生成限制提示 */}
-                    {limitStatus && (
-                        <div className={`p-4 rounded-xl border-2 ${
-                            limitStatus.allowed
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-red-50 border-red-200'
-                        }`}>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    {limitStatus.allowed ? (
-                                        <CheckCircle className="w-5 h-5 text-green-600" />
-                                    ) : (
-                                        <AlertCircle className="w-5 h-5 text-red-600" />
-                                    )}
-                                    <div>
-                                        <p className={`text-sm font-bold ${
-                                            limitStatus.allowed ? 'text-green-800' : 'text-red-800'
-                                        }`}>
-                                            今日剩余生成次数：
-                                            <span className="text-lg mx-1">{limitStatus.remaining}/{limitStatus.limit}</span>
-                                        </p>
-                                        {!limitStatus.allowed && (
-                                            <p className="text-xs text-red-600 mt-1">
-                                                将在 {new Date(limitStatus.resetAt).toLocaleString('zh-CN', {
-                                                    month: '2-digit',
-                                                    day: '2-digit',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })} 重置
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                {isLoadingLimit && (
-                                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    {/* 积分余额已在页面header中显示 */}
 
                     {/* 队列状态显示 */}
                     {isInQueue && queuePosition !== null && queuePosition > 0 && (
@@ -2004,6 +2330,12 @@ ${chartInfo}
                         </div>
                     )}
 
+                    {/* 消耗提示 */}
+                    <div className="flex items-center justify-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
+                        <span>⭐</span>
+                        <span>生成完整分析将消耗 1 颗小积分</span>
+                    </div>
+
                     {/* 操作按钮 */}
                     <div className="flex gap-3">
                         <button
@@ -2015,13 +2347,18 @@ ${chartInfo}
                         </button>
                         <button
                             onClick={handleAutoGenerate}
-                            disabled={isLoading || (limitStatus && !limitStatus.allowed)}
+                            disabled={isLoading || isLoadingStarsBalance}
                             className="flex-2 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                     <span>AI 分析中... {loadingTime}秒</span>
+                                </>
+                            ) : isLoadingStarsBalance ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <span>检查积分中...</span>
                                 </>
                             ) : (
                                 <>

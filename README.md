@@ -37,17 +37,7 @@ npm install
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，设置后端 API 地址：
-
-```env
-# 开发环境：使用本地后端
-VITE_BACKEND_URL=http://localhost:3001
-
-# 生产环境：使用部署的后端
-VITE_BACKEND_URL=http://43.134.98.27:3782
-```
-
-> 💡 **提示：** 项目已配置生产环境后端，可直接使用
+> 💡 **提示：** 项目已统一使用 Railway 后端，无需配置后端 URL
 
 ### 3. 启动开发服务器
 
@@ -75,9 +65,7 @@ npm run build
 
 1. 推送代码到 GitHub/GitLab/Bitbucket
 2. 在 [Vercel Dashboard](https://vercel.com/dashboard) 导入项目
-3. 配置环境变量：
-   - `VITE_BACKEND_URL` = `http://43.134.98.27:3782`
-4. 点击 Deploy
+3. 点击 Deploy（无需配置后端环境变量）
 
 **或使用 CLI：**
 
@@ -97,22 +85,17 @@ vercel --prod
 1. 连接 GitHub 仓库
 2. 构建命令: `npm run build`
 3. 发布目录: `dist`
-4. 设置环境变量 `VITE_BACKEND_URL`
 
 ---
 
-## 🧪 测试 API
+## 🧪 API 使用
 
-打开 `test-api.html` 测试后端 API 连接：
+详细的 API 调用方式请参考：[CHART_API_USAGE.md](./CHART_API_USAGE.md)
 
-```bash
-open test-api.html
-```
-
-测试内容包括：
-- ✅ 健康检查 (`/health`)
-- ✅ 星盘计算 (`/api/calculate-chart`)
-- ✅ AI 生成 (`/api/generate`)
+**支持的 API：**
+- ✅ 星盘计算 (`/api/chart/unified`) - Railway 后端
+- ✅ AI 生成 (`/api/generate`) - Railway 后端
+- 🔐 所有 API 均需 Firebase JWT 认证
 
 ## 📁 项目结构
 
@@ -139,9 +122,11 @@ AstroMoon-frontend/
 
 ## 🔧 环境变量
 
-| 变量名 | 说明 | 默认值 | 生产环境 |
-|--------|------|--------|----------|
-| `VITE_BACKEND_URL` | 后端 API 地址 | `http://localhost:3001` | `http://43.134.98.27:3782` |
+| 变量名 | 说明 | 备注 |
+|--------|------|------|
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile 站点密钥 | 用于人机验证 |
+
+> 💡 **提示：** 后端 API 地址已硬编码为 Railway，无需配置
 
 > ⚠️ **注意：** Vite 环境变量必须以 `VITE_` 开头才能在客户端访问
 
@@ -149,32 +134,31 @@ AstroMoon-frontend/
 
 ## 🔗 后端 API
 
-后端 API 文档：查看项目根目录的 API 文档
+详细文档：[CHART_API_USAGE.md](./CHART_API_USAGE.md)
+
+**后端地址：**
+- Railway: `https://astromoon-backend-production.up.railway.app`
 
 **主要接口：**
 
-- `GET /health` - 健康检查
-- `POST /api/calculate-chart` - 星盘计算
-- `POST /api/generate` - AI 生成（流式响应）
+- `POST /api/chart/unified` - 星盘计算（需认证）
+- `POST /api/generate` - AI 生成（需认证）
 
 **API 示例：**
 
 ```javascript
 import { calculateChart } from './services/apiService';
 
-// 计算星盘
-const chart = await calculateChart({
-  year: 1990,
-  month: 6,
-  day: 15,
-  hour: 14,
-  minute: 30,
+// 计算星盘（自动添加 Firebase JWT Token）
+const chartData = await calculateChart({
+  unixTimestamp: Math.floor(new Date('1990-06-15T14:30:00').getTime() / 1000),
   latitude: 23.1291,
-  longitude: 113.2644
+  longitude: 113.2644,
+  houseSystem: 'P'
 });
 
-console.log(chart);
-// { sunSign: "双子座 ♊", moonSign: "双鱼座 ♓", ... }
+console.log(chartData);
+// { bodies: {...}, aspects: [...], houses: {...} }
 ```
 
 ---

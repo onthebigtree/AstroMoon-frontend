@@ -13,32 +13,58 @@ interface GenerateRequest {
  * @returns 星盘计算结果
  */
 export const calculateChart = async (request: ChartCalculationRequest): Promise<ChartCalculationResponse> => {
-    // 🔥 使用新的统一 API 端点 /chart/unified
-    // 在开发环境直接调用，在生产环境使用 Vercel Serverless Function 代理
-    const isDev = import.meta.env.DEV;
-    const backendUrl = isDev ? (import.meta.env.VITE_BACKEND_URL || 'http://43.134.98.27:8000') : '';
-    const url = backendUrl ? `${backendUrl}/chart/unified` : '/api/calculate-chart';
+    // 🚀 使用 Railway 统一后端 /api/chart/unified
+    const RAILWAY_BACKEND_URL = import.meta.env.VITE_RAILWAY_BACKEND_URL
+        || 'https://astromoon-backend-dev.up.railway.app';
+    const url = `${RAILWAY_BACKEND_URL}/api/chart/unified`;
 
-    console.log('🔮 计算星盘数据 (统一API):', url);
+    console.log('🔮 计算星盘数据 (Railway Backend):', url);
     console.log('📊 请求参数:', request);
+
+    // 准备请求头
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+
+    // 🔐 添加 Firebase JWT Token 认证
+    try {
+        const { getAuth } = await import('firebase/auth');
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (user) {
+            const token = await user.getIdToken(true);
+            headers['Authorization'] = `Bearer ${token}`;
+            console.log('🔐 已添加 JWT Token 认证');
+        } else {
+            console.warn('⚠️ 用户未登录，可能无法访问星盘计算 API');
+        }
+    } catch (error) {
+        console.warn('⚠️ 无法获取 Firebase Token:', error);
+    }
 
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify(request),
         });
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: '未知错误' }));
-            throw new Error(errorData.error || `HTTP ${response.status}`);
+
+            // 处理认证错误
+            if (response.status === 401) {
+                throw new Error('未授权：请先登录');
+            }
+
+            throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
         }
 
         const data = await response.json();
         console.log('✅ 星盘计算成功:', data);
-        return data;
+
+        // Railway API 返回格式: { code: 0, msg: "成功", data: {...} }
+        return data.data || data;
     } catch (error: any) {
         console.error('❌ 星盘计算失败:', error);
         throw new Error(`星盘计算失败: ${error.message}`);
@@ -56,7 +82,8 @@ export const generateWithAPI = async ({ userPrompt, systemPrompt }: GenerateRequ
 
     if (USE_NEW_BACKEND) {
         // 使用新后端（Railway）
-        backendUrl = 'https://astromoon-backend-production.up.railway.app';
+        backendUrl = import.meta.env.VITE_RAILWAY_BACKEND_URL
+            || 'https://astromoon-backend-dev.up.railway.app';
         url = `${backendUrl}/api/generate`;
         console.log('🌐 使用新后端（Railway + Firebase Auth）:', url);
     } else {

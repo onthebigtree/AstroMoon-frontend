@@ -100,6 +100,23 @@ export interface ExportResponse {
   exportCount: number;
 }
 
+// ==================== 星星配额相关类型 ====================
+
+export interface UserCredits {
+  success: boolean;
+  total_stars: number;
+  used_stars: number;
+  remaining_stars: number;
+}
+
+export interface CreditsError {
+  error: string;
+  message: string;
+  total_stars?: number;
+  used_stars?: number;
+  remaining_stars?: number;
+}
+
 // ==================== 生成限制相关类型 ====================
 
 export interface GenerationLimit {
@@ -198,4 +215,113 @@ export interface QueueInfo {
   queuePosition: number;
   activeCount: number;
   queueLength: number;
+}
+
+// ==================== 支付相关类型 ====================
+
+export interface Product {
+  name: string;
+  price: number;
+  stars: number;
+  description: string;
+  popular?: boolean;
+}
+
+export interface ProductsResponse {
+  success: boolean;
+  products: Record<string, Product>;
+}
+
+export interface CreatePaymentRequest {
+  productType: 'stars_10' | 'stars_30' | 'stars_100';
+  payCurrency?: string; // btc, eth, usdt, usdcbase 等
+}
+
+export interface CreatePaymentResponse {
+  success: boolean;
+  invoiceId: number;
+  paymentUrl: string;
+  orderId: string;
+}
+
+export interface PaymentInvoice {
+  id: number;
+  user_id: number;
+  invoice_id: string;
+  order_id: string;
+  invoice_url: string;
+  product_type: string;
+  stars_amount: number;
+  price_amount: number;
+  pay_currency: string;
+  paid_amount?: number;
+  status: 'waiting' | 'confirming' | 'confirmed' | 'finished' | 'failed' | 'expired';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentStatusResponse {
+  success: boolean;
+  invoice: PaymentInvoice;
+}
+
+export interface CurrenciesResponse {
+  success: boolean;
+  currencies: string[];
+}
+
+export interface StarBalanceResponse {
+  success: boolean;
+  stars: number;
+}
+
+// ==================== 交易记录相关类型 ====================
+
+export interface Transaction {
+  id: number;
+  type: 'recharge' | 'consumption';
+  stars: number;
+  timestamp: string;
+  status: string;
+  // 充值记录字段
+  orderId?: string;
+  productType?: string;
+  priceAmount?: number;
+  payCurrency?: string;
+  paidAmount?: number;
+  // 消费记录字段
+  reason?: string;
+  resourceType?: string;
+  resourceId?: number;
+  remainingStars?: number;
+}
+
+export interface TransactionsResponse {
+  success: boolean;
+  transactions: Transaction[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface TransactionsRequest {
+  type?: 'all' | 'recharge' | 'consumption';
+  page?: number;
+  limit?: number;
+}
+
+// ==================== 兑换码相关类型 ====================
+
+export interface RedeemCodeRequest {
+  code: string;
+}
+
+export interface RedeemCodeResponse {
+  success: boolean;
+  message: string;
+  starsRedeemed: number;
+  currentBalance: number;
 }

@@ -1,11 +1,19 @@
-# robots.txt for Astro Moon
-# https://astromoon.vercel.app/
+# Astro Moon Robots.txt
 
+# Allow all crawlers
 User-agent: *
 Allow: /
 
-# Disallow private API routes
+# Disallow API endpoints
 Disallow: /api/
 
-# Sitemap
-Sitemap: https://astromoon.vercel.app/sitemap.xml
+# Sitemap locations
+Sitemap: https://www.astromoon.xyz/sitemap.xml
+Sitemap: https://app.astromoon.xyz/sitemap.xml
+
+# Specific rules for common bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /

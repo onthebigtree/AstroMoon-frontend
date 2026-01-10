@@ -8,6 +8,7 @@ import type {
   ExportResponse,
   SuccessResponse,
   GenerationLimit,
+  UserCredits,
 } from './types';
 
 /**
@@ -68,6 +69,11 @@ export async function* streamReportGenerate(
         if (line.startsWith('data: ') && !line.includes('[DONE]')) {
           try {
             const json = JSON.parse(line.slice(6));
+
+            // 忽略心跳事件
+            if (json.type === 'keepalive') {
+              continue;
+            }
 
             // 处理队列信息事件
             if (json.type === 'queue_info') {
@@ -159,7 +165,23 @@ export async function deleteReport(id: string): Promise<void> {
 }
 
 /**
- * 查询今日生成限制状态
+ * 获取用户星星余额
+ * @returns 星星配额信息
+ */
+export async function getUserCredits(): Promise<UserCredits> {
+  const response = await apiRequest<UserCredits>(
+    '/api/reports/credits',
+    {
+      method: 'GET',
+    },
+    true
+  );
+  return response;
+}
+
+/**
+ * 查询今日生成限制状态（已废弃，保留兼容）
+ * @deprecated 请使用 getUserCredits() 代替
  * @returns 生成限制信息（是否允许、剩余次数、重置时间等）
  */
 export async function checkGenerationLimit(): Promise<GenerationLimit> {
