@@ -15,8 +15,8 @@ interface ZodiacFortune2026Props {
 // Tier List 人物配置
 const TIER_AVATARS: Record<string, string[]> = {
   'T0': ['cz.jpg', 'vitalik.jpg'],              // 夯: CZ, Vitalik
-  'T1': ['sunyuchen.jpg'],                      // 顶级: 孙宇晨
-  'T2': ['saylor.jpg', 'buffett.jpg'],          // 人上人: Saylor, Buffett
+  'T1': ['sun.jpg'],                            // 顶级: 孙宇晨
+  'T2': ['saylor2.jpg', 'buffett.jpg'],         // 人上人: Saylor, Buffett
   'T3': ['lixiaolai.jpg'],                      // NPC: 李笑来
   'T4': ['trump.jpg', 'jiucai.jpg'],            // 拉: Trump, 韭菜
 };
