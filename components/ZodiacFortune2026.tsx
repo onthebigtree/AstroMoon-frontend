@@ -79,7 +79,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
       // 标签区域宽度（底图左侧的彩色标签）
       const labelWidth = 285;
       // 头像大小
-      const avatarSize = 175;
+      const avatarSize = 190;
       // 头像间距
       const avatarGap = 8;
       // 头像起始 X 位置
