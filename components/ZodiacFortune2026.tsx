@@ -21,13 +21,13 @@ const TIER_AVATARS: Record<string, string[]> = {
   'T4': ['saylor2.jpg', 'lixiaolai.jpg'],
 };
 
-// Tier 行的 Y 坐标配置（基于 607px 高度的底图，每行约 121px）
+// Tier 行的 Y 坐标配置（基于 1201px 高度的底图，每行约 240px）
 const TIER_Y_POSITIONS: Record<string, { y: number; height: number }> = {
-  'T0': { y: 2, height: 119 },
-  'T1': { y: 123, height: 119 },
-  'T2': { y: 244, height: 119 },
-  'T3': { y: 365, height: 119 },
-  'T4': { y: 486, height: 119 },
+  'T0': { y: 0, height: 240 },
+  'T1': { y: 240, height: 240 },
+  'T2': { y: 480, height: 240 },
+  'T3': { y: 720, height: 240 },
+  'T4': { y: 960, height: 241 },
 };
 
 const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
@@ -62,7 +62,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
       setIsLoadingTierList(true);
 
       // 加载底图
-      const background = await loadImage('/tier-list/background.jpg');
+      const background = await loadImage('/tier-list/background.jpeg');
 
       // 创建 Canvas
       const canvas = document.createElement('canvas');
@@ -76,14 +76,14 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
       // 绘制底图
       ctx.drawImage(background, 0, 0);
 
-      // 标签区域宽度（底图左侧的彩色标签，约 90px）
-      const labelWidth = 92;
-      // 头像大小（与行高匹配）
-      const avatarSize = 100;
+      // 标签区域宽度（底图左侧的彩色标签，约 175px）
+      const labelWidth = 178;
+      // 头像大小（与行高匹配，约 200px）
+      const avatarSize = 200;
       // 头像间距
-      const avatarGap = 6;
+      const avatarGap = 10;
       // 头像起始 X 位置（紧贴标签区域）
-      const startX = labelWidth + 5;
+      const startX = labelWidth + 8;
 
       // 加载并绘制每个 Tier 的人物头像
       for (const [tier, avatars] of Object.entries(TIER_AVATARS)) {
@@ -137,7 +137,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
 
         // 绘制"你"字
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 48px sans-serif';
+        ctx.font = 'bold 80px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('你', userX + avatarSize / 2, userY + avatarSize / 2);
