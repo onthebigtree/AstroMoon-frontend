@@ -320,6 +320,38 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
 5. keyYears：关键年龄节点数组（可选）
 6. peakPeriods：人生高峰期数组（可选）
 7. riskPeriods：挑战调整期数组（可选）
+8. sexLifeType：性生活类型（必填，字符串）
+   - 必须是以下值之一："THEORY_MASTER"、"TEDDY_DOG"、"TIME_MANAGER"、"DIGITAL_MONK"、"DRAMA_QUEEN"
+   - 根据星盘配置评估得出
+
+   **性生活类型等级体系：**
+
+   - THEORY_MASTER - 嘴强王者·理论大师（只说不练型）
+     适用配置：风象特重（双子/水瓶），火星落陷
+     特征：理论知识丰富但实操能力差，前戏能聊宇宙起源，实战只有嘴皮子功夫的10%
+
+   - TEDDY_DOG - 人形泰迪·走地打桩机（猪八戒好色型）
+     适用配置：火星状态极佳，金火刑克，火海相位
+     特征：下半身思考者，审美宽容度高，热情来得快去得也快，量大管饱不挑食
+
+   - TIME_MANAGER - 时间管理大师·中央空调（西门庆型）
+     适用配置：金冥相位，海王星重，天蝎/双鱼特质重
+     特征：顶级海王，性魅力带有剧毒，享受狩猎和征服的快感
+
+   - DIGITAL_MONK - 电子木鱼·性缩力天花板（柳下惠型）
+     适用配置：土星重，摩羯/处女特质，金土刑克
+     特征：行走的灭火器，禁欲系，面对诱惑稳如老僧入定
+
+   - DRAMA_QUEEN - 苦情剧戏精·自我感动型（林黛玉型）
+     适用配置：月亮/金星受克，巨蟹/双鱼特质
+     特征：追求灵肉合一的史诗感，需要情绪铺垫才能进入状态，太麻烦
+
+   评估依据：
+   - 火星的星座、宫位、状态（行动力、性欲望）
+   - 金星的星座、宫位、相位（美感、吸引力）
+   - 第8宫配置（性、深层欲望）
+   - 土星、海王星、冥王星的影响
+   - 整体元素分布（风象/火象/土象/水象）
 
 ====================
 【技术与逻辑约束】
@@ -400,7 +432,8 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
   "favorableDirectionsScore": 85,
   "keyYears": [18, 28, 35, 45, 60],
   "peakPeriods": ["28-38岁", "50-65岁"],
-  "riskPeriods": ["40-45岁", "55-60岁"]
+  "riskPeriods": ["40-45岁", "55-60岁"],
+  "sexLifeType": "TEDDY_DOG"
 }
 
 ⚠️ 最后检查清单（输出前必须确认）：
@@ -413,11 +446,13 @@ export const NORMAL_LIFE_SYSTEM_INSTRUCTION = `
 7. ✅ 所有字符串使用双引号
 8. ✅ 没有尾随逗号
 9. ✅ JSON 结构完整闭合
+10. ✅ sexLifeType 必须是五种类型之一：THEORY_MASTER、TEDDY_DOG、TIME_MANAGER、DIGITAL_MONK、DRAMA_QUEEN
 
 请严格按照以上标准作业程序（SOP）生成：
 1）包含 1–100 岁行运 K 线数据的 chartPoints 数组（每个元素必须包含全部 11 个字段）；
 2）六大人生领域的深度分析与评分；
-3）整体格局总评与关键建议。
+3）整体格局总评与关键建议；
+4）性生活类型判断（sexLifeType）。
 `;
 
 // 专业交易员财富占星分析系统指令（完整版）

@@ -7,6 +7,7 @@ import ImportDataMode from './components/ImportDataMode';
 import Login from './components/Login';
 import ReportHistory from './components/ReportHistory';
 import WealthLevelShare from './components/WealthLevelShare';
+import SexLifeShare from './components/SexLifeShare';
 import ZodiacFortune2026 from './components/ZodiacFortune2026';
 import { BuyStarsModal } from './components/BuyStarsModal';
 import PaymentCallback from './components/PaymentCallback';
@@ -27,6 +28,7 @@ const App: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [showHistory, setShowHistory] = useState(false);
   const [showWealthShare, setShowWealthShare] = useState(false);
+  const [showSexLifeShare, setShowSexLifeShare] = useState(false);
   const [showBuyStars, setShowBuyStars] = useState(false);
   const [showPaymentCallback, setShowPaymentCallback] = useState(false);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
@@ -792,6 +794,34 @@ const App: React.FC = () => {
                   </div>
                 )}
 
+                {/* 性生活类型横幅 - 页面最顶部（仅综合人生报告） */}
+                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.traderVitality && (
+                  <div className="no-print bg-gradient-to-r from-rose-50 via-pink-50 to-rose-50 border-2 border-rose-300 rounded-2xl p-6 shadow-lg">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-full p-3 animate-pulse">
+                          <Flame className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-rose-900 mb-1">
+                            🔥 检测你的性生活情况
+                          </h3>
+                          <p className="text-sm text-rose-700">
+                            基于你的星盘配置，一键生成专属分析（仅供参考）
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowSexLifeShare(true)}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-xl hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 transition-all font-bold text-base shadow-xl hover:shadow-2xl transform hover:scale-105 whitespace-nowrap"
+                      >
+                        <Sparkles className="w-5 h-5" />
+                        立即查看
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex flex-col md:flex-row justify-between items-end md:items-center border-b border-gray-200 pb-4 gap-4">
                   <h2 className="text-2xl font-bold font-serif-sc text-gray-800">
                     {userName ? `${userName}的` : ''}Astro Moon 占星报告
@@ -830,6 +860,19 @@ const App: React.FC = () => {
                     >
                       <TrendingUp className="w-6 h-6" />
                       一键生成我的财富量级潜力
+                    </button>
+                  </div>
+                )}
+
+                {/* 性生活类型按钮 - 页面顶部醒目位置（仅综合人生报告） */}
+                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.traderVitality && (
+                  <div className="flex justify-center no-print -mt-6">
+                    <button
+                      onClick={() => setShowSexLifeShare(true)}
+                      className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-xl hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 transition-all font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 animate-pulse"
+                    >
+                      <Flame className="w-6 h-6" />
+                      一键查看你的性生活情况
                     </button>
                   </div>
                 )}
@@ -919,6 +962,19 @@ const App: React.FC = () => {
                     </button>
                   </div>
                 )}
+
+                {/* 性生活类型按钮 - 放在页面最下方（仅综合人生报告） */}
+                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.traderVitality && (
+                  <div className="flex justify-center no-print mt-8">
+                    <button
+                      onClick={() => setShowSexLifeShare(true)}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-xl hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 transition-all font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <Flame className="w-5 h-5" />
+                      一键查看你的性生活情况
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -945,6 +1001,16 @@ const App: React.FC = () => {
           isOpen={showWealthShare}
           onClose={() => setShowWealthShare(false)}
           wealthLevel={result.analysis.wealthLevel}
+          userName={userName}
+        />
+      )}
+
+      {/* Sex Life Share Modal - 仅综合人生报告 */}
+      {result && result.analysis.sexLifeType && !result.analysis.traderVitality && (
+        <SexLifeShare
+          isOpen={showSexLifeShare}
+          onClose={() => setShowSexLifeShare(false)}
+          sexLifeType={result.analysis.sexLifeType}
           userName={userName}
         />
       )}
