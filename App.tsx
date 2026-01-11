@@ -327,11 +327,18 @@ const App: React.FC = () => {
             mappedAnalysis.favorableDirectionsTitle = reportContent.analysis.favorableDirectionsTitle || "适宜发展方位";
           }
 
+          // 保留性生活类型字段
+          if (reportContent.analysis.sexLifeType) {
+            console.log('✅ 保留 sexLifeType 字段:', reportContent.analysis.sexLifeType);
+            mappedAnalysis.sexLifeType = reportContent.analysis.sexLifeType;
+          }
+
           reportContent.analysis = mappedAnalysis;
           console.log('✅ 字段映射完成，新增维度保留结果:', {
             intimacyEnergy: !!mappedAnalysis.intimacyEnergy,
             sexualCharm: !!mappedAnalysis.sexualCharm,
-            favorableDirections: !!mappedAnalysis.favorableDirections
+            favorableDirections: !!mappedAnalysis.favorableDirections,
+            sexLifeType: mappedAnalysis.sexLifeType || null
           });
         } else if (hasTraderFields) {
           // 删除交易员特定字段，避免被误判为交易员模式
@@ -396,6 +403,7 @@ const App: React.FC = () => {
         intimacyEnergy: !!reportContent.analysis.intimacyEnergy,
         sexualCharm: !!reportContent.analysis.sexualCharm,
         favorableDirections: !!reportContent.analysis.favorableDirections,
+        sexLifeType: reportContent.analysis.sexLifeType || null,
       });
       console.log('AnalysisResult 会显示为:', !!reportContent.analysis.traderVitality ? '交易员模式' : '普通人生模式');
       console.groupEnd();
