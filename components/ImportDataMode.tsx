@@ -1048,6 +1048,12 @@ ${chartInfo}
                 result.analysis.favorableDirections = data.favorableDirections;
                 result.analysis.favorableDirectionsScore = data.favorableDirectionsScore || 85;
             }
+
+            // 性生活类型（仅普通人生模式）
+            if (data.sexLifeType) {
+                console.log('✅ 找到 sexLifeType 字段:', data.sexLifeType);
+                result.analysis.sexLifeType = data.sexLifeType;
+            }
         }
 
         // 🔍 打印最终处理后的结果（用于调试）
@@ -1055,6 +1061,7 @@ ${chartInfo}
         console.log('intimacyEnergy:', !!result.analysis.intimacyEnergy);
         console.log('sexualCharm:', !!result.analysis.sexualCharm);
         console.log('favorableDirections:', !!result.analysis.favorableDirections);
+        console.log('sexLifeType:', result.analysis.sexLifeType || null);
         console.groupEnd();
 
         return result;
@@ -1710,6 +1717,12 @@ ${chartInfo}
                         result.analysis.favorableDirectionsTitle = data.favorableDirectionsTitle || "适宜发展方位";
                         result.analysis.favorableDirections = data.favorableDirections;
                         result.analysis.favorableDirectionsScore = data.favorableDirectionsScore || 85;
+                    }
+
+                    // 性生活类型（仅普通人生模式）
+                    if (data.sexLifeType) {
+                        console.log('✅ 找到 sexLifeType 字段:', data.sexLifeType);
+                        result.analysis.sexLifeType = data.sexLifeType;
                     }
                 }
 
