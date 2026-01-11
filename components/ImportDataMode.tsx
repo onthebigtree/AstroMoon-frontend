@@ -1744,17 +1744,17 @@ ${chartInfo}
                 errorMessage = `生成失败：${err.message}`;
             }
 
-            // 自动退款
+            // 自动退款（消耗原路返回）
             try {
                 const refundResult = await refundReport('generation_failed');
-                errorMessage += `\n\n✅ 已自动退还 ${refundResult.refunded} 颗星星，当前余额 ${refundResult.stars} 颗。今日剩余退款次数：${refundResult.remainingRefunds} 次`;
+                errorMessage += `\n\n✅ 生成失败，消耗已原路返回（${refundResult.refunded} 颗星星），当前余额 ${refundResult.stars} 颗`;
                 // 更新星星余额
                 if (onStarsChange) {
                     onStarsChange(refundResult.stars);
                 }
             } catch (refundErr: any) {
                 if (refundErr.message?.includes('每日退款次数已达上限') || refundErr.message?.includes('RefundLimitExceeded')) {
-                    errorMessage += `\n\n⚠️ 每日自动退款次数已达上限（5次）。如需更多帮助，请联系 t.me/TheMoonDojo 人工处理。`;
+                    errorMessage += `\n\n⚠️ 今日自动退款次数已达上限，如需退款请联系 t.me/TheMoonDojo 人工处理`;
                 } else {
                     errorMessage += `\n\n⚠️ 自动退款失败：${refundErr.message}`;
                 }
