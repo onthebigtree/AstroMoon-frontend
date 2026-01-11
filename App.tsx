@@ -795,7 +795,7 @@ const App: React.FC = () => {
                 )}
 
                 {/* 性生活类型横幅 - 页面最顶部（仅综合人生报告） */}
-                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.traderVitality && (
+                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.wealthLevel && (
                   <div className="no-print bg-gradient-to-r from-rose-50 via-pink-50 to-rose-50 border-2 border-rose-300 rounded-2xl p-6 shadow-lg">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
@@ -865,7 +865,7 @@ const App: React.FC = () => {
                 )}
 
                 {/* 性生活类型按钮 - 页面顶部醒目位置（仅综合人生报告） */}
-                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.traderVitality && (
+                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.wealthLevel && (
                   <div className="flex justify-center no-print -mt-6">
                     <button
                       onClick={() => setShowSexLifeShare(true)}
@@ -964,7 +964,7 @@ const App: React.FC = () => {
                 )}
 
                 {/* 性生活类型按钮 - 放在页面最下方（仅综合人生报告） */}
-                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.traderVitality && (
+                {(result as LifeDestinyResult).analysis.sexLifeType && !(result as LifeDestinyResult).analysis.wealthLevel && (
                   <div className="flex justify-center no-print mt-8">
                     <button
                       onClick={() => setShowSexLifeShare(true)}
@@ -1006,7 +1006,7 @@ const App: React.FC = () => {
       )}
 
       {/* Sex Life Share Modal - 仅综合人生报告 */}
-      {result && result.analysis.sexLifeType && !result.analysis.traderVitality && (
+      {result && result.analysis.sexLifeType && !result.analysis.wealthLevel && (
         <SexLifeShare
           isOpen={showSexLifeShare}
           onClose={() => setShowSexLifeShare(false)}
