@@ -9,6 +9,8 @@ import type {
   SuccessResponse,
   GenerationLimit,
   UserCredits,
+  RefundRequest,
+  RefundResponse,
 } from './types';
 
 /**
@@ -189,6 +191,27 @@ export async function checkGenerationLimit(): Promise<GenerationLimit> {
     '/api/reports/limit',
     {
       method: 'GET',
+    },
+    true
+  );
+  return response;
+}
+
+/**
+ * 申请退款（生成失败时使用）
+ * 每日限制 5 次，每次退还 1 颗星星
+ * @param reason 退款原因
+ * @returns 退款结果
+ * @throws 超过每日限制时抛出错误
+ */
+export async function refundReport(
+  reason: RefundRequest['reason'] = 'generation_failed'
+): Promise<RefundResponse> {
+  const response = await apiRequest<RefundResponse>(
+    '/api/reports/refund',
+    {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
     },
     true
   );

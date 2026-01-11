@@ -25,6 +25,7 @@ export {
   markReportExported,
   deleteReport,
   getUserCredits,
+  refundReport,
 } from './reports';
 
 // 统计数据
