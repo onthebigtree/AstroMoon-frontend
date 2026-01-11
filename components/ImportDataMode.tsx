@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { LifeDestinyResult, Annual2026Result } from '../types';
 import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter, Calendar } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION, ANNUAL_2026_SYSTEM_INSTRUCTION } from '../constants';
-import { streamReportGenerate } from '../services/api/reports';
+import { streamReportGenerate, refundReport } from '../services/api/reports';
 import { getStarBalance } from '../services/api/payments';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
 import { replaceAge100Reason } from '../constants/age100';
@@ -1737,11 +1737,30 @@ ${chartInfo}
             }
         } catch (err: any) {
             // 只有在达到最大重试次数或遇到其他错误时才会到这里
+            let errorMessage = '';
             if (retryCount >= MAX_RETRIES) {
-                setError(`生成失败（已重试 ${MAX_RETRIES} 次）：${err.message}`);
+                errorMessage = `生成失败（已重试 ${MAX_RETRIES} 次）：${err.message}`;
             } else {
-                setError(`生成失败：${err.message}`);
+                errorMessage = `生成失败：${err.message}`;
             }
+
+            // 自动退款（消耗原路返回）
+            try {
+                const refundResult = await refundReport('generation_failed');
+                errorMessage += `\n\n✅ 生成失败，消耗已原路返回（${refundResult.refunded} 颗星星），当前余额 ${refundResult.stars} 颗`;
+                // 更新星星余额
+                if (onStarsChange) {
+                    onStarsChange(refundResult.stars);
+                }
+            } catch (refundErr: any) {
+                if (refundErr.message?.includes('每日退款次数已达上限') || refundErr.message?.includes('RefundLimitExceeded')) {
+                    errorMessage += `\n\n⚠️ 今日自动退款次数已达上限，如需退款请联系 t.me/TheMoonDojo 人工处理`;
+                } else {
+                    errorMessage += `\n\n⚠️ 自动退款失败：${refundErr.message}`;
+                }
+            }
+
+            setError(errorMessage);
             break; // 跳出重试循环
         }
         } // 结束 while 循环
@@ -2159,9 +2178,21 @@ ${chartInfo}
                     </div>
 
                     {error && (
-                        <div className="flex items-start gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
-                            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                            <div className="text-sm whitespace-pre-line">{error}</div>
+                        <div className="flex flex-col gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
+                            <div className="flex items-start gap-2">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                <div className="text-sm whitespace-pre-line">{error}</div>
+                            </div>
+                            {error.includes('t.me') && (
+                                <a
+                                    href="https://t.me/TheMoonDojo"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block text-sm text-blue-600 hover:underline ml-7"
+                                >
+                                    点击联系人工客服 →
+                                </a>
+                            )}
                         </div>
                     )}
 
@@ -2370,9 +2401,21 @@ ${chartInfo}
                     </div>
 
                     {error && (
-                        <div className="flex items-start gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
-                            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                            <div className="text-sm whitespace-pre-line">{error}</div>
+                        <div className="flex flex-col gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
+                            <div className="flex items-start gap-2">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                <div className="text-sm whitespace-pre-line">{error}</div>
+                            </div>
+                            {error.includes('t.me') && (
+                                <a
+                                    href="https://t.me/TheMoonDojo"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block text-sm text-blue-600 hover:underline ml-7"
+                                >
+                                    点击联系人工客服 →
+                                </a>
+                            )}
                         </div>
                     )}
                 </div>

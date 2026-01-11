@@ -134,6 +134,9 @@ export interface AnalysisData {
 
   // 财富量级潜力评级
   wealthLevel?: string;  // A10 | A9 | A8 | A7 | A6 | A5 | A4 | A3 | A2 | A1 | 等级标识
+
+  // 性生活类型（综合人生模式）
+  sexLifeType?: string;  // THEORY_MASTER | TEDDY_DOG | TIME_MANAGER | DIGITAL_MONK | DRAMA_QUEEN
 }
 
 export interface LifeDestinyResult {

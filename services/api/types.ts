@@ -325,3 +325,23 @@ export interface RedeemCodeResponse {
   starsRedeemed: number;
   currentBalance: number;
 }
+
+// ==================== 退款相关类型 ====================
+
+export interface RefundRequest {
+  reason: 'generation_failed' | 'other';
+}
+
+export interface RefundResponse {
+  success: boolean;
+  message: string;
+  stars: number;
+  refunded: number;
+  todayRefundCount: number;
+  remainingRefunds: number;
+}
+
+export interface RefundLimitError {
+  error: 'RefundLimitExceeded';
+  message: string;
+}
