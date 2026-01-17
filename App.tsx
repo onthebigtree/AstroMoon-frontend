@@ -666,7 +666,7 @@ const App: React.FC = () => {
               <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide sm:tracking-widest">Astrology & Life Analysis</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end overflow-x-auto">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end overflow-visible">
             <LanguageSwitcher />
             <TwitterLinks />
             <button
