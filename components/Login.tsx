@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { Mail, Lock, LogIn, AlertCircle, Moon, CheckCircle, Eye, EyeOff, UserPlus, MailCheck } from 'lucide-react';
 
 const Login: React.FC = () => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,7 +17,7 @@ const Login: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [showUnverified, setShowUnverified] = useState(false);
 
-  const { currentUser, signUp, signIn, resetPassword, loginWithGoogle, sendVerificationEmail, logout } = useAuth();
+  const { currentUser, signUp, signIn, resetPassword: resetPwd, loginWithGoogle, sendVerificationEmail, logout } = useAuth();
 
   // 检查用户是否已验证邮箱
   useEffect(() => {
@@ -34,7 +37,7 @@ const Login: React.FC = () => {
   // 验证密码强度
   const validatePassword = (password: string) => {
     if (password.length < 6) {
-      return '密码至少需要 6 个字符';
+      return t('errors.passwordMinLength');
     }
     return null;
   };
@@ -46,12 +49,12 @@ const Login: React.FC = () => {
     setSuccess('');
 
     if (!email || !password || !confirmPassword) {
-      setError('请填写所有必填字段');
+      setError(t('errors.fillAllFields'));
       return;
     }
 
     if (!validateEmail(email)) {
-      setError('请输入有效的邮箱地址');
+      setError(t('errors.invalidEmail'));
       return;
     }
 
@@ -62,14 +65,14 @@ const Login: React.FC = () => {
     }
 
     if (password !== confirmPassword) {
-      setError('两次输入的密码不一致');
+      setError(t('errors.passwordMismatch'));
       return;
     }
 
     try {
       setLoading(true);
       await signUp(email, password);
-      setSuccess('注册成功！我们已向您的邮箱发送了验证邮件，请查收。');
+      setSuccess(t('success.signUpSuccess'));
       // 清空表单
       setEmail('');
       setPassword('');
@@ -78,19 +81,19 @@ const Login: React.FC = () => {
       console.error('Sign up error:', err);
       switch (err.code) {
         case 'auth/email-already-in-use':
-          setError('该邮箱已被注册');
+          setError(t('errors.emailAlreadyInUse'));
           break;
         case 'auth/invalid-email':
-          setError('邮箱格式不正确');
+          setError(t('errors.invalidEmailFormat'));
           break;
         case 'auth/weak-password':
-          setError('密码强度太弱，请使用更复杂的密码');
+          setError(t('errors.weakPassword'));
           break;
         case 'auth/operation-not-allowed':
-          setError('邮箱/密码登录未启用，请联系管理员');
+          setError(t('errors.operationNotAllowed'));
           break;
         default:
-          setError(err.message || '注册失败，请稍后重试');
+          setError(err.message || t('errors.signUpFailed'));
       }
     } finally {
       setLoading(false);
@@ -104,12 +107,12 @@ const Login: React.FC = () => {
     setSuccess('');
 
     if (!email || !password) {
-      setError('请输入邮箱和密码');
+      setError(t('errors.enterEmailPassword'));
       return;
     }
 
     if (!validateEmail(email)) {
-      setError('请输入有效的邮箱地址');
+      setError(t('errors.invalidEmail'));
       return;
     }
 
@@ -121,25 +124,25 @@ const Login: React.FC = () => {
       console.error('Sign in error:', err);
       switch (err.code) {
         case 'auth/user-not-found':
-          setError('该邮箱未注册');
+          setError(t('errors.userNotFound'));
           break;
         case 'auth/wrong-password':
-          setError('密码错误');
+          setError(t('errors.wrongPassword'));
           break;
         case 'auth/invalid-email':
-          setError('邮箱格式不正确');
+          setError(t('errors.invalidEmailFormat'));
           break;
         case 'auth/user-disabled':
-          setError('该账号已被禁用');
+          setError(t('errors.userDisabled'));
           break;
         case 'auth/too-many-requests':
-          setError('登录尝试次数过多，请稍后再试');
+          setError(t('errors.tooManyRequests'));
           break;
         case 'auth/invalid-credential':
-          setError('邮箱或密码错误');
+          setError(t('errors.invalidCredential'));
           break;
         default:
-          setError(err.message || '登录失败，请稍后重试');
+          setError(err.message || t('errors.signInFailed'));
       }
     } finally {
       setLoading(false);
@@ -153,30 +156,30 @@ const Login: React.FC = () => {
     setSuccess('');
 
     if (!email) {
-      setError('请输入您的邮箱地址');
+      setError(t('errors.enterEmail'));
       return;
     }
 
     if (!validateEmail(email)) {
-      setError('请输入有效的邮箱地址');
+      setError(t('errors.invalidEmail'));
       return;
     }
 
     try {
       setLoading(true);
-      await resetPassword(email);
-      setSuccess('密码重置邮件已发送，请查收邮箱');
+      await resetPwd(email);
+      setSuccess(t('login.resetLinkSent'));
     } catch (err: any) {
       console.error('Reset password error:', err);
       switch (err.code) {
         case 'auth/user-not-found':
-          setError('该邮箱未注册');
+          setError(t('errors.userNotFound'));
           break;
         case 'auth/invalid-email':
-          setError('邮箱格式不正确');
+          setError(t('errors.invalidEmailFormat'));
           break;
         default:
-          setError(err.message || '发送重置邮件失败，请稍后重试');
+          setError(err.message || t('errors.resetFailed'));
       }
     } finally {
       setLoading(false);
@@ -193,16 +196,16 @@ const Login: React.FC = () => {
       console.error('Google login error:', err);
       switch (err.code) {
         case 'auth/popup-closed-by-user':
-          setError('登录窗口已关闭');
+          setError(t('errors.popupClosed'));
           break;
         case 'auth/popup-blocked':
-          setError('浏览器阻止了弹出窗口，请允许弹窗后重试');
+          setError(t('errors.popupBlocked'));
           break;
         case 'auth/cancelled-popup-request':
-          setError('登录已取消');
+          setError(t('errors.loginCancelled'));
           break;
         default:
-          setError(err.message || 'Google 登录失败，请稍后重试');
+          setError(err.message || t('errors.googleLoginFailed'));
       }
     } finally {
       setLoading(false);
@@ -215,10 +218,10 @@ const Login: React.FC = () => {
       setError('');
       setLoading(true);
       await sendVerificationEmail();
-      setSuccess('验证邮件已重新发送，请查收！');
+      setSuccess(t('success.verificationResent'));
     } catch (err: any) {
       console.error('Resend verification error:', err);
-      setError(err.message || '发送验证邮件失败，请稍后重试');
+      setError(err.message || t('errors.verificationFailed'));
     } finally {
       setLoading(false);
     }
@@ -250,7 +253,10 @@ const Login: React.FC = () => {
                 <p className="text-xs text-gray-500 uppercase tracking-widest">Astrology & Life Analysis</p>
               </div>
             </div>
-            <p className="text-gray-600">验证您的邮箱</p>
+            <div className="flex items-center justify-center gap-4">
+              <p className="text-gray-600">{t('login.verifyEmail')}</p>
+              <LanguageSwitcher />
+            </div>
           </div>
 
           {/* Verification Card */}
@@ -259,20 +265,18 @@ const Login: React.FC = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
                 <MailCheck className="w-10 h-10 text-amber-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">请验证您的邮箱</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t('login.pleaseVerify')}</h3>
+              <p className="text-gray-600 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: t('login.verificationSent', { email: currentUser.email }) }} />
               <p className="text-gray-600 text-sm leading-relaxed">
-                我们已向 <strong className="text-indigo-600">{currentUser.email}</strong> 发送了一封验证邮件。
-              </p>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                请点击邮件中的链接完成验证后，刷新此页面即可使用。
+                {t('login.verifyInstructions')}
               </p>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                <p className="text-sm text-blue-800 font-medium mb-2">💡 提示：</p>
+                <p className="text-sm text-blue-800 font-medium mb-2">💡 {t('login.tips')}</p>
                 <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-                  <li>请检查您的垃圾邮件文件夹</li>
-                  <li>验证邮件可能需要几分钟才能送达</li>
-                  <li>点击邮件中的链接后，返回此页面刷新</li>
+                  <li>{t('login.checkSpam')}</li>
+                  <li>{t('login.emailDelay')}</li>
+                  <li>{t('login.returnAfterVerify')}</li>
                 </ul>
               </div>
 
@@ -295,21 +299,21 @@ const Login: React.FC = () => {
                 disabled={loading}
                 className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? '发送中...' : '重新发送验证邮件'}
+                {loading ? t('login.sending') : t('login.resendVerification')}
               </button>
 
               <button
                 onClick={() => window.location.reload()}
                 className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-all font-medium"
               >
-                我已验证，刷新页面
+                {t('login.alreadyVerified')}
               </button>
 
               <button
                 onClick={handleLogout}
                 className="w-full text-gray-600 text-sm hover:text-gray-900 transition-colors py-2"
               >
-                退出登录
+                {t('login.logoutBtn')}
               </button>
             </div>
           </div>
@@ -332,9 +336,12 @@ const Login: React.FC = () => {
               <p className="text-xs text-gray-500 uppercase tracking-widest">Astrology & Life Analysis</p>
             </div>
           </div>
-          <p className="text-gray-600">
-            {mode === 'signin' ? '登录您的账户' : mode === 'signup' ? '创建新账户' : '重置密码'}
-          </p>
+          <div className="flex items-center justify-center gap-4">
+            <p className="text-gray-600">
+              {mode === 'signin' ? t('login.loginAccount') : mode === 'signup' ? t('login.createAccount') : t('login.resetPassword')}
+            </p>
+            <LanguageSwitcher />
+          </div>
         </div>
 
         {/* Login Card */}
@@ -354,7 +361,7 @@ const Login: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                登录
+                {t('login.signIn')}
               </button>
               <button
                 onClick={() => {
@@ -368,7 +375,7 @@ const Login: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                注册
+                {t('login.signUp')}
               </button>
             </div>
           )}
@@ -394,7 +401,7 @@ const Login: React.FC = () => {
             <form onSubmit={handleSignUp} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  邮箱地址 *
+                  {t('login.email')} *
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -412,7 +419,7 @@ const Login: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  密码 *
+                  {t('login.password')} *
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -421,7 +428,7 @@ const Login: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="至少 6 个字符"
+                    placeholder={t('login.atLeast6Chars')}
                     disabled={loading}
                     autoComplete="new-password"
                   />
@@ -437,7 +444,7 @@ const Login: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  确认密码 *
+                  {t('login.confirmPassword')} *
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -446,7 +453,7 @@ const Login: React.FC = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="再次输入密码"
+                    placeholder={t('login.reenterPassword')}
                     disabled={loading}
                     autoComplete="new-password"
                   />
@@ -466,7 +473,7 @@ const Login: React.FC = () => {
                 className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-5 h-5" />
-                {loading ? '注册中...' : '注册账户'}
+                {loading ? t('login.signingUp') : t('login.signUpBtn')}
               </button>
             </form>
           )}
@@ -476,7 +483,7 @@ const Login: React.FC = () => {
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  邮箱地址
+                  {t('login.email')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -494,7 +501,7 @@ const Login: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  密码
+                  {t('login.password')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -503,7 +510,7 @@ const Login: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="您的密码"
+                    placeholder={t('login.yourPassword')}
                     disabled={loading}
                     autoComplete="current-password"
                   />
@@ -527,7 +534,7 @@ const Login: React.FC = () => {
                   }}
                   className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                 >
-                  忘记密码？
+                  {t('login.forgotPassword')}
                 </button>
               </div>
 
@@ -537,7 +544,7 @@ const Login: React.FC = () => {
                 className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <LogIn className="w-5 h-5" />
-                {loading ? '登录中...' : '登录'}
+                {loading ? t('login.loggingIn') : t('login.signIn')}
               </button>
             </form>
           )}
@@ -547,7 +554,7 @@ const Login: React.FC = () => {
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  邮箱地址
+                  {t('login.email')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -562,7 +569,7 @@ const Login: React.FC = () => {
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  我们将向您的邮箱发送密码重置链接
+                  {t('login.resetInstructions')}
                 </p>
               </div>
 
@@ -571,7 +578,7 @@ const Login: React.FC = () => {
                 disabled={loading}
                 className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? '发送中...' : '发送重置链接'}
+                {loading ? t('login.sending') : t('login.resetLink')}
               </button>
 
               <button
@@ -583,7 +590,7 @@ const Login: React.FC = () => {
                 }}
                 className="w-full text-gray-600 text-sm hover:text-gray-900 transition-colors py-2"
               >
-                返回登录
+                {t('login.backToLogin')}
               </button>
             </form>
           )}
@@ -595,7 +602,7 @@ const Login: React.FC = () => {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">或</span>
+                <span className="px-4 bg-white text-gray-500">{t('login.or')}</span>
               </div>
             </div>
           )}
@@ -626,7 +633,7 @@ const Login: React.FC = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              使用 Google 账号{mode === 'signin' ? '登录' : '注册'}
+              {t('login.googleLogin', { action: mode === 'signin' ? t('login.signIn') : t('login.signUp') })}
             </button>
           )}
 
@@ -634,7 +641,7 @@ const Login: React.FC = () => {
           {mode === 'signup' && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
               <p className="text-xs text-blue-800 leading-relaxed">
-                <strong>📧 邮箱验证：</strong> 注册后我们会向您的邮箱发送验证邮件，请点击邮件中的链接完成验证。
+                {t('login.emailVerificationInfo')}
               </p>
             </div>
           )}
@@ -642,7 +649,7 @@ const Login: React.FC = () => {
           {mode === 'signin' && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left">
               <p className="text-xs text-amber-800 leading-relaxed">
-                <strong>🔒 安全提示：</strong> 请妥善保管您的密码，不要与他人分享。如果忘记密码，可以通过"忘记密码"功能重置。
+                {t('login.securityTip')}
               </p>
             </div>
           )}
@@ -650,7 +657,7 @@ const Login: React.FC = () => {
 
         {/* Footer Note */}
         <p className="text-center text-xs text-gray-500 mt-6">
-          登录即表示您同意我们的服务条款和隐私政策
+          {t('login.termsAgreement')}
         </p>
       </div>
     </div>

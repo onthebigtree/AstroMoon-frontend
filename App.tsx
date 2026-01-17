@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import LifeKLineChart from './components/LifeKLineChart';
 import AnalysisResult from './components/AnalysisResult';
 import Annual2026ResultComponent from './components/Annual2026Result';
@@ -14,7 +15,9 @@ import PaymentCallback from './components/PaymentCallback';
 import TransactionHistory from './components/TransactionHistory';
 import StarsDetailModal from './components/StarsDetailModal';
 import TwitterLinks from './components/TwitterLinks';
+import LanguageSwitcher from './components/LanguageSwitcher';
 import { useAuth } from './contexts/AuthContext';
+import { useLanguage } from './contexts/LanguageContext';
 import { LifeDestinyResult, Annual2026Result } from './types';
 import { Report } from './services/api/types';
 import { getStarBalance } from './services/api/payments';
@@ -22,7 +25,9 @@ import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, Histo
 import { replaceAge100Reason } from './constants/age100';
 
 const App: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser, logout } = useAuth();
+  const { language } = useLanguage();
   const [result, setResult] = useState<LifeDestinyResult | Annual2026Result | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
@@ -638,11 +643,12 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end overflow-x-auto">
+            <LanguageSwitcher />
             <TwitterLinks />
             <button
               onClick={() => setShowStarsDetail(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-50 to-purple-50 border border-purple-200 rounded-lg hover:shadow-md transition-all group"
-              title="积分中心 - 查看余额、充值、消费记录"
+              title={t('header.starsCenter')}
             >
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />
               <span className="text-sm font-semibold text-gray-900">
@@ -653,19 +659,19 @@ const App: React.FC = () => {
             <button
               onClick={() => setShowHistory(true)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all flex-shrink-0"
-              title="历史报告"
+              title={t('history.title')}
             >
               <History className="w-4 h-4" />
-              <span className="hidden sm:inline text-sm">历史</span>
+              <span className="hidden sm:inline text-sm">{t('header.history')}</span>
             </button>
             {currentUser && (
               <button
                 onClick={() => logout()}
                 className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all flex-shrink-0"
-                title="退出登录"
+                title={t('header.logout')}
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm">退出</span>
+                <span className="hidden sm:inline text-sm">{t('header.logout')}</span>
               </button>
             )}
           </div>
@@ -695,15 +701,15 @@ const App: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-lg md:text-xl font-bold text-white mb-0.5">
-                        2026 赤马红羊运势速测
+                        {t('home.zodiacBanner.title')}
                       </h3>
                       <p className="text-xs md:text-sm text-white/80">
-                        点击测试你的 2026 年到底夯还是拉
+                        {t('home.zodiacBanner.subtitle')}
                       </p>
                     </div>
                   </div>
                   <div className="hidden sm:flex items-center gap-1 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-white text-sm font-medium group-hover:bg-white/30 transition-all">
-                    <span>免费测</span>
+                    <span>{t('home.zodiacBanner.cta')}</span>
                     <span className="text-lg">→</span>
                   </div>
                 </div>
@@ -712,15 +718,12 @@ const App: React.FC = () => {
 
             <div className="text-center max-w-2xl flex flex-col items-center">
               <h2 className="text-4xl md:text-5xl font-serif-sc font-bold text-gray-900 mb-6">
-                财富占星分析 <br />
-                <span className="text-indigo-600">交易员专属星盘</span>
+                {t('home.title')} <br />
+                <span className="text-indigo-600">{t('home.subtitle')}</span>
               </h2>
-              <p className="text-gray-600 text-lg leading-relaxed mb-4">
-                结合<strong>西方古典占星，金融占星与金融交易心理学</strong>，
-                为交易员提供专业的财富格局分析与行运K线图。
-              </p>
+              <p className="text-gray-600 text-lg leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: t('home.description') }} />
               <p className="text-gray-700 text-base leading-relaxed mb-6 font-medium">
-                <strong>全网第一位财运指标发明人。——&gt;月亮牌手@TheMoonDojo</strong>
+                <strong>{t('home.author')}</strong>
               </p>
             </div>
 
@@ -749,7 +752,7 @@ const App: React.FC = () => {
               <>
                 <div className="flex flex-col md:flex-row justify-between items-end md:items-center border-b border-gray-200 pb-4 gap-4">
                   <h2 className="text-2xl font-bold font-serif-sc text-gray-800">
-                    {userName ? `${userName}的` : ''}2026年年运报告
+                    {userName ? `${userName}${language === 'en' ? "'s " : '的'}` : ''}{t('report.annualTitle')}
                   </h2>
                   <div className="flex flex-wrap gap-3 no-print">
                     <button
@@ -757,13 +760,13 @@ const App: React.FC = () => {
                       className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
                     >
                       <Printer className="w-4 h-4" />
-                      保存PDF
+                      {t('report.savePdf')}
                     </button>
                     <button
                       onClick={() => setResult(null)}
                       className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm"
                     >
-                      ← 重新排盘
+                      ← {t('report.regenerate')}
                     </button>
                   </div>
                 </div>
@@ -784,10 +787,10 @@ const App: React.FC = () => {
                         </div>
                         <div>
                           <h3 className="text-xl font-bold text-amber-900 mb-1">
-                            🌟 发现你的财富量级潜力
+                            🌟 {t('wealth.bannerTitle')}
                           </h3>
                           <p className="text-sm text-amber-700">
-                            基于你的星盘配置，一键生成专属财富等级分析
+                            {t('wealth.bannerSubtitle')}
                           </p>
                         </div>
                       </div>
@@ -796,7 +799,7 @@ const App: React.FC = () => {
                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-xl hover:shadow-2xl transform hover:scale-105 whitespace-nowrap"
                       >
                         <Sparkles className="w-5 h-5" />
-                        立即生成
+                        {t('wealth.generate')}
                       </button>
                     </div>
                   </div>
@@ -812,10 +815,10 @@ const App: React.FC = () => {
                         </div>
                         <div>
                           <h3 className="text-xl font-bold text-rose-900 mb-1">
-                            🔥 检测你的性生活情况
+                            🔥 {t('sexLife.bannerTitle')}
                           </h3>
                           <p className="text-sm text-rose-700">
-                            基于你的星盘配置，一键生成专属分析（仅供参考）
+                            {t('sexLife.bannerSubtitle')}
                           </p>
                         </div>
                       </div>
@@ -824,7 +827,7 @@ const App: React.FC = () => {
                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-xl hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 transition-all font-bold text-base shadow-xl hover:shadow-2xl transform hover:scale-105 whitespace-nowrap"
                       >
                         <Sparkles className="w-5 h-5" />
-                        立即查看
+                        {t('sexLife.view')}
                       </button>
                     </div>
                   </div>
@@ -832,7 +835,7 @@ const App: React.FC = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-end md:items-center border-b border-gray-200 pb-4 gap-4">
                   <h2 className="text-2xl font-bold font-serif-sc text-gray-800">
-                    {userName ? `${userName}的` : ''}Astro Moon 占星报告
+                    {userName ? `${userName}${language === 'en' ? "'s " : '的'}` : ''}{t('report.title')}
                   </h2>
 
                   <div className="flex flex-wrap gap-3 no-print">
@@ -841,20 +844,20 @@ const App: React.FC = () => {
                       className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
                     >
                       <Printer className="w-4 h-4" />
-                      保存PDF
+                      {t('report.savePdf')}
                     </button>
                     <button
                       onClick={handleSaveHtml}
                       className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white border border-emerald-600 rounded-lg hover:bg-emerald-700 transition-all font-medium text-sm shadow-sm"
                     >
                       <Download className="w-4 h-4" />
-                      下载网页
+                      {t('report.downloadHtml')}
                     </button>
                     <button
                       onClick={() => setResult(null)}
                       className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm"
                     >
-                      ← 重新排盘
+                      ← {t('report.regenerate')}
                     </button>
                   </div>
                 </div>
@@ -867,7 +870,7 @@ const App: React.FC = () => {
                       className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 animate-pulse"
                     >
                       <TrendingUp className="w-6 h-6" />
-                      一键生成我的财富量级潜力
+                      {t('wealth.buttonText')}
                     </button>
                   </div>
                 )}
@@ -880,7 +883,7 @@ const App: React.FC = () => {
                       className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-xl hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 transition-all font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 animate-pulse"
                     >
                       <Flame className="w-6 h-6" />
-                      一键查看你的性生活情况
+                      {t('sexLife.buttonText')}
                     </button>
                   </div>
                 )}
@@ -890,20 +893,20 @@ const App: React.FC = () => {
                   <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-bold text-gray-700 flex items-center gap-2">
                       <span className="w-1 h-6 bg-indigo-600 rounded-full"></span>
-                      流年大运走势图 (100年)
+                      {t('report.chartTitle')}
                     </h3>
                     {peakYearItem && (
                       <p className="text-sm font-bold text-indigo-800 bg-indigo-50 border border-indigo-100 rounded px-2 py-1 inline-flex items-center gap-2 self-start mt-1">
                         <Trophy className="w-3 h-3 text-amber-500" />
-                        人生巅峰年份：{peakYearItem.year}年 ({peakYearItem.ganZhi}) - {peakYearItem.age}岁，评分 <span className="text-amber-600 text-lg">{peakYearItem.score}</span>
+                        {t('report.peakYear')}: {peakYearItem.year}{language === 'zh' ? '年' : ''} ({peakYearItem.ganZhi}) - {peakYearItem.age}{language === 'zh' ? '岁' : ' y/o'}, {language === 'zh' ? '评分' : 'Score'} <span className="text-amber-600 text-lg">{peakYearItem.score}</span>
                       </p>
                     )}
                   </div>
 
                   <p className="text-sm text-gray-500 mb-2 no-print">
-                    <span className="text-green-600 font-bold">绿色K线</span> 代表运势上涨（吉），
-                    <span className="text-red-600 font-bold">红色K线</span> 代表运势下跌（凶）。
-                    <span className="text-red-500 font-bold">★</span> 标记为全盘最高运势点。
+                    <span className="text-green-600 font-bold">{language === 'zh' ? '绿色K线' : 'Green K-line'}</span> {t('report.greenLine').replace('绿色K线', '').replace('Green K-line indicates', '')}
+                    <span className="text-red-600 font-bold">{language === 'zh' ? '红色K线' : 'Red K-line'}</span> {t('report.redLine').replace('红色K线', '').replace('Red K-line indicates', '')}
+                    <span className="text-red-500 font-bold">★</span> {t('report.peakMark').replace('★', '')}
                   </p>
                   <LifeKLineChart data={(result as LifeDestinyResult).chartData} />
                 </section>
@@ -918,14 +921,14 @@ const App: React.FC = () => {
                 <div className="mt-8 print:break-before-page">
                   <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2 mb-4">
                     <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
-                    <h3 className="text-xl font-bold text-gray-800 font-serif-sc">流年详批全表</h3>
+                    <h3 className="text-xl font-bold text-gray-800 font-serif-sc">{t('report.detailTable')}</h3>
                   </div>
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
                       <tr className="bg-gray-100 text-gray-600 font-bold uppercase tracking-wider">
-                        <th className="p-2 border border-gray-200 text-center w-16">年龄</th>
-                        <th className="p-2 border border-gray-200 text-center w-16">评分</th>
-                        <th className="p-2 border border-gray-200">运势批断</th>
+                        <th className="p-2 border border-gray-200 text-center w-16">{t('report.ageColumn')}</th>
+                        <th className="p-2 border border-gray-200 text-center w-16">{t('report.scoreColumn')}</th>
+                        <th className="p-2 border border-gray-200">{t('report.adviceColumn')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -939,7 +942,7 @@ const App: React.FC = () => {
                           <td className="p-2 border border-gray-100 text-center font-mono">
                             {item.age}
                             {item.age === 100 && (
-                              <div className="text-xs text-amber-600 font-bold mt-1">谢幕</div>
+                              <div className="text-xs text-amber-600 font-bold mt-1">{t('report.curtainCall')}</div>
                             )}
                           </td>
                           <td className={`p-2 border border-gray-100 text-center font-bold ${item.close >= item.open ? 'text-green-600' : 'text-red-600'}`}>
@@ -954,7 +957,7 @@ const App: React.FC = () => {
                   </table>
 
                   <div className="mt-8 pt-4 border-t border-gray-200 flex justify-center items-center text-xs text-gray-500">
-                    <span>生成时间：{new Date().toLocaleString()}</span>
+                    <span>{t('report.generateTime')}: {new Date().toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}</span>
                   </div>
                 </div>
 
@@ -966,7 +969,7 @@ const App: React.FC = () => {
                       className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-700 transition-all font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
                       <TrendingUp className="w-5 h-5" />
-                      一键生成我的财富量级潜力
+                      {t('wealth.buttonText')}
                     </button>
                   </div>
                 )}
@@ -979,7 +982,7 @@ const App: React.FC = () => {
                       className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-xl hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 transition-all font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
                       <Flame className="w-5 h-5" />
-                      一键查看你的性生活情况
+                      {t('sexLife.buttonText')}
                     </button>
                   </div>
                 )}
@@ -992,7 +995,7 @@ const App: React.FC = () => {
       {/* Footer */}
       <footer className="w-full bg-gray-900 text-gray-400 py-8 mt-auto no-print">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} Astro Moon | 仅供参考研究，投资需谨慎</p>
+          <p>&copy; {new Date().getFullYear()} Astro Moon | {t('app.footer')}</p>
         </div>
       </footer>
 

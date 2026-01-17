@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { LifeDestinyResult, Annual2026Result } from '../types';
 import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter, Calendar } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION, ANNUAL_2026_SYSTEM_INSTRUCTION } from '../constants';
+import { getSystemPrompt } from '../constants/prompts';
 import { streamReportGenerate, refundReport } from '../services/api/reports';
 import { getStarBalance } from '../services/api/payments';
 import { robustParseJSON, validateAstroData } from '../utils/jsonParser';
@@ -12,6 +13,7 @@ import ChinaCitySelector from './ChinaCitySelector';
 import TelegramLoginButton from './TelegramLoginButton';
 import TurnstileVerify from './TurnstileVerify';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getProfiles, createProfile, updateProfile, deleteProfile, type Profile, checkTelegramMembership, bindTelegramAccount } from '../services/api';
 
 interface ImportDataModeProps {
@@ -144,6 +146,7 @@ const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; ti
 
 const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsChange, defaultMode }) => {
     const { currentUser } = useAuth();
+    const { language, lockLanguage, unlockLanguage } = useLanguage();
     const [mode, setMode] = useState<Mode>(defaultMode || 'choose');
     const [step, setStep] = useState<Step>(1);
     const [basicChart, setBasicChart] = useState<BasicChartInfo | null>(null);
@@ -735,7 +738,8 @@ ${chartInfo}
 
     // 复制完整提示词
     const copyFullPrompt = async () => {
-        const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : mode === 'annual2026' ? ANNUAL_2026_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
+        const promptType = mode === 'trader' ? 'trader' : mode === 'annual2026' ? 'annual2026' : 'normal';
+        const systemPrompt = getSystemPrompt(language, promptType);
         const fullPrompt = `=== 系统指令 (System Prompt) ===\n\n${systemPrompt}\n\n=== 用户提示词 (User Prompt) ===\n\n${generateUserPrompt()}`;
 
         try {
@@ -1159,6 +1163,9 @@ ${chartInfo}
         setLoadingTime(0);
         setIsInQueue(true);
 
+        // 锁定语言，防止生成过程中切换
+        lockLanguage();
+
         const MAX_RETRIES = 3; // 最大重试次数
         let retryCount = 0;
 
@@ -1224,8 +1231,9 @@ ${chartInfo}
             // 生成用户提示词
             const userPrompt = generateUserPrompt();
 
-            // 根据模式选择系统指令
-            const systemPrompt = mode === 'trader' ? TRADER_SYSTEM_INSTRUCTION : mode === 'annual2026' ? ANNUAL_2026_SYSTEM_INSTRUCTION : NORMAL_LIFE_SYSTEM_INSTRUCTION;
+            // 根据当前语言和模式选择系统指令
+            const promptType = mode === 'trader' ? 'trader' : mode === 'annual2026' ? 'annual2026' : 'normal';
+            const systemPrompt = getSystemPrompt(language, promptType);
 
             // 生成报告标题
             const reportTitle = `${astroInfo.name || '匿名用户'}的${mode === 'trader' ? '交易员财富' : mode === 'annual2026' ? '2026年年运' : '综合人生'}占星报告`;
@@ -1788,6 +1796,9 @@ ${chartInfo}
         setLoadingTime(0);
         setQueuePosition(null);
         setIsInQueue(false);
+
+        // 解锁语言，允许用户再次切换
+        unlockLanguage();
     };
 
     const handleAstroChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
