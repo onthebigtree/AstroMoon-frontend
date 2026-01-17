@@ -2,6 +2,7 @@
 import React from 'react';
 import { Annual2026Result as Annual2026ResultType, MonthlyKLinePoint } from '../types';
 import { Calendar } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Annual2026ResultProps {
   result: Annual2026ResultType;
@@ -116,38 +117,38 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
 };
 
 // 根据分数或趋势获取运势状态
-const getFortuneStatus = (item: MonthlyKLinePoint): { label: string; color: string; bgColor: string } => {
+const getFortuneStatus = (item: MonthlyKLinePoint, isZh: boolean): { label: string; color: string; bgColor: string } => {
   // 优先使用 trend 字段判断
   if (item.trend === 'up') {
-    return { label: '好运', color: 'text-green-700', bgColor: 'bg-green-100' };
+    return { label: isZh ? '好运' : 'Good', color: 'text-green-700', bgColor: 'bg-green-100' };
   } else if (item.trend === 'down') {
-    return { label: '谨慎', color: 'text-red-700', bgColor: 'bg-red-100' };
+    return { label: isZh ? '谨慎' : 'Caution', color: 'text-red-700', bgColor: 'bg-red-100' };
   }
   // 如果没有 trend 或是 flat，使用分数判断
   if (item.score >= 75) {
-    return { label: '好运', color: 'text-green-700', bgColor: 'bg-green-100' };
+    return { label: isZh ? '好运' : 'Good', color: 'text-green-700', bgColor: 'bg-green-100' };
   } else if (item.score <= 65) {
-    return { label: '谨慎', color: 'text-red-700', bgColor: 'bg-red-100' };
+    return { label: isZh ? '谨慎' : 'Caution', color: 'text-red-700', bgColor: 'bg-red-100' };
   }
-  return { label: '普通', color: 'text-yellow-700', bgColor: 'bg-yellow-100' };
+  return { label: isZh ? '普通' : 'Normal', color: 'text-yellow-700', bgColor: 'bg-yellow-100' };
 };
 
 // Monthly analysis table
-const MonthlyTable: React.FC<{ data: MonthlyKLinePoint[] }> = ({ data }) => {
+const MonthlyTable: React.FC<{ data: MonthlyKLinePoint[]; isZh: boolean }> = ({ data, isZh }) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gradient-to-r from-indigo-100 to-purple-100">
-            <th className="px-4 py-3 text-left font-semibold text-gray-700">月份</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">运势</th>
-            <th className="px-4 py-3 text-left font-semibold text-gray-700">主题</th>
-            <th className="px-4 py-3 text-left font-semibold text-gray-700">详细分析</th>
+            <th className="px-4 py-3 text-left font-semibold text-gray-700">{isZh ? '月份' : 'Month'}</th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">{isZh ? '运势' : 'Fortune'}</th>
+            <th className="px-4 py-3 text-left font-semibold text-gray-700">{isZh ? '主题' : 'Theme'}</th>
+            <th className="px-4 py-3 text-left font-semibold text-gray-700">{isZh ? '详细分析' : 'Analysis'}</th>
           </tr>
         </thead>
         <tbody>
           {data.map((item, index) => {
-            const fortune = getFortuneStatus(item);
+            const fortune = getFortuneStatus(item, isZh);
             return (
               <tr
                 key={item.month}
@@ -190,6 +191,8 @@ const MonthlyTable: React.FC<{ data: MonthlyKLinePoint[] }> = ({ data }) => {
 };
 
 const Annual2026Result: React.FC<Annual2026ResultProps> = ({ result, userName }) => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
   const { chartData, analysis } = result;
 
   return (
@@ -198,11 +201,11 @@ const Annual2026Result: React.FC<Annual2026ResultProps> = ({ result, userName })
       <div className="text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-100 to-teal-100 rounded-full mb-4">
           <Calendar className="w-5 h-5 text-teal-600" />
-          <span className="text-teal-700 font-medium">2026年年运报告</span>
+          <span className="text-teal-700 font-medium">{isZh ? '2026年年运报告' : '2026 Annual Fortune Report'}</span>
         </div>
         {userName && (
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {userName}的2026年年运
+            {isZh ? `${userName}的2026年年运` : `${userName}'s 2026 Fortune`}
           </h2>
         )}
         {analysis.summary && (
@@ -220,23 +223,23 @@ const Annual2026Result: React.FC<Annual2026ResultProps> = ({ result, userName })
       {/* Key Months */}
       {(analysis.keyMonths || analysis.peakMonths || analysis.riskMonths) && (
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">关键月份提醒</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-4">{isZh ? '关键月份提醒' : 'Key Months Reminder'}</h3>
           <div className="grid md:grid-cols-3 gap-4">
             {analysis.keyMonths && (
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-sm text-gray-500 mb-1">关键月份</div>
+                <div className="text-sm text-gray-500 mb-1">{isZh ? '关键月份' : 'Key Months'}</div>
                 <div className="font-medium text-gray-800">{analysis.keyMonths}</div>
               </div>
             )}
             {analysis.peakMonths && (
               <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-green-500">
-                <div className="text-sm text-green-600 mb-1">高光期</div>
+                <div className="text-sm text-green-600 mb-1">{isZh ? '高光期' : 'Peak Period'}</div>
                 <div className="font-medium text-gray-800">{analysis.peakMonths}</div>
               </div>
             )}
             {analysis.riskMonths && (
               <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-red-500">
-                <div className="text-sm text-red-600 mb-1">谨慎期</div>
+                <div className="text-sm text-red-600 mb-1">{isZh ? '谨慎期' : 'Caution Period'}</div>
                 <div className="font-medium text-gray-800">{analysis.riskMonths}</div>
               </div>
             )}
@@ -249,10 +252,10 @@ const Annual2026Result: React.FC<Annual2026ResultProps> = ({ result, userName })
         <div className="px-6 py-4 border-b border-gray-100">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-indigo-600" />
-            流月运势详解
+            {isZh ? '流月运势详解' : 'Monthly Fortune Details'}
           </h3>
         </div>
-        <MonthlyTable data={chartData} />
+        <MonthlyTable data={chartData} isZh={isZh} />
       </div>
     </div>
   );

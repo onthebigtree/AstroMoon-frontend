@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Download, Flame } from 'lucide-react';
 import { getSexLifeTypeInfo } from '../utils/sexLifeTypes';
 import html2canvas from 'html2canvas';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface SexLifeShareProps {
   isOpen: boolean;
@@ -16,6 +17,8 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
   sexLifeType,
   userName
 }) => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
   const [isDownloading, setIsDownloading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -48,7 +51,7 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
     try {
       const dataUrl = await generateImage();
       if (!dataUrl) {
-        alert('下载失败，请重试');
+        alert(isZh ? '下载失败，请重试' : 'Download failed, please try again');
         return;
       }
 
@@ -61,7 +64,7 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
       link.click();
     } catch (error) {
       console.error('下载图片失败:', error);
-      alert('下载失败，请重试');
+      alert(isZh ? '下载失败，请重试' : 'Download failed, please try again');
     } finally {
       setIsDownloading(false);
     }
@@ -72,7 +75,7 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* 关闭按钮 */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-xl font-bold text-gray-800 font-serif-sc">我的性生活类型</h2>
+          <h2 className="text-xl font-bold text-gray-800 font-serif-sc">{isZh ? '我的性生活类型' : 'My Intimate Life Type'}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-lg"
@@ -90,14 +93,14 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
               <span className="text-sm font-medium text-gray-600">Astro Moon 占星报告</span>
             </div>
             {userName && (
-              <p className="text-xs text-gray-500">{userName}的专属分析</p>
+              <p className="text-xs text-gray-500">{isZh ? `${userName}的专属分析` : `${userName}'s Exclusive Analysis`}</p>
             )}
           </div>
 
           {/* 大标题 */}
           <div className="text-center mb-8">
             <h3 className="text-2xl md:text-3xl font-bold text-gray-900 font-serif-sc">
-              我的性生活类型
+              {isZh ? '我的性生活类型' : 'My Intimate Life Type'}
             </h3>
           </div>
 
@@ -129,7 +132,7 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
               {/* 原型参考 */}
               <div className="mt-4">
                 <span className="inline-block bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium">
-                  原型：{typeInfo.archetype}
+                  {isZh ? '原型：' : 'Archetype: '}{typeInfo.archetype}
                 </span>
               </div>
             </div>
@@ -145,29 +148,29 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
           {/* 星象配置 */}
           <div className="bg-indigo-50 rounded-xl p-4 mb-6">
             <p className="text-xs text-indigo-700 text-center font-medium">
-              适用星盘配置：{typeInfo.astroConfig}
+              {isZh ? '适用星盘配置：' : 'Astro Configuration: '}{typeInfo.astroConfig}
             </p>
           </div>
 
           {/* 底部品牌信息与水印 */}
           <div className="text-center pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-500 mb-2">
-              结合西方古典占星、金融占星与交易心理学
+              {isZh ? '结合西方古典占星、金融占星与交易心理学' : 'Combining Western classical astrology, financial astrology and trading psychology'}
             </p>
             <p className="text-xs font-bold text-gray-700 mb-2">
-              全网第一位财运指标发明人。——&gt;月亮牌手@TheMoonDojo
+              {isZh ? '全网第一位财运指标发明人。——>月亮牌手@TheMoonDojo' : 'First wealth index inventor —> @TheMoonDojo'}
             </p>
             <p className="text-xs text-orange-600 font-medium">
-              ⚠️ 仅供娱乐参考，请勿当真
+              ⚠️ {isZh ? '仅供娱乐参考，请勿当真' : 'For entertainment only'}
             </p>
             {/* 二维码 */}
             <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col items-center gap-2">
               <img
                 src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://www.astromoon.xyz/"
-                alt="网站二维码"
+                alt={isZh ? '网站二维码' : 'Website QR Code'}
                 className="w-20 h-20"
               />
-              <p className="text-xs text-gray-500">扫码访问 www.astromoon.xyz</p>
+              <p className="text-xs text-gray-500">{isZh ? '扫码访问 www.astromoon.xyz' : 'Scan to visit www.astromoon.xyz'}</p>
             </div>
           </div>
         </div>
@@ -181,7 +184,7 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
             className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-xl hover:from-rose-700 hover:to-pink-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg text-lg"
           >
             <Download className="w-5 h-5" />
-            <span>{isDownloading ? '生成中...' : '生成分享图片'}</span>
+            <span>{isDownloading ? (isZh ? '生成中...' : 'Generating...') : (isZh ? '生成分享图片' : 'Generate Share Image')}</span>
           </button>
 
           {/* 生成的图片预览 */}
@@ -195,14 +198,14 @@ const SexLifeShare: React.FC<SexLifeShareProps> = ({
                 />
               </div>
               <p className="text-sm text-center font-medium text-rose-600 animate-pulse">
-                📱 长按图片保存到相册
+                📱 {isZh ? '长按图片保存到相册' : 'Long press to save image'}
               </p>
             </div>
           )}
 
           {!generatedImage && (
             <p className="text-xs text-gray-500 text-center">
-              💡 点击按钮生成图片，然后长按图片保存
+              💡 {isZh ? '点击按钮生成图片，然后长按图片保存' : 'Click button to generate image, then long press to save'}
             </p>
           )}
         </div>

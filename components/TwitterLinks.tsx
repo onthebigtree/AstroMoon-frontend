@@ -1,20 +1,24 @@
 import React from 'react';
 import { Twitter, Mail } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const TwitterLinks: React.FC = () => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
+
   const links = [
     {
-      title: '星盘专家',
+      title: isZh ? '星盘专家' : 'Chart Expert',
       handle: '@TheMoonDojo',
       url: 'https://x.com/TheMoonDojo',
-      description: '十年星盘专家，用独家算法+AI大模型，重新定义你的交易运势',
+      description: isZh ? '十年星盘专家，用独家算法+AI大模型，重新定义你的交易运势' : '10-year astrology expert, using proprietary algorithms + AI to redefine your trading fortune',
       icon: Twitter,
     },
     {
-      title: '合作联系',
+      title: isZh ? '合作联系' : 'Contact',
       handle: '@AstroMoon1225',
       url: 'https://x.com/AstroMoon1225',
-      description: '合作/简历投递推特私信联系',
+      description: isZh ? '合作/简历投递推特私信联系' : 'DM for collaboration/inquiries',
       icon: Mail,
     },
   ];

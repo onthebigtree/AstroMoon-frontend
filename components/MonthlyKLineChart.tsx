@@ -13,48 +13,51 @@ import {
   LabelList
 } from 'recharts';
 import { MonthlyKLinePoint } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface MonthlyKLineChartProps {
   data: MonthlyKLinePoint[];
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, language }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as MonthlyKLinePoint;
     const isUp = data.close >= data.open;
+    const isZh = language === 'zh';
+
     return (
       <div className="bg-white/95 backdrop-blur-sm p-5 rounded-xl shadow-2xl border border-gray-200 z-50 w-[320px] md:w-[400px]">
         {/* Header */}
         <div className="flex justify-between items-start mb-3 border-b border-gray-100 pb-2">
           <div>
             <p className="text-xl font-bold text-gray-800 font-serif-sc">
-              2026年{data.monthName}
+              {isZh ? `2026年${data.monthName}` : `2026 ${data.monthName}`}
             </p>
             <p className="text-sm text-indigo-600 font-medium mt-1">
-              {data.quarter} · {data.monthTransit || '月度运势'}
+              {data.quarter} · {data.monthTransit || (isZh ? '月度运势' : 'Monthly Fortune')}
             </p>
           </div>
           <div className={`text-base font-bold px-2 py-1 rounded ${isUp ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {isUp ? '吉 ▲' : '凶 ▼'}
+            {isUp ? (isZh ? '吉 ▲' : 'Good ▲') : (isZh ? '凶 ▼' : 'Bad ▼')}
           </div>
         </div>
 
         {/* Data Grid */}
         <div className="grid grid-cols-4 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 p-2 rounded">
           <div className="text-center">
-            <span className="block scale-90">开盘</span>
+            <span className="block scale-90">{isZh ? '开盘' : 'Open'}</span>
             <span className="font-mono text-gray-700 font-bold">{data.open}</span>
           </div>
           <div className="text-center">
-            <span className="block scale-90">收盘</span>
+            <span className="block scale-90">{isZh ? '收盘' : 'Close'}</span>
             <span className="font-mono text-gray-700 font-bold">{data.close}</span>
           </div>
           <div className="text-center">
-            <span className="block scale-90">最高</span>
+            <span className="block scale-90">{isZh ? '最高' : 'High'}</span>
             <span className="font-mono text-gray-700 font-bold">{data.high}</span>
           </div>
           <div className="text-center">
-            <span className="block scale-90">最低</span>
+            <span className="block scale-90">{isZh ? '最低' : 'Low'}</span>
             <span className="font-mono text-gray-700 font-bold">{data.low}</span>
           </div>
         </div>
@@ -158,6 +161,9 @@ const PeakLabel = (props: any) => {
 };
 
 const MonthlyKLineChart: React.FC<MonthlyKLineChartProps> = ({ data }) => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
+
   const transformedData = data.map(d => ({
     ...d,
     bodyRange: [Math.min(d.open, d.close), Math.max(d.open, d.close)],
@@ -175,16 +181,16 @@ const MonthlyKLineChart: React.FC<MonthlyKLineChartProps> = ({ data }) => {
   const maxHigh = data.length > 0 ? Math.max(...data.map(d => d.high)) : 100;
 
   if (!data || data.length === 0) {
-    return <div className="h-[500px] flex items-center justify-center text-gray-400">无数据</div>;
+    return <div className="h-[500px] flex items-center justify-center text-gray-400">{isZh ? '无数据' : 'No data'}</div>;
   }
 
   return (
     <div className="w-full h-[500px] bg-white p-2 md:p-6 rounded-xl border border-gray-200 shadow-sm relative">
       <div className="mb-6 flex justify-between items-center px-2">
-        <h3 className="text-xl font-bold text-gray-800 font-serif-sc">2026年月运走势图</h3>
+        <h3 className="text-xl font-bold text-gray-800 font-serif-sc">{isZh ? '2026年月运走势图' : '2026 Monthly Fortune Chart'}</h3>
         <div className="flex gap-4 text-xs font-medium">
-           <span className="flex items-center text-green-700 bg-green-50 px-2 py-1 rounded"><div className="w-2 h-2 bg-green-500 mr-2 rounded-full"></div> 吉运 (涨)</span>
-           <span className="flex items-center text-red-700 bg-red-50 px-2 py-1 rounded"><div className="w-2 h-2 bg-red-500 mr-2 rounded-full"></div> 凶运 (跌)</span>
+           <span className="flex items-center text-green-700 bg-green-50 px-2 py-1 rounded"><div className="w-2 h-2 bg-green-500 mr-2 rounded-full"></div> {isZh ? '吉运 (涨)' : 'Good (Rise)'}</span>
+           <span className="flex items-center text-red-700 bg-red-50 px-2 py-1 rounded"><div className="w-2 h-2 bg-red-500 mr-2 rounded-full"></div> {isZh ? '凶运 (跌)' : 'Bad (Fall)'}</span>
         </div>
       </div>
 
@@ -197,7 +203,7 @@ const MonthlyKLineChart: React.FC<MonthlyKLineChartProps> = ({ data }) => {
             tick={{fontSize: 11, fill: '#6b7280'}}
             axisLine={{ stroke: '#e5e7eb' }}
             tickLine={false}
-            label={{ value: '月份', position: 'insideBottomRight', offset: -5, fontSize: 10, fill: '#9ca3af' }}
+            label={{ value: isZh ? '月份' : 'Month', position: 'insideBottomRight', offset: -5, fontSize: 10, fill: '#9ca3af' }}
           />
 
           <YAxis
@@ -205,10 +211,10 @@ const MonthlyKLineChart: React.FC<MonthlyKLineChartProps> = ({ data }) => {
             tick={{fontSize: 10, fill: '#6b7280'}}
             axisLine={false}
             tickLine={false}
-            label={{ value: '运势分', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }}
+            label={{ value: isZh ? '运势分' : 'Score', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }}
           />
 
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#9ca3af', strokeWidth: 1, strokeDasharray: '4 4' }} />
+          <Tooltip content={<CustomTooltip language={language} />} cursor={{ stroke: '#9ca3af', strokeWidth: 1, strokeDasharray: '4 4' }} />
 
           {/* Quarter Reference Lines */}
           {quarterChanges.map((point, index) => (

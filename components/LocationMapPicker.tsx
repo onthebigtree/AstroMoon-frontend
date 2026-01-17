@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { X, MapPin, Loader2, Search } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface LocationData {
   latitude: number;
@@ -21,6 +22,8 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   onSelect,
   initialPosition,
 }) => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(
     initialPosition || null
   );
@@ -96,7 +99,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         // 如果有初始位置，添加标记
         if (initialPosition) {
           const marker = L.marker([initialPosition.lat, initialPosition.lng]).addTo(map);
-          marker.bindPopup(`<b>当前位置</b><br>纬度: ${initialPosition.lat.toFixed(4)}<br>经度: ${initialPosition.lng.toFixed(4)}`);
+          marker.bindPopup(`<b>${isZh ? '当前位置' : 'Current Location'}</b><br>${isZh ? '纬度' : 'Lat'}: ${initialPosition.lat.toFixed(4)}<br>${isZh ? '经度' : 'Lng'}: ${initialPosition.lng.toFixed(4)}`);
           markerRef.current = marker;
         }
 
@@ -113,7 +116,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
           // 添加新标记
           const marker = L.marker([lat, lng]).addTo(map);
-          marker.bindPopup(`<b>选中位置</b><br>纬度: ${lat.toFixed(4)}<br>经度: ${lng.toFixed(4)}`).openPopup();
+          marker.bindPopup(`<b>${isZh ? '选中位置' : 'Selected Location'}</b><br>${isZh ? '纬度' : 'Lat'}: ${lat.toFixed(4)}<br>${isZh ? '经度' : 'Lng'}: ${lng.toFixed(4)}`).openPopup();
           markerRef.current = marker;
         });
 
@@ -158,13 +161,13 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       if (response.ok) {
         const data = await response.json();
         const name = data.address?.city || data.address?.town || data.address?.village ||
-                     data.address?.county || data.display_name || '未知位置';
+                     data.address?.county || data.display_name || (isZh ? '未知位置' : 'Unknown Location');
         setAddressName(name);
         return name;
       }
     } catch (error) {
       console.error('反向地理编码失败:', error);
-      setAddressName('未知位置');
+      setAddressName(isZh ? '未知位置' : 'Unknown Location');
     } finally {
       setIsGeocodingAddress(false);
     }
@@ -206,16 +209,16 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
             // 添加新标记
             const marker = L.marker([newPosition.lat, newPosition.lng]).addTo(mapInstanceRef.current);
-            marker.bindPopup(`<b>${result.display_name}</b><br>纬度: ${newPosition.lat.toFixed(4)}<br>经度: ${newPosition.lng.toFixed(4)}`).openPopup();
+            marker.bindPopup(`<b>${result.display_name}</b><br>${isZh ? '纬度' : 'Lat'}: ${newPosition.lat.toFixed(4)}<br>${isZh ? '经度' : 'Lng'}: ${newPosition.lng.toFixed(4)}`).openPopup();
             markerRef.current = marker;
           }
         } else {
-          alert('未找到该地点，请尝试其他关键词');
+          alert(isZh ? '未找到该地点，请尝试其他关键词' : 'Location not found, please try other keywords');
         }
       }
     } catch (error) {
       console.error('搜索位置失败:', error);
-      alert('搜索失败，请稍后重试');
+      alert(isZh ? '搜索失败，请稍后重试' : 'Search failed, please try again later');
     } finally {
       setIsSearching(false);
     }
@@ -250,7 +253,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600">
           <div className="flex items-center gap-2 text-white">
             <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
-            <h2 className="text-lg sm:text-xl font-bold">选择出生地点</h2>
+            <h2 className="text-lg sm:text-xl font-bold">{isZh ? '选择出生地点' : 'Select Birth Location'}</h2>
           </div>
           <button
             onClick={onClose}
@@ -270,7 +273,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && searchLocation()}
-                placeholder="搜索城市或地点名称..."
+                placeholder={isZh ? "搜索城市或地点名称..." : "Search city or location..."}
                 className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 disabled={isSearching}
               />
@@ -283,18 +286,18 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
               {isSearching ? (
                 <>
                   <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                  <span>搜索中...</span>
+                  <span>{isZh ? '搜索中...' : 'Searching...'}</span>
                 </>
               ) : (
                 <>
                   <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>搜索</span>
+                  <span>{isZh ? '搜索' : 'Search'}</span>
                 </>
               )}
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-2 hidden sm:block">
-            💡 提示：可以搜索城市名称，或直接在地图上点击选择位置
+            💡 {isZh ? '提示：可以搜索城市名称，或直接在地图上点击选择位置' : 'Tip: Search for a city name, or click on the map to select a location'}
           </p>
         </div>
 
@@ -305,8 +308,8 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 z-[1000]">
                 <div className="text-center">
                   <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-2" />
-                  <p className="text-gray-600 font-medium">加载地图中...</p>
-                  <p className="text-xs text-gray-500 mt-1">正在连接地图服务器</p>
+                  <p className="text-gray-600 font-medium">{isZh ? '加载地图中...' : 'Loading map...'}</p>
+                  <p className="text-xs text-gray-500 mt-1">{isZh ? '正在连接地图服务器' : 'Connecting to map server'}</p>
                 </div>
               </div>
             )}
@@ -324,32 +327,32 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
               <div className="flex-1">
                 <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2 text-sm sm:text-base">
                   <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-                  已选择位置
+                  {isZh ? '已选择位置' : 'Selected Location'}
                 </h3>
                 <div className="space-y-1 text-xs sm:text-sm">
                   {isGeocodingAddress ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                      <span>正在获取地址...</span>
+                      <span>{isZh ? '正在获取地址...' : 'Getting address...'}</span>
                     </div>
                   ) : (
                     <div className="text-gray-700">
-                      <span className="font-medium">地点：</span>
-                      {addressName || '未知位置'}
+                      <span className="font-medium">{isZh ? '地点：' : 'Location: '}</span>
+                      {addressName || (isZh ? '未知位置' : 'Unknown Location')}
                     </div>
                   )}
                   <div className="flex gap-4">
                     <div className="text-gray-700">
-                      <span className="font-medium">纬度：</span>
+                      <span className="font-medium">{isZh ? '纬度：' : 'Lat: '}</span>
                       {position.lat.toFixed(4)}°
                     </div>
                     <div className="text-gray-700">
-                      <span className="font-medium">经度：</span>
+                      <span className="font-medium">{isZh ? '经度：' : 'Lng: '}</span>
                       {position.lng.toFixed(4)}°
                     </div>
                   </div>
                   <div className="text-gray-700">
-                    <span className="font-medium">时区：</span>
+                    <span className="font-medium">{isZh ? '时区：' : 'Timezone: '}</span>
                     UTC{Math.round(position.lng / 15) >= 0 ? '+' : ''}{Math.round(position.lng / 15)}
                   </div>
                 </div>
@@ -359,7 +362,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto"
               >
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span>确认选择</span>
+                <span>{isZh ? '确认选择' : 'Confirm'}</span>
               </button>
             </div>
           </div>

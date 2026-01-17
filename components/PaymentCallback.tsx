@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getPaymentStatusByOrder, getStarBalance } from '../services/api';
 import type { PaymentInvoice } from '../services/api';
 import { CheckCircle, Loader2, XCircle, Clock } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface PaymentCallbackProps {
   onComplete: () => void;
@@ -11,6 +12,8 @@ interface PaymentCallbackProps {
 type PaymentStatus = 'loading' | 'success' | 'waiting' | 'error';
 
 const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUpdated }) => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
   const [status, setStatus] = useState<PaymentStatus>('loading');
   const [invoice, setInvoice] = useState<PaymentInvoice | null>(null);
   const [error, setError] = useState<string>('');
@@ -24,13 +27,13 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
 
     if (!orderId) {
       setStatus('error');
-      setError('缺少订单 ID');
+      setError(isZh ? '缺少订单 ID' : 'Missing order ID');
       return;
     }
 
     if (paymentStatus === 'cancelled') {
       setStatus('error');
-      setError('支付已取消');
+      setError(isZh ? '支付已取消' : 'Payment cancelled');
       return;
     }
 
@@ -47,7 +50,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
 
       if (!response.success) {
         setStatus('error');
-        setError('查询订单失败');
+        setError(isZh ? '查询订单失败' : 'Failed to query order');
         return;
       }
 
@@ -66,16 +69,16 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
       } else if (invoiceData.status === 'failed' || invoiceData.status === 'expired') {
         // 支付失败或过期
         setStatus('error');
-        setError(invoiceData.status === 'failed' ? '支付失败' : '支付已过期');
+        setError(invoiceData.status === 'failed' ? (isZh ? '支付失败' : 'Payment failed') : (isZh ? '支付已过期' : 'Payment expired'));
       } else {
         // 其他状态
         setStatus('error');
-        setError(`未知状态: ${invoiceData.status}`);
+        setError(isZh ? `未知状态: ${invoiceData.status}` : `Unknown status: ${invoiceData.status}`);
       }
     } catch (err: any) {
       console.error('查询订单状态失败:', err);
       setStatus('error');
-      setError(err.message || '查询订单状态失败');
+      setError(err.message || (isZh ? '查询订单状态失败' : 'Failed to query order status'));
     }
   };
 
@@ -108,7 +111,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
       if (attempts >= maxAttempts) {
         clearInterval(intervalId);
         setStatus('error');
-        setError('订单确认超时，请稍后在订单历史中查看');
+        setError(isZh ? '订单确认超时，请稍后在订单历史中查看' : 'Order confirmation timeout, please check order history later');
         return;
       }
 
@@ -124,7 +127,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
         } else if (invoiceData.status === 'failed' || invoiceData.status === 'expired') {
           clearInterval(intervalId);
           setStatus('error');
-          setError(invoiceData.status === 'failed' ? '支付失败' : '支付已过期');
+          setError(invoiceData.status === 'failed' ? (isZh ? '支付失败' : 'Payment failed') : (isZh ? '支付已过期' : 'Payment expired'));
         }
         // 如果还是 waiting/confirming，继续轮询
       } catch (err: any) {
@@ -146,8 +149,8 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
         return (
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="w-16 h-16 text-purple-500 animate-spin" />
-            <h2 className="text-2xl font-bold text-gray-800">正在查询订单状态...</h2>
-            <p className="text-gray-600">请稍候</p>
+            <h2 className="text-2xl font-bold text-gray-800">{isZh ? '正在查询订单状态...' : 'Checking order status...'}</h2>
+            <p className="text-gray-600">{isZh ? '请稍候' : 'Please wait'}</p>
           </div>
         );
 
@@ -155,29 +158,29 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
         return (
           <div className="flex flex-col items-center space-y-4">
             <Clock className="w-16 h-16 text-yellow-500 animate-pulse" />
-            <h2 className="text-2xl font-bold text-gray-800">支付正在确认中</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{isZh ? '支付正在确认中' : 'Payment confirming'}</h2>
             <p className="text-gray-600">
-              区块链交易需要一定时间确认，请耐心等待...
+              {isZh ? '区块链交易需要一定时间确认，请耐心等待...' : 'Blockchain transactions take time to confirm, please wait...'}
             </p>
             {invoice && (
               <div className="bg-gray-100 rounded-lg p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">订单号:</span>
+                  <span className="text-gray-600">{isZh ? '订单号' : 'Order'}:</span>
                   <span className="font-mono text-gray-800">{invoice.order_id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">积分数量:</span>
+                  <span className="text-gray-600">{isZh ? '积分数量' : 'Stars'}:</span>
                   <span className="font-semibold text-purple-600">{invoice.stars_amount} ⭐</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">状态:</span>
+                  <span className="text-gray-600">{isZh ? '状态' : 'Status'}:</span>
                   <span className="text-yellow-600 capitalize">{invoice.status}</span>
                 </div>
               </div>
             )}
             {countdown > 0 && (
               <p className="text-sm text-gray-500">
-                将在 {countdown} 次后停止自动查询
+                {isZh ? `将在 ${countdown} 次后停止自动查询` : `Auto-refresh will stop after ${countdown} attempts`}
               </p>
             )}
           </div>
@@ -194,10 +197,10 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
 
             {/* 成功标题 */}
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-green-600 mb-2">充值成功!</h2>
+              <h2 className="text-3xl font-bold text-green-600 mb-2">{isZh ? '充值成功!' : 'Recharge Success!'}</h2>
               {invoice && (
                 <p className="text-xl text-gray-700">
-                  已成功充值 <span className="font-bold text-purple-600 text-2xl">{invoice.stars_amount}</span> 积分
+                  {isZh ? '已成功充值' : 'Successfully recharged'} <span className="font-bold text-purple-600 text-2xl">{invoice.stars_amount}</span> {isZh ? '积分' : 'Stars'}
                 </p>
               )}
             </div>
@@ -206,24 +209,24 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
             <div className="w-full bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-5 space-y-3">
               <div className="flex items-center justify-center gap-2 text-green-700 font-medium">
                 <CheckCircle className="w-5 h-5" />
-                <span>积分已到账，可立即使用</span>
+                <span>{isZh ? '积分已到账，可立即使用' : 'Stars credited, ready to use'}</span>
               </div>
               {invoice && (
                 <div className="space-y-2 text-sm pt-2 border-t border-green-200">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">订单号:</span>
+                    <span className="text-gray-600">{isZh ? '订单号' : 'Order'}:</span>
                     <span className="font-mono text-gray-800">{invoice.order_id}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">支付金额:</span>
+                    <span className="text-gray-600">{isZh ? '支付金额' : 'Amount'}:</span>
                     <span className="font-semibold text-gray-800">
                       {invoice.paid_amount || invoice.price_amount} {invoice.pay_currency.toUpperCase()}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">完成时间:</span>
+                    <span className="text-gray-600">{isZh ? '完成时间' : 'Completed'}:</span>
                     <span className="text-gray-800">
-                      {new Date(invoice.updated_at).toLocaleString('zh-CN')}
+                      {new Date(invoice.updated_at).toLocaleString(isZh ? 'zh-CN' : 'en-US')}
                     </span>
                   </div>
                 </div>
@@ -234,7 +237,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
               onClick={onComplete}
               className="mt-4 w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
             >
-              开始使用 →
+              {isZh ? '开始使用 →' : 'Start Using →'}
             </button>
           </div>
         );
@@ -243,16 +246,16 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
         return (
           <div className="flex flex-col items-center space-y-4">
             <XCircle className="w-16 h-16 text-red-500" />
-            <h2 className="text-2xl font-bold text-gray-800">支付失败</h2>
-            <p className="text-gray-600">{error || '发生未知错误'}</p>
+            <h2 className="text-2xl font-bold text-gray-800">{isZh ? '支付失败' : 'Payment Failed'}</h2>
+            <p className="text-gray-600">{error || (isZh ? '发生未知错误' : 'An unknown error occurred')}</p>
             {invoice && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">订单号:</span>
+                  <span className="text-gray-600">{isZh ? '订单号' : 'Order'}:</span>
                   <span className="font-mono text-gray-800">{invoice.order_id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">状态:</span>
+                  <span className="text-gray-600">{isZh ? '状态' : 'Status'}:</span>
                   <span className="text-red-600 capitalize">{invoice.status}</span>
                 </div>
               </div>
@@ -261,7 +264,7 @@ const PaymentCallback: React.FC<PaymentCallbackProps> = ({ onComplete, onStarsUp
               onClick={onComplete}
               className="mt-4 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
-              返回首页
+              {isZh ? '返回首页' : 'Return Home'}
             </button>
           </div>
         );

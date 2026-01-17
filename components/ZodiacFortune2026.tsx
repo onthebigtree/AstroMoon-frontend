@@ -5,6 +5,7 @@ import {
   getZodiacSignByDate,
   ZodiacFortuneInfo
 } from '../utils/zodiacFortune2026';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ZodiacFortune2026Props {
   isOpen: boolean;
@@ -35,6 +36,8 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
   onClose,
   onGoToDetailedTest,
 }) => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
   const [birthMonth, setBirthMonth] = useState<number>(1);
   const [birthDay, setBirthDay] = useState<number>(1);
   const [result, setResult] = useState<ZodiacFortuneInfo | null>(null);
@@ -212,7 +215,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
     try {
       const dataUrl = await generateImage();
       if (!dataUrl) {
-        alert('下载失败，请重试');
+        alert(isZh ? '下载失败，请重试' : 'Download failed, please try again');
         return;
       }
 
@@ -224,7 +227,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
       link.click();
     } catch (error) {
       console.error('下载图片失败:', error);
-      alert('下载失败，请重试');
+      alert(isZh ? '下载失败，请重试' : 'Download failed, please try again');
     } finally {
       setIsDownloading(false);
     }
@@ -245,7 +248,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-xl font-bold text-gray-800 font-serif-sc flex items-center gap-2">
             <Flame className="w-5 h-5 text-red-500" />
-            2026 赤马红羊运势速测
+            {isZh ? '2026 赤马红羊运势速测' : '2026 Fortune Quick Test'}
           </h2>
           <button
             onClick={handleClose}
@@ -261,8 +264,8 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
             // 输入界面 - 只保留日期选择
             <div className="space-y-6">
               <div className="text-center">
-                <p className="text-gray-600 mb-2">输入你的出生日期</p>
-                <p className="text-sm text-gray-400">自动判断你的 2026 运势等级</p>
+                <p className="text-gray-600 mb-2">{isZh ? '输入你的出生日期' : 'Enter your birth date'}</p>
+                <p className="text-sm text-gray-400">{isZh ? '自动判断你的 2026 运势等级' : 'Automatically determine your 2026 fortune level'}</p>
               </div>
 
               <div className="flex gap-4 items-center justify-center">
@@ -281,7 +284,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                   >
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                       <option key={m} value={m}>
-                        {m}月
+                        {isZh ? `${m}月` : `${m}`}
                       </option>
                     ))}
                   </select>
@@ -295,7 +298,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                   >
                     {Array.from({ length: getDaysInMonth(birthMonth) }, (_, i) => i + 1).map((d) => (
                       <option key={d} value={d}>
-                        {d}日
+                        {isZh ? `${d}日` : `${d}`}
                       </option>
                     ))}
                   </select>
@@ -308,13 +311,13 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                 className="w-full py-4 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
               >
                 <Calendar className="w-5 h-5" />
-                测一测我的 2026
+                {isZh ? '测一测我的 2026' : 'Test My 2026 Fortune'}
               </button>
 
               {/* 说明文字 */}
               <div className="text-center text-xs text-gray-400 pt-2">
-                <p>基于西方占星学木星、土星、冥王星等行星走势分析</p>
-                <p className="mt-1 text-orange-500 font-medium">2026 丙午年 · 赤马红羊劫</p>
+                <p>{isZh ? '基于西方占星学木星、土星、冥王星等行星走势分析' : 'Based on Western astrology analysis of Jupiter, Saturn, Pluto'}</p>
+                <p className="mt-1 text-orange-500 font-medium">{isZh ? '2026 丙午年 · 赤马红羊劫' : '2026 Year of the Fire Horse'}</p>
               </div>
             </div>
           ) : (
@@ -329,7 +332,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                     <span className="text-sm font-medium text-gray-600">Astro Moon 占星</span>
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 font-serif-sc">
-                    2026 赤马红羊运势速测
+                    {isZh ? '2026 赤马红羊运势速测' : '2026 Fortune Quick Test'}
                   </h3>
                 </div>
 
@@ -337,7 +340,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                 <div className="relative mb-6 rounded-xl overflow-hidden shadow-lg">
                   {isLoadingTierList ? (
                     <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                      <div className="text-gray-500">加载中...</div>
+                      <div className="text-gray-500">{isZh ? '加载中...' : 'Loading...'}</div>
                     </div>
                   ) : tierListImage ? (
                     <img
@@ -348,7 +351,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                     />
                   ) : (
                     <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                      <div className="text-gray-500">图片加载失败</div>
+                      <div className="text-gray-500">{isZh ? '图片加载失败' : 'Failed to load image'}</div>
                     </div>
                   )}
                 </div>
@@ -380,7 +383,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
 
                 {/* 锐评 */}
                 <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 rounded-xl p-4">
-                  <p className="text-sm font-medium text-gray-500 mb-1">锐评</p>
+                  <p className="text-sm font-medium text-gray-500 mb-1">{isZh ? '锐评' : 'Comment'}</p>
                   <p className="text-red-700 text-sm leading-relaxed font-medium">
                     "{result.comment}"
                   </p>
@@ -389,17 +392,17 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                 {/* 底部品牌信息 */}
                 <div className="text-center pt-4 mt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-400 mb-2">
-                    仅供娱乐，请勿迷信
+                    {isZh ? '仅供娱乐，请勿迷信' : 'For entertainment only'}
                   </p>
                   {/* 二维码 */}
                   <div className="flex flex-col items-center gap-1">
                     <img
                       src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://www.astromoon.xyz/"
-                      alt="网站二维码"
+                      alt={isZh ? '网站二维码' : 'Website QR Code'}
                       className="w-16 h-16"
                       crossOrigin="anonymous"
                     />
-                    <p className="text-[10px] text-gray-400">扫码查看完整星盘</p>
+                    <p className="text-[10px] text-gray-400">{isZh ? '扫码查看完整星盘' : 'Scan to view full chart'}</p>
                   </div>
                 </div>
               </div>
@@ -412,7 +415,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                   className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white rounded-xl hover:from-red-600 hover:via-orange-600 hover:to-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold shadow-lg text-lg"
                 >
                   <Download className="w-5 h-5" />
-                  <span>{isDownloading ? '生成中...' : '生成分享图片'}</span>
+                  <span>{isDownloading ? (isZh ? '生成中...' : 'Generating...') : (isZh ? '生成分享图片' : 'Generate Share Image')}</span>
                 </button>
 
                 {/* 生成的图片预览 */}
@@ -426,7 +429,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                       />
                     </div>
                     <p className="text-sm text-center font-medium text-orange-600 animate-pulse">
-                      长按图片保存到相册
+                      {isZh ? '长按图片保存到相册' : 'Long press to save image'}
                     </p>
                   </div>
                 )}
@@ -438,7 +441,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                     className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold shadow-lg transition-all"
                   >
                     <Sparkles className="w-5 h-5" />
-                    <span>深度测试 2026 年运</span>
+                    <span>{isZh ? '深度测试 2026 年运' : 'Deep Test 2026 Fortune'}</span>
                   </button>
                 )}
 
@@ -446,7 +449,7 @@ const ZodiacFortune2026: React.FC<ZodiacFortune2026Props> = ({
                   onClick={handleReset}
                   className="w-full py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-all font-medium"
                 >
-                  重新测试
+                  {isZh ? '重新测试' : 'Test Again'}
                 </button>
               </div>
             </div>

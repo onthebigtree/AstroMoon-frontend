@@ -106,7 +106,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (auth.currentUser) {
       await sendEmailVerification(auth.currentUser);
     } else {
-      throw new Error('没有登录的用户');
+      throw new Error('No logged in user');
     }
   }
 
@@ -117,7 +117,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         let email = window.localStorage.getItem('emailForSignIn');
         if (!email) {
           // 如果用户在不同的设备上打开链接，需要提示输入邮箱
-          email = window.prompt('请输入您的邮箱地址以完成登录');
+          email = window.prompt('Please enter your email address to complete login');
         }
         if (email) {
           try {

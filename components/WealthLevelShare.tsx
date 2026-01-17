@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Download, TrendingUp } from 'lucide-react';
 import { getWealthLevelInfo } from '../utils/wealthLevels';
 import html2canvas from 'html2canvas';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface WealthLevelShareProps {
   isOpen: boolean;
@@ -16,6 +17,8 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
   wealthLevel,
   userName
 }) => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
   const [isDownloading, setIsDownloading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -48,13 +51,13 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
     try {
       const dataUrl = await generateImage();
       if (!dataUrl) {
-        alert('生成失败，请重试');
+        alert(isZh ? '生成失败，请重试' : 'Generation failed, please try again');
         return;
       }
       setGeneratedImage(dataUrl);
     } catch (error) {
       console.error('生成图片失败:', error);
-      alert('生成失败，请重试');
+      alert(isZh ? '生成失败，请重试' : 'Generation failed, please try again');
     } finally {
       setIsDownloading(false);
     }
@@ -66,7 +69,7 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
     try {
       const dataUrl = await generateImage();
       if (!dataUrl) {
-        alert('下载失败，请重试');
+        alert(isZh ? '下载失败，请重试' : 'Download failed, please try again');
         return;
       }
 
@@ -79,7 +82,7 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
       link.click();
     } catch (error) {
       console.error('下载图片失败:', error);
-      alert('下载失败，请重试');
+      alert(isZh ? '下载失败，请重试' : 'Download failed, please try again');
     } finally {
       setIsDownloading(false);
     }
@@ -90,7 +93,7 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* 关闭按钮 */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-xl font-bold text-gray-800 font-serif-sc">我的财富量级潜力</h2>
+          <h2 className="text-xl font-bold text-gray-800 font-serif-sc">{isZh ? '我的财富量级潜力' : 'My Wealth Potential'}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-lg"
@@ -108,14 +111,14 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
               <span className="text-sm font-medium text-gray-600">Astro Moon 占星报告</span>
             </div>
             {userName && (
-              <p className="text-xs text-gray-500">{userName}的专属分析</p>
+              <p className="text-xs text-gray-500">{isZh ? `${userName}的专属分析` : `${userName}'s Exclusive Analysis`}</p>
             )}
           </div>
 
           {/* 大标题 */}
           <div className="text-center mb-8">
             <h3 className="text-2xl md:text-3xl font-bold text-gray-900 font-serif-sc">
-              我这辈子的财富量级潜力
+              {isZh ? '我这辈子的财富量级潜力' : 'My Lifetime Wealth Potential'}
             </h3>
           </div>
 
@@ -163,22 +166,22 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
           {/* 底部品牌信息与水印 */}
           <div className="text-center pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-500 mb-2">
-              结合西方古典占星、金融占星与交易心理学
+              {isZh ? '结合西方古典占星、金融占星与交易心理学' : 'Combining Western classical astrology, financial astrology and trading psychology'}
             </p>
             <p className="text-xs font-bold text-gray-700 mb-2">
-              全网第一位财运指标发明人。——&gt;月亮牌手@TheMoonDojo
+              {isZh ? '全网第一位财运指标发明人。——>月亮牌手@TheMoonDojo' : 'First wealth index inventor —> @TheMoonDojo'}
             </p>
             <p className="text-xs text-orange-600 font-medium">
-              ⚠️ 此财富潜力仅针对金融投机方面
+              ⚠️ {isZh ? '此财富潜力仅针对金融投机方面' : 'This wealth potential is for financial speculation only'}
             </p>
             {/* 二维码 */}
             <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col items-center gap-2">
               <img
                 src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://www.astromoon.xyz/"
-                alt="网站二维码"
+                alt={isZh ? '网站二维码' : 'Website QR Code'}
                 className="w-20 h-20"
               />
-              <p className="text-xs text-gray-500">扫码访问 www.astromoon.xyz</p>
+              <p className="text-xs text-gray-500">{isZh ? '扫码访问 www.astromoon.xyz' : 'Scan to visit www.astromoon.xyz'}</p>
             </div>
           </div>
         </div>
@@ -192,7 +195,7 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
             className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg text-lg"
           >
             <Download className="w-5 h-5" />
-            <span>{isDownloading ? '生成中...' : '生成分享图片'}</span>
+            <span>{isDownloading ? (isZh ? '生成中...' : 'Generating...') : (isZh ? '生成分享图片' : 'Generate Share Image')}</span>
           </button>
 
           {/* 生成的图片预览 */}
@@ -206,14 +209,14 @@ const WealthLevelShare: React.FC<WealthLevelShareProps> = ({
                 />
               </div>
               <p className="text-sm text-center font-medium text-indigo-600 animate-pulse">
-                📱 长按图片保存到相册
+                📱 {isZh ? '长按图片保存到相册' : 'Long press to save image'}
               </p>
             </div>
           )}
 
           {!generatedImage && (
             <p className="text-xs text-gray-500 text-center">
-              💡 点击按钮生成图片，然后长按图片保存
+              💡 {isZh ? '点击按钮生成图片，然后长按图片保存' : 'Click button to generate image, then long press to save'}
             </p>
           )}
         </div>
