@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Calendar, Loader2, AlertCircle, History } from 'lucide-react';
 import { getReports, type Report } from '../services/api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ReportHistoryProps {
   isOpen: boolean;
@@ -9,6 +11,8 @@ interface ReportHistoryProps {
 }
 
 const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelectReport }) => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +31,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
       setReports(reportList);
     } catch (err: any) {
       console.error('加载报告列表失败:', err);
-      setError(err.message || '加载报告列表失败');
+      setError(err.message || t('historyPage.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -41,14 +45,15 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
       onClose();
     } catch (err: any) {
       console.error('选择报告失败:', err);
-      setError(err.message || '加载报告失败');
+      setError(err.message || t('errors.loadReportFailed'));
     } finally {
       setLoading(false);
     }
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString('zh-CN', {
+    const locale = language === 'zh' ? 'zh-CN' : 'en-US';
+    return new Date(dateStr).toLocaleString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -69,8 +74,8 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
               <History className="w-6 h-6 text-indigo-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">历史报告</h2>
-              <p className="text-sm text-gray-500">查看之前生成的占星报告</p>
+              <h2 className="text-xl font-bold text-gray-900">{t('historyPage.title')}</h2>
+              <p className="text-sm text-gray-500">{t('historyPage.subtitle')}</p>
             </div>
           </div>
           <button
@@ -86,14 +91,14 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
-              <p className="text-gray-500">加载中...</p>
+              <p className="text-gray-500">{t('historyPage.loading')}</p>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="bg-red-50 p-4 rounded-lg border border-red-200 flex items-start gap-2 max-w-md">
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-red-900">加载失败</p>
+                  <p className="text-sm font-medium text-red-900">{t('historyPage.loadFailed')}</p>
                   <p className="text-sm text-red-700 mt-1">{error}</p>
                 </div>
               </div>
@@ -101,7 +106,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
                 onClick={loadReports}
                 className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                重试
+                {language === 'zh' ? '重试' : 'Retry'}
               </button>
             </div>
           ) : reports.length === 0 ? (
@@ -109,8 +114,8 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
               <div className="bg-gray-100 p-4 rounded-full mb-4">
                 <Calendar className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-lg font-medium text-gray-600 mb-2">暂无生成历史</p>
-              <p className="text-sm text-gray-400">生成报告后，可以在这里查看历史记录</p>
+              <p className="text-lg font-medium text-gray-600 mb-2">{t('historyPage.noHistory')}</p>
+              <p className="text-sm text-gray-400">{t('historyPage.noHistoryDesc')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -122,7 +127,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
                 >
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 mb-2 truncate group-hover:text-indigo-600 transition-colors">
-                      {report.report_title || '未命名报告'}
+                      {report.report_title || t('historyPage.unnamed')}
                     </h3>
 
                     <div className="flex items-center gap-1.5 text-sm text-gray-500">
@@ -140,13 +145,13 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
         <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
           <div className="flex items-center justify-between text-sm">
             <p className="text-gray-500">
-              共 <span className="font-bold text-gray-900">{reports.length}</span> 个报告
+              {t('historyPage.totalReports', { count: reports.length })}
             </p>
             <button
               onClick={onClose}
               className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-medium"
             >
-              关闭
+              {language === 'zh' ? '关闭' : 'Close'}
             </button>
           </div>
         </div>

@@ -1,7 +1,9 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AnalysisData } from '../types';
 import { ScrollText, TrendingUp, Zap, Sparkles, Shield, Users, Star, Info, Target, DollarSign, BarChart3, Heart, Flame, Compass } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface AnalysisResultProps {
   analysis: AnalysisData;
@@ -100,6 +102,9 @@ const Card = ({ title, icon: Icon, content, score, colorClass, extraBadges }: an
 };
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+
   // 检测报告模式：如果有交易员特定字段，则为交易员模式
   const isTraderMode = !!analysis.traderVitality;
 
@@ -109,7 +114,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
       {analysis.birthChart && (
         <div className="flex justify-center bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 text-amber-50 p-6 rounded-xl shadow-lg">
           <div className="text-center">
-            <div className="text-xs text-gray-300 mb-2 uppercase tracking-wider">Birth Chart · 星盘信息</div>
+            <div className="text-xs text-gray-300 mb-2 uppercase tracking-wider">{t('analysis.birthChartInfo')}</div>
             <div className="text-lg md:text-xl font-serif-sc font-medium tracking-wide">{analysis.birthChart}</div>
           </div>
         </div>
@@ -134,7 +139,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <h3 className="flex items-center gap-2 font-serif-sc font-bold text-xl text-indigo-900">
             <ScrollText className="w-5 h-5" />
-            {isTraderMode ? '交易员财富格局总评' : '你的综合人生总评'}
+            {isTraderMode ? t('analysis.traderSummary') : t('analysis.normalSummary')}
           </h3>
           <div className="w-full md:w-1/3">
             <ScoreBar score={analysis.summaryScore} />
@@ -150,7 +155,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         {isTraderMode ? (
           <>
             <Card
-              title={analysis.traderVitalityTitle || "交易生命力与抗压指数"}
+              title={analysis.traderVitalityTitle || t('analysis.traderVitality')}
               icon={Zap}
               content={analysis.traderVitality}
               score={analysis.traderVitalityScore}
@@ -158,7 +163,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             />
 
             <Card
-              title={analysis.wealthPotentialTitle || "财富量级与来源结构"}
+              title={analysis.wealthPotentialTitle || t('analysis.wealthPotential')}
               icon={DollarSign}
               content={analysis.wealthPotential}
               score={analysis.wealthPotentialScore}
@@ -166,7 +171,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             />
 
             <Card
-              title={analysis.fortuneLuckTitle || "运气与天选财富"}
+              title={analysis.fortuneLuckTitle || t('analysis.fortuneLuck')}
               icon={Sparkles}
               content={analysis.fortuneLuck}
               score={analysis.fortuneLuckScore}
@@ -174,7 +179,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             />
 
             <Card
-              title={analysis.leverageRiskTitle || "杠杆与风险管理能力"}
+              title={analysis.leverageRiskTitle || t('analysis.leverageRisk')}
               icon={Shield}
               content={analysis.leverageRisk}
               score={analysis.leverageRiskScore}
@@ -182,7 +187,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             />
 
             <Card
-              title={analysis.platformTeamTitle || "平台与团队红利"}
+              title={analysis.platformTeamTitle || t('analysis.platformTeam')}
               icon={Users}
               content={analysis.platformTeam}
               score={analysis.platformTeamScore}
@@ -190,7 +195,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             />
 
             <Card
-              title={analysis.tradingStyleTitle || "适合的交易风格与策略"}
+              title={analysis.tradingStyleTitle || t('analysis.tradingStyle')}
               icon={Target}
               content={analysis.tradingStyle}
               score={analysis.tradingStyleScore}
@@ -200,7 +205,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             {/* 新增维度：亲密能量 */}
             {analysis.intimacyEnergy && (
               <Card
-                title={analysis.intimacyEnergyTitle || "亲密能量与深度连接能力"}
+                title={analysis.intimacyEnergyTitle || t('analysis.intimacyEnergy')}
                 icon={Heart}
                 content={analysis.intimacyEnergy}
                 score={analysis.intimacyEnergyScore}
@@ -211,7 +216,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             {/* 新增维度：性能力 */}
             {analysis.sexualCharm && (
               <Card
-                title={analysis.sexualCharmTitle || "性能力与吸引力"}
+                title={analysis.sexualCharmTitle || t('analysis.sexualCharm')}
                 icon={Flame}
                 content={analysis.sexualCharm}
                 score={analysis.sexualCharmScore}
@@ -222,7 +227,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             {/* 新增维度：适宜发展方位 */}
             {analysis.favorableDirections && (
               <Card
-                title={analysis.favorableDirectionsTitle || "适宜发展方位"}
+                title={analysis.favorableDirectionsTitle || t('analysis.favorableDirections')}
                 icon={Compass}
                 content={analysis.favorableDirections}
                 score={analysis.favorableDirectionsScore}
@@ -235,7 +240,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           <>
             {analysis.personality && (
               <Card
-                title="性格与天赋"
+                title={t('analysis.personality')}
                 icon={Star}
                 content={analysis.personality}
                 score={analysis.personalityScore}
@@ -245,7 +250,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
             {analysis.industry && (
               <Card
-                title="事业与职业方向"
+                title={t('analysis.industry')}
                 icon={Target}
                 content={analysis.industry}
                 score={analysis.industryScore}
@@ -255,7 +260,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
             {analysis.wealth && (
               <Card
-                title="财运"
+                title={t('analysis.wealth')}
                 icon={DollarSign}
                 content={analysis.wealth}
                 score={analysis.wealthScore}
@@ -265,7 +270,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
             {analysis.marriage && (
               <Card
-                title="婚姻感情"
+                title={t('analysis.marriage')}
                 icon={Heart}
                 content={analysis.marriage}
                 score={analysis.marriageScore}
@@ -275,7 +280,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
             {analysis.health && (
               <Card
-                title="健康"
+                title={t('analysis.health')}
                 icon={Shield}
                 content={analysis.health}
                 score={analysis.healthScore}
@@ -285,7 +290,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
             {analysis.family && (
               <Card
-                title="家庭与子女"
+                title={t('analysis.family')}
                 icon={Users}
                 content={analysis.family}
                 score={analysis.familyScore}
@@ -295,7 +300,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
             {analysis.fengShui && (
               <Card
-                title="风水与环境"
+                title={t('analysis.fengshui')}
                 icon={Sparkles}
                 content={analysis.fengShui}
                 score={analysis.fengShuiScore}
@@ -305,7 +310,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
             {analysis.crypto && (
               <Card
-                title="加密货币投资建议"
+                title={t('analysis.crypto')}
                 icon={TrendingUp}
                 content={analysis.crypto}
                 score={analysis.cryptoScore}
@@ -314,12 +319,12 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
                   <>
                     {analysis.cryptoYear && (
                       <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded font-bold">
-                        关键年份：{analysis.cryptoYear}
+                        {t('analysis.cryptoYear')}: {analysis.cryptoYear}
                       </span>
                     )}
                     {analysis.cryptoStyle && (
                       <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold">
-                        风格：{analysis.cryptoStyle}
+                        {language === 'zh' ? '风格' : 'Style'}: {analysis.cryptoStyle}
                       </span>
                     )}
                   </>
@@ -330,7 +335,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             {/* 新增维度：亲密能量 */}
             {analysis.intimacyEnergy && (
               <Card
-                title={analysis.intimacyEnergyTitle || "亲密能量与深度连接能力"}
+                title={analysis.intimacyEnergyTitle || t('analysis.intimacyEnergy')}
                 icon={Heart}
                 content={analysis.intimacyEnergy}
                 score={analysis.intimacyEnergyScore}
@@ -341,7 +346,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             {/* 新增维度：性能力 */}
             {analysis.sexualCharm && (
               <Card
-                title={analysis.sexualCharmTitle || "性能力与吸引力"}
+                title={analysis.sexualCharmTitle || t('analysis.sexualCharm')}
                 icon={Flame}
                 content={analysis.sexualCharm}
                 score={analysis.sexualCharmScore}
@@ -352,7 +357,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             {/* 新增维度：适宜发展方位 */}
             {analysis.favorableDirections && (
               <Card
-                title={analysis.favorableDirectionsTitle || "适宜发展方位"}
+                title={analysis.favorableDirectionsTitle || t('analysis.favorableDirections')}
                 icon={Compass}
                 content={analysis.favorableDirections}
                 score={analysis.favorableDirectionsScore}
@@ -365,7 +370,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         {/* Key Years and Periods - if available */}
         {analysis.keyYears && (
           <Card
-            title="关键财富年份"
+            title={t('analysis.keyWealthYears')}
             icon={BarChart3}
             content={analysis.keyYears}
             colorClass="text-blue-700"
@@ -374,7 +379,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
         {analysis.peakPeriods && (
           <Card
-            title="潜在高速盈利期"
+            title={t('analysis.highProfitPeriod')}
             icon={TrendingUp}
             content={analysis.peakPeriods}
             colorClass="text-green-700"
@@ -383,7 +388,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
         {analysis.riskPeriods && (
           <Card
-            title="高风险波动期"
+            title={t('analysis.highRiskPeriod')}
             icon={Shield}
             content={analysis.riskPeriods}
             colorClass="text-red-700"
@@ -392,35 +397,45 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
         {/* Static Score Explanation Card */}
         <Card
-          title="评分讲解"
+          title={t('analysis.scoreExplanation')}
           icon={Info}
           colorClass="text-gray-600"
           content={
             <div className="space-y-4">
               <ul className="space-y-1.5 font-mono text-xs md:text-sm">
                 <li className="flex justify-between items-center border-b border-gray-100 pb-1">
-                  <span>0-29分</span>
-                  <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded font-bold">极弱</span>
+                  <span>0-29{language === 'zh' ? '分' : ''}</span>
+                  <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded font-bold">
+                    {language === 'zh' ? '极弱' : 'Very Weak'}
+                  </span>
                 </li>
                 <li className="flex justify-between items-center border-b border-gray-100 pb-1">
-                  <span>30-49分</span>
-                  <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-600 rounded font-bold">偏弱</span>
+                  <span>30-49{language === 'zh' ? '分' : ''}</span>
+                  <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-600 rounded font-bold">
+                    {language === 'zh' ? '偏弱' : 'Weak'}
+                  </span>
                 </li>
                 <li className="flex justify-between items-center border-b border-gray-100 pb-1">
-                  <span>50-69分</span>
-                  <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded font-bold">中等</span>
+                  <span>50-69{language === 'zh' ? '分' : ''}</span>
+                  <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded font-bold">
+                    {language === 'zh' ? '中等' : 'Average'}
+                  </span>
                 </li>
                 <li className="flex justify-between items-center border-b border-gray-100 pb-1">
-                  <span>70-89分</span>
-                  <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded font-bold">优秀</span>
+                  <span>70-89{language === 'zh' ? '分' : ''}</span>
+                  <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded font-bold">
+                    {language === 'zh' ? '优秀' : 'Excellent'}
+                  </span>
                 </li>
                 <li className="flex justify-between items-center">
-                  <span>90-100分</span>
-                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-600 rounded font-bold">卓越</span>
+                  <span>90-100{language === 'zh' ? '分' : ''}</span>
+                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-600 rounded font-bold">
+                    {language === 'zh' ? '卓越' : 'Outstanding'}
+                  </span>
                 </li>
               </ul>
               <p className="text-xs text-black leading-relaxed border-t border-gray-100 pt-2 text-justify">
-                注：占星分析提供的是潜力趋势，交易成功还需要技术学习、心理修炼、风险管理和实战经验的配合。星象只是地图，真正的旅程由你自己创造。
+                {t('analysis.disclaimer')}
               </p>
             </div>
           }

@@ -105,7 +105,7 @@ const App: React.FC = () => {
         const fullReport = await getReport(report.id);
 
         if (!fullReport.full_report || !fullReport.full_report.content) {
-          throw new Error('报告数据不完整或已损坏');
+          throw new Error(language === 'zh' ? '报告数据不完整或已损坏' : 'Report data is incomplete or corrupted');
         }
 
         report = fullReport;
@@ -452,11 +452,14 @@ const App: React.FC = () => {
   const handlePrint = () => {
     // 判断报告类型：如果有 traderVitality 字段，则为交易员报告
     const isTraderReport = result?.analysis?.traderVitality ? true : false;
-    const reportType = isTraderReport ? '交易员财富报告' : '综合人生报告';
+    const reportType = isTraderReport
+      ? (language === 'zh' ? '交易员财富报告' : 'Trader Wealth Report')
+      : (language === 'zh' ? '综合人生报告' : 'Comprehensive Life Report');
 
     // 设置文档标题为：姓名+报告类型
     const originalTitle = document.title;
-    const pdfFileName = `${userName || '占星'}${reportType}`;
+    const defaultName = language === 'zh' ? '占星' : 'Astrology';
+    const pdfFileName = `${userName || defaultName}${reportType}`;
     document.title = pdfFileName;
 
     // 打印
@@ -486,19 +489,21 @@ const App: React.FC = () => {
     // 1. 获取图表 SVG (Recharts 生成的是 SVG)
     const chartContainer = document.querySelector('.recharts-surface');
     // 如果找不到 chart，给一个提示文本
-    const chartSvg = chartContainer ? chartContainer.outerHTML : '<div style="padding:20px;text-align:center;">图表导出失败，请截图保存</div>';
+    const chartFailText = language === 'zh' ? '图表导出失败，请截图保存' : 'Chart export failed, please take a screenshot';
+    const chartSvg = chartContainer ? chartContainer.outerHTML : `<div style="padding:20px;text-align:center;">${chartFailText}</div>`;
 
     // 2. 获取命理分析部分的 HTML
     const analysisContainer = document.getElementById('analysis-result-container');
     const analysisHtml = analysisContainer ? analysisContainer.innerHTML : '';
 
     // 3. 生成流年详批表格 (去掉流年和大运列)
+    const ageUnit = language === 'zh' ? '岁' : ' y/o';
     const tableRows = result.chartData.map(item => {
       const scoreColor = item.close >= item.open ? 'text-green-600' : 'text-red-600';
       const trendIcon = item.close >= item.open ? '▲' : '▼';
       return `
         <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-          <td class="p-3 border-r border-gray-100 text-center font-mono">${item.age}岁</td>
+          <td class="p-3 border-r border-gray-100 text-center font-mono">${item.age}${ageUnit}</td>
           <td class="p-3 border-r border-gray-100 text-center font-bold ${scoreColor}">
             ${item.score} <span class="text-xs">${trendIcon}</span>
           </td>
@@ -507,20 +512,26 @@ const App: React.FC = () => {
       `;
     }).join('');
 
+    const tableTitle = language === 'zh' ? '流年详批全表' : 'Detailed Annual Fortune Table';
+    const tableSubtitle = language === 'zh' ? '(由于离线网页无法交互，特此列出所有年份详情)' : '(All years listed for offline viewing)';
+    const ageHeader = language === 'zh' ? '年龄' : 'Age';
+    const scoreHeader = language === 'zh' ? '评分' : 'Score';
+    const adviceHeader = language === 'zh' ? '运势批断与建议' : 'Fortune Analysis & Advice';
+
     const detailedTableHtml = `
       <div class="mt-12 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
            <div class="w-1 h-5 bg-indigo-600 rounded-full"></div>
-           <h3 class="text-xl font-bold text-gray-800 font-serif-sc">流年详批全表</h3>
-           <span class="text-xs text-gray-500 ml-2">(由于离线网页无法交互，特此列出所有年份详情)</span>
+           <h3 class="text-xl font-bold text-gray-800 font-serif-sc">${tableTitle}</h3>
+           <span class="text-xs text-gray-500 ml-2">${tableSubtitle}</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-gray-100 text-gray-600 text-sm font-bold uppercase tracking-wider">
-                <th class="p-3 border-r border-gray-200 text-center w-20">年龄</th>
-                <th class="p-3 border-r border-gray-200 text-center w-20">评分</th>
-                <th class="p-3">运势批断与建议</th>
+                <th class="p-3 border-r border-gray-200 text-center w-20">${ageHeader}</th>
+                <th class="p-3 border-r border-gray-200 text-center w-20">${scoreHeader}</th>
+                <th class="p-3">${adviceHeader}</th>
               </tr>
             </thead>
             <tbody>
@@ -532,13 +543,26 @@ const App: React.FC = () => {
     `;
 
     // 4. 组装完整的 HTML 文件
+    const htmlLang = language === 'zh' ? 'zh-CN' : 'en';
+    const defaultUser = language === 'zh' ? '用户' : 'User';
+    const reportTitle = language === 'zh' ? 'Astro Moon 占星报告' : 'Astro Moon Astrology Report';
+    const possessiveSuffix = language === 'zh' ? '的' : "'s ";
+    const generatedAt = language === 'zh' ? '生成时间：' : 'Generated at: ';
+    const chartTitle = language === 'zh' ? '流年大运走势图' : 'Life Fortune Trend Chart';
+    const chartNote = language === 'zh'
+      ? '注：图表K线颜色根据运势涨跌绘制，数值越高代表运势越强。'
+      : 'Note: K-line colors indicate fortune rise/fall. Higher values represent stronger fortune.';
+    const footerText = language === 'zh'
+      ? '仅供娱乐与文化研究，请勿迷信'
+      : 'For entertainment and cultural research only';
+
     const fullHtml = `
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${userName || '用户'} - Astro Moon 占星报告</title>
+  <title>${userName || defaultUser} - ${reportTitle}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Inter:wght@400;600&display=swap');
@@ -553,21 +577,21 @@ const App: React.FC = () => {
 
     <!-- Header -->
     <div class="text-center border-b border-gray-200 pb-8">
-      <h1 class="text-4xl font-bold font-serif-sc text-gray-900 mb-2">${userName ? userName + '的' : ''}Astro Moon 占星报告</h1>
-      <p class="text-gray-500 text-sm">生成时间：${timeString}</p>
+      <h1 class="text-4xl font-bold font-serif-sc text-gray-900 mb-2">${userName ? userName + possessiveSuffix : ''}${reportTitle}</h1>
+      <p class="text-gray-500 text-sm">${generatedAt}${timeString}</p>
     </div>
 
     <!-- Chart Section -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
       <div class="flex items-center gap-2 mb-6">
         <div class="w-1 h-6 bg-indigo-600 rounded-full"></div>
-        <h3 class="text-xl font-bold text-gray-800 font-serif-sc">流年大运走势图</h3>
+        <h3 class="text-xl font-bold text-gray-800 font-serif-sc">${chartTitle}</h3>
       </div>
       <!-- Injected SVG Container -->
       <div class="w-full overflow-hidden flex justify-center py-4">
         ${chartSvg}
       </div>
-      <p class="text-center text-xs text-gray-400 mt-2">注：图表K线颜色根据运势涨跌绘制，数值越高代表运势越强。</p>
+      <p class="text-center text-xs text-gray-400 mt-2">${chartNote}</p>
     </div>
 
     <!-- Analysis Cards -->
@@ -580,7 +604,7 @@ const App: React.FC = () => {
 
     <!-- Footer -->
     <div class="text-center text-gray-400 text-sm py-12 border-t border-gray-200 mt-12">
-      <p>&copy; ${now.getFullYear()} Astro Moon | 仅供娱乐与文化研究，请勿迷信</p>
+      <p>&copy; ${now.getFullYear()} Astro Moon | ${footerText}</p>
     </div>
 
   </div>
