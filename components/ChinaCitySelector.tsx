@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Loader2 } from 'lucide-react';
 import chinaCitiesData from '../data/china-cities.json';
 
@@ -20,6 +21,7 @@ interface ChinaCitySelectorProps {
 }
 
 const ChinaCitySelector: React.FC<ChinaCitySelectorProps> = ({ onSelect }) => {
+  const { t } = useTranslation();
   const [provinces] = useState<CityData[]>(chinaCitiesData as CityData[]);
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
@@ -96,7 +98,7 @@ const ChinaCitySelector: React.FC<ChinaCitySelectorProps> = ({ onSelect }) => {
   // 确认选择
   const handleConfirm = async () => {
     if (!selectedProvince || !selectedCity) {
-      alert('请至少选择省份和城市');
+      alert(t('importData.selectAtLeast'));
       return;
     }
 
@@ -119,7 +121,7 @@ const ChinaCitySelector: React.FC<ChinaCitySelectorProps> = ({ onSelect }) => {
         timezone: timezone,
       });
     } else {
-      alert('无法获取该地点的经纬度，请尝试使用地图选择器');
+      alert(t('importData.cannotGetCoords'));
     }
   };
 
@@ -128,13 +130,13 @@ const ChinaCitySelector: React.FC<ChinaCitySelectorProps> = ({ onSelect }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* 省份选择 */}
         <div>
-          <label className="block text-xs font-bold text-gray-600 mb-1">省份/直辖市</label>
+          <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.province')}</label>
           <select
             value={selectedProvince}
             onChange={(e) => setSelectedProvince(e.target.value)}
             className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white text-sm"
           >
-            <option value="">请选择省份</option>
+            <option value="">{t('importData.selectProvince')}</option>
             {provinces.map((province) => (
               <option key={province.code} value={province.name}>
                 {province.name}
@@ -145,14 +147,14 @@ const ChinaCitySelector: React.FC<ChinaCitySelectorProps> = ({ onSelect }) => {
 
         {/* 城市选择 */}
         <div>
-          <label className="block text-xs font-bold text-gray-600 mb-1">城市</label>
+          <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.city')}</label>
           <select
             value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
             disabled={!selectedProvince || cities.length === 0}
             className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
           >
-            <option value="">请选择城市</option>
+            <option value="">{t('importData.selectCityOption')}</option>
             {cities.map((city) => (
               <option key={city.code} value={city.name}>
                 {city.name}
@@ -163,14 +165,14 @@ const ChinaCitySelector: React.FC<ChinaCitySelectorProps> = ({ onSelect }) => {
 
         {/* 区县选择 */}
         <div>
-          <label className="block text-xs font-bold text-gray-600 mb-1">区/县（可选）</label>
+          <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.district')}</label>
           <select
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
             disabled={!selectedCity || districts.length === 0}
             className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
           >
-            <option value="">请选择区县</option>
+            <option value="">{t('importData.selectDistrict')}</option>
             {districts.map((district) => (
               <option key={district.code} value={district.name}>
                 {district.name}
@@ -190,18 +192,18 @@ const ChinaCitySelector: React.FC<ChinaCitySelectorProps> = ({ onSelect }) => {
         {isGeocoding ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>获取坐标中...</span>
+            <span>{t('importData.gettingCoords')}</span>
           </>
         ) : (
           <>
             <MapPin className="w-5 h-5" />
-            <span>确认选择并获取坐标</span>
+            <span>{t('importData.confirmAndGetCoords')}</span>
           </>
         )}
       </button>
 
       <p className="text-xs text-green-600/70 text-center">
-        💡 选择后将自动获取该地点的经纬度和时区信息
+        💡 {t('importData.autoGetCoordsHint')}
       </p>
     </div>
   );
