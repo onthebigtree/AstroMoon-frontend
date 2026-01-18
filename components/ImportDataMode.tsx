@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LifeDestinyResult, Annual2026Result } from '../types';
 import { CheckCircle, AlertCircle, Sparkles, ArrowRight, Zap, Loader2, TrendingUp, Heart, MapPin, BookOpen, Save, Edit2, Trash2, X, Share2, Twitter, Calendar } from 'lucide-react';
 import { TRADER_SYSTEM_INSTRUCTION, NORMAL_LIFE_SYSTEM_INSTRUCTION, ANNUAL_2026_SYSTEM_INSTRUCTION } from '../constants';
@@ -145,6 +146,7 @@ const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; ti
 };
 
 const ImportDataMode: React.FC<ImportDataModeProps> = ({ onDataImport, onStarsChange, defaultMode }) => {
+    const { t } = useTranslation();
     const { currentUser } = useAuth();
     const { language, lockLanguage, unlockLanguage } = useLanguage();
     const [mode, setMode] = useState<Mode>(defaultMode || 'choose');
@@ -1814,8 +1816,8 @@ ${chartInfo}
             {mode === 'choose' && (
                 <div className="space-y-6">
                     <div className="text-center">
-                        <h2 className="text-3xl font-bold font-serif-sc text-gray-800 mb-3">选择分析类型</h2>
-                        <p className="text-gray-500 text-sm">请选择您想要的占星分析模式</p>
+                        <h2 className="text-3xl font-bold font-serif-sc text-gray-800 mb-3">{t('importData.chooseType')}</h2>
+                        <p className="text-gray-500 text-sm">{t('importData.chooseTypeDesc')}</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1831,14 +1833,14 @@ ${chartInfo}
                                         <TrendingUp className="w-10 h-10" />
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold mb-2">💰 专业交易者</h3>
+                                <h3 className="text-xl font-bold mb-2">💰 {t('importData.traderTitle')}</h3>
                                 <p className="text-sm text-white/90 mb-4">
-                                    专注财富格局、风险管理与交易策略分析
+                                    {t('importData.traderSubtitle')}
                                 </p>
                                 <div className="text-xs text-white/80 space-y-1">
-                                    <div>📈 财富量级评估</div>
-                                    <div>⚖️ 风险管理能力</div>
-                                    <div>🎯 交易风格匹配</div>
+                                    <div>📈 {t('importData.traderFeature1')}</div>
+                                    <div>⚖️ {t('importData.traderFeature2')}</div>
+                                    <div>🎯 {t('importData.traderFeature3')}</div>
                                 </div>
                             </div>
                         </button>
@@ -1855,14 +1857,14 @@ ${chartInfo}
                                         <Heart className="w-10 h-10" />
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold mb-2">🌟 综合人生</h3>
+                                <h3 className="text-xl font-bold mb-2">🌟 {t('importData.normalTitle')}</h3>
                                 <p className="text-sm text-white/90 mb-4">
-                                    全面分析性格、情感、事业、健康等人生领域
+                                    {t('importData.normalSubtitle')}
                                 </p>
                                 <div className="text-xs text-white/80 space-y-1">
-                                    <div>💖 情感婚姻分析</div>
-                                    <div>💼 事业发展方向</div>
-                                    <div>🏥 健康生活建议</div>
+                                    <div>💖 {t('importData.normalFeature1')}</div>
+                                    <div>💼 {t('importData.normalFeature2')}</div>
+                                    <div>🏥 {t('importData.normalFeature3')}</div>
                                 </div>
                             </div>
                         </button>
@@ -1879,14 +1881,14 @@ ${chartInfo}
                                         <Calendar className="w-10 h-10" />
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold mb-2">📅 2026年运</h3>
+                                <h3 className="text-xl font-bold mb-2">📅 {t('importData.annual2026Title')}</h3>
                                 <p className="text-sm text-white/90 mb-4">
-                                    基于小限法的年度运势深度解读
+                                    {t('importData.annual2026Subtitle')}
                                 </p>
                                 <div className="text-xs text-white/80 space-y-1">
-                                    <div>🎯 年度核心课题</div>
-                                    <div>📅 关键月份预警</div>
-                                    <div>💫 12月运势走势</div>
+                                    <div>🎯 {t('importData.annual2026Feature1')}</div>
+                                    <div>📅 {t('importData.annual2026Feature2')}</div>
+                                    <div>💫 {t('importData.annual2026Feature3')}</div>
                                 </div>
                             </div>
                         </button>
