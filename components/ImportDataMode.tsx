@@ -1923,7 +1923,7 @@ ${chartInfo}
                     onClick={() => { setMode('choose'); setStep(1); setError(null); }}
                     className="mb-6 text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
                 >
-                    ← 返回选择模式
+                    ← {t('importData.backToChoose')}
                 </button>
             )}
 
@@ -1932,10 +1932,10 @@ ${chartInfo}
                 <div className="space-y-6">
                     <div className="text-center">
                         <h2 className="text-2xl font-bold font-serif-sc text-gray-800 mb-2">
-                            输入出生信息
+                            {t('importData.enterBirthInfo')}
                         </h2>
                         <p className="text-gray-500 text-sm">
-                            填写出生信息后即可一键生成 {mode === 'trader' ? '交易员财富' : mode === 'annual2026' ? '2026年年运' : '人生'}分析报告
+                            {t('importData.enterBirthInfoDesc', { mode: mode === 'trader' ? t('importData.traderReport') : mode === 'annual2026' ? t('importData.annual2026Report') : t('importData.lifeReport') })}
                         </p>
                     </div>
 
@@ -1944,7 +1944,7 @@ ${chartInfo}
                         <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200 mb-4">
                             <div className="flex items-center gap-2 mb-3">
                                 <BookOpen className="w-4 h-4 text-purple-600" />
-                                <span className="text-sm font-bold text-purple-800">我的档案 ({profiles.length})</span>
+                                <span className="text-sm font-bold text-purple-800">{t('importData.myProfiles')} ({profiles.length})</span>
                                 {isLoadingProfiles && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
                             </div>
 
@@ -1961,7 +1961,7 @@ ${chartInfo}
                                     >
                                         <div className="flex-1 min-w-0">
                                             <div className="font-bold text-gray-800 truncate text-sm">
-                                                {profile.profile_name || '未命名'}
+                                                {profile.profile_name || t('importData.unnamed')}
                                             </div>
                                             <div className="text-xs text-gray-500">
                                                 {profile.birth_year}-{profile.birth_month}-{profile.birth_day} {profile.birth_hour}:{String(profile.birth_minute).padStart(2, '0')}
@@ -1975,7 +1975,7 @@ ${chartInfo}
                                                     handleEditProfile(profile);
                                                 }}
                                                 className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
-                                                title="编辑档案"
+                                                title={t('importData.editProfile')}
                                             >
                                                 <Edit2 className="w-3.5 h-3.5" />
                                             </button>
@@ -1983,7 +1983,7 @@ ${chartInfo}
                                                 onClick={(e) => handleDeleteProfile(String(profile.id), e)}
                                                 disabled={isDeletingProfile}
                                                 className="p-1.5 text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
-                                                title="删除档案"
+                                                title={t('importData.deleteProfile')}
                                             >
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
@@ -1993,14 +1993,14 @@ ${chartInfo}
                             </div>
 
                             <p className="text-xs text-gray-500 mt-3">
-                                💡 提示：点击档案快速加载，点击"查看基础星盘"后会自动保存新档案
+                                💡 {t('importData.profileTip')}
                             </p>
 
                             {/* 档案操作成功提示 */}
                             {showSaveSuccess && (
                                 <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg flex items-center gap-2 text-green-800 text-sm">
                                     <CheckCircle className="w-4 h-4" />
-                                    <span>操作成功！</span>
+                                    <span>{t('importData.operationSuccess')}</span>
                                 </div>
                             )}
                         </div>
@@ -2008,26 +2008,26 @@ ${chartInfo}
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold text-gray-600 mb-1">姓名 (可选)</label>
+                            <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.nameOptional')}</label>
                             <input
                                 type="text"
                                 name="name"
                                 value={astroInfo.name}
                                 onChange={handleAstroChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                placeholder="姓名"
+                                placeholder={t('importData.name')}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-gray-600 mb-1">性别</label>
+                            <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.gender')}</label>
                             <select
                                 name="gender"
                                 value={astroInfo.gender}
                                 onChange={handleAstroChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                             >
-                                <option value="Male">男</option>
-                                <option value="Female">女</option>
+                                <option value="Male">{t('importData.male')}</option>
+                                <option value="Female">{t('importData.female')}</option>
                             </select>
                         </div>
                     </div>
@@ -2035,12 +2035,12 @@ ${chartInfo}
                     <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
                         <div className="flex items-center gap-2 mb-3 text-blue-800 text-sm font-bold">
                             <Sparkles className="w-4 h-4" />
-                            <span>出生日期时间 (阳历/公历)</span>
+                            <span>{t('importData.birthDateTime')}</span>
                         </div>
 
                         <div className="grid grid-cols-3 gap-3 mb-3">
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">年</label>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.birthYear')}</label>
                                 <input
                                     type="number"
                                     name="birthYear"
@@ -2051,7 +2051,7 @@ ${chartInfo}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">月</label>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.birthMonth')}</label>
                                 <input
                                     type="number"
                                     name="birthMonth"
@@ -2064,7 +2064,7 @@ ${chartInfo}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">日</label>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.birthDay')}</label>
                                 <input
                                     type="number"
                                     name="birthDay"
@@ -2080,7 +2080,7 @@ ${chartInfo}
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">时 (0-23)</label>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.birthHour')}</label>
                                 <input
                                     type="number"
                                     name="birthHour"
@@ -2093,7 +2093,7 @@ ${chartInfo}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">分 (0-59)</label>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.birthMinute')}</label>
                                 <input
                                     type="number"
                                     name="birthMinute"
@@ -2111,7 +2111,7 @@ ${chartInfo}
                     <div className="bg-green-50 p-4 rounded-xl border border-green-100">
                         <div className="flex items-center gap-2 mb-3 text-green-800 text-sm font-bold">
                             <Sparkles className="w-4 h-4" />
-                            <span>出生地点与坐标</span>
+                            <span>{t('importData.birthPlace')}</span>
                         </div>
 
                         {/* 省市区选择器 */}
@@ -2124,7 +2124,7 @@ ${chartInfo}
                                     className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1 mx-auto"
                                 >
                                     <MapPin className="w-3 h-3" />
-                                    <span>找不到出生地？点击地图选择</span>
+                                    <span>{t('importData.mapPickerTip')}</span>
                                 </button>
                             </div>
                         </div>
@@ -2132,7 +2132,7 @@ ${chartInfo}
                         {/* 经纬度和时区输入 */}
                         <div className="grid grid-cols-3 gap-3">
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">纬度</label>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.latitude')}</label>
                                 <input
                                     type="number"
                                     step="0.0001"
@@ -2144,7 +2144,7 @@ ${chartInfo}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">经度</label>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.longitude')}</label>
                                 <input
                                     type="number"
                                     step="0.0001"
@@ -2156,7 +2156,7 @@ ${chartInfo}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">时区 (UTC)</label>
+                                <label className="block text-xs font-bold text-gray-600 mb-1">{t('importData.timezone')}</label>
                                 <input
                                     type="number"
                                     step="0.5"
@@ -2168,20 +2168,20 @@ ${chartInfo}
                                 />
                             </div>
                         </div>
-                        <p className="text-xs text-green-600/70 mt-2">💡 也可以手动输入精确的经纬度和时区</p>
+                        <p className="text-xs text-green-600/70 mt-2">💡 {t('importData.manualCoordTip')}</p>
                     </div>
 
                     {/* 分宫制选择器 */}
                     <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
                         <div className="flex items-center gap-2 mb-3 text-purple-800 text-sm font-bold">
                             <Sparkles className="w-4 h-4" />
-                            <span>分宫制系统 (House System)</span>
+                            <span>{t('importData.houseSystem')}</span>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-600 mb-2">
-                                选择分宫制
+                                {t('importData.selectHouseSystem')}
                                 <span className="ml-2 text-xs font-normal text-purple-600">
-                                    {mode === 'trader' || mode === 'annual2026' ? '(默认：整宫制)' : '(普通版本默认：普拉西度)'}
+                                    {mode === 'trader' || mode === 'annual2026' ? t('importData.defaultWholeSigns') : t('importData.defaultPlacidus')}
                                 </span>
                             </label>
                             <select
@@ -2189,17 +2189,17 @@ ${chartInfo}
                                 onChange={(e) => setHouseSystem(e.target.value)}
                                 className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white font-bold"
                             >
-                                <option value="P">Placidus - 普拉西度制（最常用）</option>
-                                <option value="W">Whole Sign - 整宫制</option>
-                                <option value="K">Koch - 科赫制</option>
-                                <option value="E">Equal - 等宫制</option>
-                                <option value="B">Alcabitius - 阿尔卡比修斯制</option>
-                                <option value="R">Regiomontanus - 雷格蒙塔努斯制</option>
-                                <option value="C">Campanus - 坎帕纳斯制</option>
+                                <option value="P">{t('importData.placidus')}</option>
+                                <option value="W">{t('importData.wholeSigns')}</option>
+                                <option value="K">{t('importData.koch')}</option>
+                                <option value="E">{t('importData.equal')}</option>
+                                <option value="B">{t('importData.alcabitius')}</option>
+                                <option value="R">{t('importData.regiomontanus')}</option>
+                                <option value="C">{t('importData.campanus')}</option>
                             </select>
                         </div>
                         <div className="mt-2 text-xs text-purple-600/80 bg-white/50 p-2 rounded">
-                            💡 不同分宫制会影响宫位的划分方式。{mode === 'trader' || mode === 'annual2026' ? '推荐使用整宫制(W)。' : '普通版本推荐使用普拉西度制(P)。'}
+                            💡 {t('importData.houseSystemTip')}{mode === 'trader' || mode === 'annual2026' ? t('importData.recommendWholeSigns') : t('importData.recommendPlacidus')}
                         </div>
                     </div>
 
@@ -2216,7 +2216,7 @@ ${chartInfo}
                                     rel="noopener noreferrer"
                                     className="inline-block text-sm text-blue-600 hover:underline ml-7"
                                 >
-                                    点击联系人工客服 →
+                                    {t('importData.contactSupport')}
                                 </a>
                             )}
                         </div>
@@ -2230,12 +2230,12 @@ ${chartInfo}
                         {isLoading ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                <span>计算星盘中...</span>
+                                <span>{t('importData.calculatingChart')}</span>
                             </>
                         ) : (
                             <>
                                 <Sparkles className="w-5 h-5" />
-                                <span>查看基础星盘</span>
+                                <span>{t('importData.viewBasicChart')}</span>
                                 <ArrowRight className="w-5 h-5" />
                             </>
                         )}
@@ -2247,29 +2247,29 @@ ${chartInfo}
             {step === 2 && mode !== 'choose' && basicChart && (
                 <div className="space-y-6">
                     <div className="text-center">
-                        <h2 className="text-2xl font-bold font-serif-sc text-gray-800 mb-2">基础星盘信息</h2>
-                        <p className="text-gray-500 text-sm">根据您的出生信息计算的基础星盘配置</p>
+                        <h2 className="text-2xl font-bold font-serif-sc text-gray-800 mb-2">{t('importData.basicChartInfo')}</h2>
+                        <p className="text-gray-500 text-sm">{t('importData.basicChartDesc')}</p>
                     </div>
 
                     {/* 出生信息确认 */}
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <div className="text-sm text-gray-700 space-y-1">
-                            <div><span className="font-bold">姓名：</span>{astroInfo.name}</div>
-                            <div><span className="font-bold">性别：</span>{astroInfo.gender === 'Male' ? '男' : '女'}</div>
-                            <div><span className="font-bold">出生日期：</span>{astroInfo.birthYear}年{astroInfo.birthMonth}月{astroInfo.birthDay}日</div>
-                            <div><span className="font-bold">出生时间：</span>{astroInfo.birthHour}时{astroInfo.birthMinute}分</div>
+                            <div><span className="font-bold">{t('importData.nameLabel')}</span>{astroInfo.name}</div>
+                            <div><span className="font-bold">{t('importData.genderLabel')}</span>{astroInfo.gender === 'Male' ? t('importData.male') : t('importData.female')}</div>
+                            <div><span className="font-bold">{t('importData.birthDateLabel')}</span>{astroInfo.birthYear}-{astroInfo.birthMonth}-{astroInfo.birthDay}</div>
+                            <div><span className="font-bold">{t('importData.birthTimeLabel')}</span>{astroInfo.birthHour}:{String(astroInfo.birthMinute).padStart(2, '0')}</div>
                             {astroInfo.birthPlace && (
-                                <div><span className="font-bold">出生地点：</span>{astroInfo.birthPlace}</div>
+                                <div><span className="font-bold">{t('importData.birthPlaceLabel')}</span>{astroInfo.birthPlace}</div>
                             )}
                             <div>
-                                <span className="font-bold">分宫制：</span>
-                                {houseSystem === 'P' && 'Placidus (普拉西度制)'}
-                                {houseSystem === 'W' && 'Whole Sign (整宫制)'}
-                                {houseSystem === 'K' && 'Koch (科赫制)'}
-                                {houseSystem === 'E' && 'Equal (等宫制)'}
-                                {houseSystem === 'B' && 'Alcabitius (阿尔卡比修斯制)'}
-                                {houseSystem === 'R' && 'Regiomontanus (雷格蒙塔努斯制)'}
-                                {houseSystem === 'C' && 'Campanus (坎帕纳斯制)'}
+                                <span className="font-bold">{t('importData.houseSystemLabel')}</span>
+                                {houseSystem === 'P' && t('importData.placidus')}
+                                {houseSystem === 'W' && t('importData.wholeSigns')}
+                                {houseSystem === 'K' && t('importData.koch')}
+                                {houseSystem === 'E' && t('importData.equal')}
+                                {houseSystem === 'B' && t('importData.alcabitius')}
+                                {houseSystem === 'R' && t('importData.regiomontanus')}
+                                {houseSystem === 'C' && t('importData.campanus')}
                             </div>
                         </div>
                     </div>
@@ -2280,15 +2280,15 @@ ${chartInfo}
                             <div className="text-3xl">{basicChart.isDiurnal ? '☀️' : '🌙'}</div>
                             <div>
                                 <h3 className="text-lg font-bold text-gray-800">
-                                    {basicChart.isDiurnal ? '昼盘 (Day Chart)' : '夜盘 (Night Chart)'}
+                                    {basicChart.isDiurnal ? t('importData.dayChart') : t('importData.nightChart')}
                                 </h3>
                                 <p className="text-sm text-gray-600">
-                                    {basicChart.isDiurnal ? '太阳在地平线以上' : '太阳在地平线以下'}
+                                    {basicChart.isDiurnal ? t('importData.sunAboveHorizon') : t('importData.sunBelowHorizon')}
                                 </p>
                             </div>
                         </div>
                         <div className="text-xs text-gray-500 bg-white/50 p-2 rounded">
-                            💡 昼盘利于太阳、木星、土星；夜盘利于月亮、金星、火星
+                            💡 {t('importData.sectTip')}
                         </div>
                     </div>
 
