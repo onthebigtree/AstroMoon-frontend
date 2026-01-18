@@ -9,12 +9,12 @@ const getSavedLanguage = (): string => {
   if (saved && ['en', 'zh'].includes(saved)) {
     return saved;
   }
-  // 检测浏览器语言
+  // 默认中文，除非浏览器语言明确是英文
   const browserLang = navigator.language.toLowerCase();
-  if (browserLang.startsWith('zh')) {
-    return 'zh';
+  if (browserLang.startsWith('en')) {
+    return 'en';
   }
-  return 'en';
+  return 'zh';
 };
 
 i18n
