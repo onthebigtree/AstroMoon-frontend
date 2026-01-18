@@ -2298,12 +2298,12 @@ ${chartInfo}
                         <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="text-2xl">☉</span>
-                                <h4 className="font-bold text-gray-800">太阳 (Sun)</h4>
+                                <h4 className="font-bold text-gray-800">{t('importData.sun')}</h4>
                             </div>
                             <div className="space-y-1 text-sm">
-                                <div><span className="text-gray-600">星座：</span><span className="font-bold">{basicChart.sunSign}</span></div>
-                                <div><span className="text-gray-600">宫位：</span><span className="font-bold">第 {basicChart.sunHouse} 宫</span></div>
-                                <div><span className="text-gray-600">状态：</span><span className="font-bold">{basicChart.sunStatus}</span></div>
+                                <div><span className="text-gray-600">{t('importData.sign')}</span><span className="font-bold">{basicChart.sunSign}</span></div>
+                                <div><span className="text-gray-600">{t('importData.house')}</span><span className="font-bold">{t('importData.houseNum', { num: basicChart.sunHouse })}</span></div>
+                                <div><span className="text-gray-600">{t('importData.status')}</span><span className="font-bold">{basicChart.sunStatus}</span></div>
                             </div>
                         </div>
 
@@ -2311,11 +2311,11 @@ ${chartInfo}
                         <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="text-2xl">☽</span>
-                                <h4 className="font-bold text-gray-800">月亮 (Moon)</h4>
+                                <h4 className="font-bold text-gray-800">{t('importData.moon')}</h4>
                             </div>
                             <div className="space-y-1 text-sm">
-                                <div><span className="text-gray-600">星座：</span><span className="font-bold">{basicChart.moonSign}</span></div>
-                                <div className="text-xs text-gray-500 mt-2">情绪与潜意识的反应模式</div>
+                                <div><span className="text-gray-600">{t('importData.sign')}</span><span className="font-bold">{basicChart.moonSign}</span></div>
+                                <div className="text-xs text-gray-500 mt-2">{t('importData.moonDesc')}</div>
                             </div>
                         </div>
                     </div>
@@ -2324,18 +2324,18 @@ ${chartInfo}
                     <div className="bg-purple-50 p-5 rounded-xl border-2 border-purple-200">
                         <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
                             <span className="text-xl">✨</span>
-                            四轴点 (Angular Houses)
+                            {t('importData.angularHouses')}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="bg-white p-3 rounded-lg">
-                                <div className="text-xs text-gray-500 mb-1">上升点 (ASC)</div>
+                                <div className="text-xs text-gray-500 mb-1">{t('importData.ascLabel')}</div>
                                 <div className="font-bold text-purple-700">{basicChart.ascendant}</div>
-                                <div className="text-xs text-gray-500 mt-1">自我呈现、外在形象</div>
+                                <div className="text-xs text-gray-500 mt-1">{t('importData.ascDesc')}</div>
                             </div>
                             <div className="bg-white p-3 rounded-lg">
-                                <div className="text-xs text-gray-500 mb-1">天顶 (MC)</div>
+                                <div className="text-xs text-gray-500 mb-1">{t('importData.mcLabel')}</div>
                                 <div className="font-bold text-purple-700">{basicChart.mc}</div>
-                                <div className="text-xs text-gray-500 mt-1">事业方向、公众形象</div>
+                                <div className="text-xs text-gray-500 mt-1">{t('importData.mcDesc')}</div>
                             </div>
                         </div>
                     </div>
@@ -2345,8 +2345,8 @@ ${chartInfo}
                         <div className="flex items-start gap-2">
                             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                             <div className="text-sm text-amber-800">
-                                <p className="font-bold mb-1">⚠️ 简化计算说明</p>
-                                <p className="text-xs">上升星座、月亮星座等信息为估算值。精确计算需要出生地的经纬度坐标和专业天文历表。以上信息仅供参考，完整的AI分析将基于您提供的所有信息进行。</p>
+                                <p className="font-bold mb-1">⚠️ {t('importData.simplifiedNote')}</p>
+                                <p className="text-xs">{t('importData.simplifiedDesc')}</p>
                             </div>
                         </div>
                     </div>
@@ -2360,10 +2360,10 @@ ${chartInfo}
                                 <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
                                 <div className="flex-1">
                                     <p className="text-blue-800 font-bold">
-                                        ⏳ 正在排队，您在第 {queuePosition} 位
+                                        ⏳ {t('importData.queueWaiting', { position: queuePosition })}
                                     </p>
                                     <p className="text-xs text-blue-600 mt-1">
-                                        预计每 7-13 秒前进一位，AI 生成约需 250 秒
+                                        {t('importData.queueEstimate')}
                                     </p>
                                 </div>
                             </div>
@@ -2377,10 +2377,10 @@ ${chartInfo}
                                 <Sparkles className="w-5 h-5 text-green-600 animate-pulse" />
                                 <div className="flex-1">
                                     <p className="text-green-800 font-bold">
-                                        🚀 正在处理您的请求...
+                                        🚀 {t('importData.processingRequest')}
                                     </p>
                                     <p className="text-xs text-green-600 mt-1">
-                                        AI 正在分析您的星盘，预计需要 250 秒
+                                        {t('importData.processingEstimate')}
                                     </p>
                                 </div>
                             </div>
@@ -2390,7 +2390,7 @@ ${chartInfo}
                     {/* 消耗提示 */}
                     <div className="flex items-center justify-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
                         <span>⭐</span>
-                        <span>生成完整分析将消耗 1 颗小积分</span>
+                        <span>{t('importData.costNotice')}</span>
                     </div>
 
                     {/* 操作按钮 */}
@@ -2400,7 +2400,7 @@ ${chartInfo}
                             disabled={isLoading}
                             className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            ← 修改信息
+                            ← {t('importData.modifyInfo')}
                         </button>
                         <button
                             onClick={handleAutoGenerate}
@@ -2410,17 +2410,17 @@ ${chartInfo}
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>AI 分析中... {loadingTime}秒</span>
+                                    <span>{t('importData.aiAnalyzing', { time: loadingTime })}</span>
                                 </>
                             ) : isLoadingStarsBalance ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>检查积分中...</span>
+                                    <span>{t('importData.checkingStars')}</span>
                                 </>
                             ) : (
                                 <>
                                     <Zap className="w-5 h-5" />
-                                    <span>继续生成完整分析</span>
+                                    <span>{t('importData.continueGenerate')}</span>
                                 </>
                             )}
                         </button>
@@ -2439,7 +2439,7 @@ ${chartInfo}
                                     rel="noopener noreferrer"
                                     className="inline-block text-sm text-blue-600 hover:underline ml-7"
                                 >
-                                    点击联系人工客服 →
+                                    {t('importData.contactSupport')}
                                 </a>
                             )}
                         </div>
