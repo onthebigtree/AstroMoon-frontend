@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { Shield, AlertCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface TurnstileVerifyProps {
   onVerify: (token: string) => void;
@@ -8,33 +10,35 @@ interface TurnstileVerifyProps {
 }
 
 const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel }) => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [error, setError] = useState<string>('');
   const [isVerified, setIsVerified] = useState(false);
 
-  // 统一使用测试密钥，不依赖环境变量（开发和生产都用测试密钥）
+  // Use test key for both development and production
   const siteKey = '1x00000000000000000000AA';
   const isTestKey = true;
 
   const handleSuccess = (token: string) => {
-    console.log('✅ Turnstile 验证成功');
+    console.log('Turnstile verification successful');
     setIsVerified(true);
     setError('');
 
-    // 延迟 500ms 让用户看到成功状态
+    // Delay 500ms to show success state
     setTimeout(() => {
       onVerify(token);
     }, 500);
   };
 
   const handleError = () => {
-    console.error('❌ Turnstile 验证失败');
-    setError('验证失败，请刷新页面重试');
+    console.error('Turnstile verification failed');
+    setError(t('turnstile.errorFailed'));
     setIsVerified(false);
   };
 
   const handleExpire = () => {
-    console.warn('⚠️ Turnstile 验证已过期');
-    setError('验证已过期，请重新验证');
+    console.warn('Turnstile verification expired');
+    setError(t('turnstile.errorExpired'));
     setIsVerified(false);
   };
 
@@ -46,10 +50,10 @@ const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel })
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-2xl font-bold text-gray-800 mb-2">
-            人类验证
+            {t('turnstile.title')}
           </h3>
           <p className="text-gray-600 text-sm">
-            请完成下方验证以继续生成占星报告
+            {t('turnstile.description')}
           </p>
         </div>
 
@@ -64,18 +68,18 @@ const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel })
               options={{
                 theme: 'light',
                 size: 'normal',
-                language: 'zh-CN',
+                language: language === 'zh' ? 'zh-CN' : 'en',
               }}
             />
           </div>
 
-          {/* 成功提示 */}
+          {/* Success message */}
           {isVerified && (
             <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-3 rounded-lg border border-green-200">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <p className="text-sm font-medium">验证成功！正在跳转...</p>
+              <p className="text-sm font-medium">{t('turnstile.success')}</p>
             </div>
           )}
 
@@ -87,14 +91,14 @@ const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel })
             </div>
           )}
 
-          {/* 取消按钮 */}
+          {/* Cancel button */}
           <div className="pt-2">
             <button
               onClick={onCancel}
               disabled={isVerified}
               className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              取消
+              {t('turnstile.cancel')}
             </button>
           </div>
         </div>
@@ -102,7 +106,7 @@ const TurnstileVerify: React.FC<TurnstileVerifyProps> = ({ onVerify, onCancel })
         <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
             <Shield className="w-4 h-4" />
-            <span>由 Cloudflare 提供安全保护</span>
+            <span>{t('turnstile.poweredBy')}</span>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Star, Sparkles, Check, ExternalLink, Loader2, CreditCard, RefreshCw, Gift } from 'lucide-react';
 import type { Product, CreatePaymentRequest } from '../services/api/types';
 import { getProducts, createPayment, getPaymentStatus, redeemCode } from '../services/api';
@@ -12,6 +13,7 @@ interface BuyStarsModalProps {
 }
 
 export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefreshStars }: BuyStarsModalProps) {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Record<string, Product> | null>(null);
   const [selectedProductType, setSelectedProductType] = useState<'stars_10' | 'stars_30' | 'stars_100' | null>(null);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
@@ -41,8 +43,8 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
       const response = await getProducts();
       setProducts(response.products);
     } catch (err: any) {
-      console.error('加载产品失败:', err);
-      setError('加载产品失败，请刷新重试');
+      console.error('Failed to load products:', err);
+      setError(t('buyStars.loadProductsFailed'));
     }
   };
 
@@ -56,7 +58,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
     try {
       await onRefreshStars();
     } catch (err) {
-      console.error('刷新积分余额失败:', err);
+      console.error('Failed to refresh stars balance:', err);
     } finally {
       if (withLoading) {
         setIsRefreshingBalance(false);
@@ -93,8 +95,8 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
       // 开始轮询支付状态
       startPollingPaymentStatus(response.invoiceId);
     } catch (err: any) {
-      console.error('创建支付失败:', err);
-      setError(err.message || '创建支付失败，请稍后重试');
+      console.error('Failed to create payment:', err);
+      setError(err.message || t('buyStars.createPaymentFailed'));
     } finally {
       setIsCreatingPayment(false);
     }
@@ -107,22 +109,22 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
         const statusResponse = await getPaymentStatus(id);
         const invoice = statusResponse.invoice;
 
-        console.log('支付状态:', invoice.status);
+        console.log('Payment status:', invoice.status);
 
         if (invoice.status === 'finished') {
           clearInterval(intervalId);
-          alert(`支付成功！已添加 ${invoice.stars_amount} 颗积分到你的账户 ⭐`);
+          alert(t('buyStars.paymentSuccess', { amount: invoice.stars_amount }));
           await refreshStarsBalance();
           onSuccess?.();
           handleClose();
         } else if (invoice.status === 'failed' || invoice.status === 'expired') {
           clearInterval(intervalId);
-          setError(invoice.status === 'failed' ? '支付失败' : '支付已过期');
+          setError(invoice.status === 'failed' ? t('buyStars.paymentFailed') : t('buyStars.paymentExpired'));
         }
       } catch (err) {
-        console.error('查询支付状态失败:', err);
+        console.error('Failed to check payment status:', err);
       }
-    }, 5000); // 每5秒查询一次
+    }, 5000); // Check every 5 seconds
 
     // 5分钟后停止轮询
     setTimeout(() => {
@@ -141,22 +143,22 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
       const invoice = statusResponse.invoice;
 
       if (invoice.status === 'finished') {
-        alert(`支付成功！已添加 ${invoice.stars_amount} 颗积分到你的账户 ⭐`);
+        alert(t('buyStars.paymentSuccess', { amount: invoice.stars_amount }));
         await refreshStarsBalance();
         onSuccess?.();
         handleClose();
       } else if (invoice.status === 'confirming') {
-        alert('支付确认中，请稍后再查看');
+        alert(t('buyStars.paymentConfirming'));
       } else if (invoice.status === 'waiting') {
-        alert('等待支付，请完成付款后再查询');
+        alert(t('buyStars.paymentWaiting'));
       } else if (invoice.status === 'failed') {
-        setError('支付失败，请重新尝试');
+        setError(t('buyStars.paymentFailed'));
       } else if (invoice.status === 'expired') {
-        setError('支付已过期，请重新创建订单');
+        setError(t('buyStars.paymentExpiredReorder'));
       }
     } catch (err: any) {
-      console.error('查询支付状态失败:', err);
-      setError(err.message || '查询失败，请稍后重试');
+      console.error('Failed to check payment status:', err);
+      setError(err.message || t('buyStars.createPaymentFailed'));
     } finally {
       setIsCheckingStatus(false);
     }
@@ -164,7 +166,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
 
   const handleRedeemCode = async () => {
     if (!redeemCodeInput.trim()) {
-      setError('请输入兑换码');
+      setError(t('buyStars.enterRedeemCode'));
       return;
     }
 
@@ -191,10 +193,10 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
         }, 1500);
       }
     } catch (err: any) {
-      console.error('❌ 兑换失败:', err);
+      console.error('Redemption failed:', err);
 
-      // 处理不同的错误类型
-      const errorMessage = err.message || err.error || '兑换失败，请检查兑换码是否正确';
+      // Handle different error types
+      const errorMessage = err.message || err.error || t('buyStars.redeemFailed');
       setError(errorMessage);
     } finally {
       setIsRedeeming(false);
@@ -219,7 +221,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Sparkles className="w-8 h-8 text-yellow-300" />
-              <h2 className="text-2xl font-bold text-white">购买积分</h2>
+              <h2 className="text-2xl font-bold text-white">{t('buyStars.title')}</h2>
             </div>
             <button
               onClick={handleClose}
@@ -228,7 +230,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
               <X className="w-6 h-6" />
             </button>
           </div>
-          <p className="text-purple-100 mt-2">选择套餐，使用加密货币购买积分</p>
+          <p className="text-purple-100 mt-2">{t('buyStars.subtitle')}</p>
         </div>
 
         {/* Content */}
@@ -239,7 +241,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                 <Star className="w-6 h-6 text-yellow-500 fill-yellow-400" />
               </div>
               <div>
-                <div className="text-xs text-gray-500">当前积分余额</div>
+                <div className="text-xs text-gray-500">{t('buyStars.currentBalance')}</div>
                 <div className="text-xl font-bold text-gray-900">
                   {isRefreshingBalance ? '...' : (currentStars ?? '--')}
                 </div>
@@ -256,7 +258,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                 ) : (
                   <RefreshCw className="w-4 h-4" />
                 )}
-                <span className="text-sm font-medium">刷新</span>
+                <span className="text-sm font-medium">{t('buyStars.refresh')}</span>
               </button>
             )}
           </div>
@@ -266,7 +268,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
             <div className="mb-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Gift className="w-5 h-5 text-green-600" />
-                <h3 className="font-bold text-gray-900">使用兑换码</h3>
+                <h3 className="font-bold text-gray-900">{t('buyStars.useRedeemCode')}</h3>
               </div>
 
               <div className="flex gap-2">
@@ -279,7 +281,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                       handleRedeemCode();
                     }
                   }}
-                  placeholder="输入兑换码"
+                  placeholder={t('buyStars.enterCode')}
                   className="flex-1 px-4 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm uppercase"
                   disabled={isRedeeming}
                 />
@@ -291,12 +293,12 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                   {isRedeeming ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      兑换中...
+                      {t('buyStars.redeeming')}
                     </>
                   ) : (
                     <>
                       <Gift className="w-4 h-4" />
-                      兑换
+                      {t('buyStars.redeem')}
                     </>
                   )}
                 </button>
@@ -311,11 +313,11 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
             </div>
           )}
 
-          {/* 加载中 */}
+          {/* Loading */}
           {!products && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-              <span className="ml-3 text-gray-600">加载中...</span>
+              <span className="ml-3 text-gray-600">{t('buyStars.loading')}</span>
             </div>
           )}
 
@@ -334,7 +336,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                 >
                   {product.popular && (
                     <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                      🔥 热门
+                      🔥 {t('buyStars.popular')}
                     </div>
                   )}
 
@@ -346,7 +348,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                         <span className="text-2xl font-bold text-purple-600">
                           {product.stars}
                         </span>
-                        <span className="text-gray-600">颗积分</span>
+                        <span className="text-gray-600">{t('buyStars.starsUnit')}</span>
                       </div>
                     </div>
                     {selectedProductType === productType && (
@@ -367,7 +369,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
             </div>
           )}
 
-          {/* 支付链接已创建 */}
+          {/* Payment URL created */}
           {paymentUrl && (
             <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 mb-6">
               <div className="flex items-center gap-3 mb-4">
@@ -375,8 +377,8 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                   <ExternalLink className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">支付页面已打开</h3>
-                  <p className="text-sm text-gray-600">请在新窗口完成支付</p>
+                  <h3 className="text-lg font-bold text-gray-900">{t('buyStars.paymentOpened')}</h3>
+                  <p className="text-sm text-gray-600">{t('buyStars.completeInNewWindow')}</p>
                 </div>
               </div>
 
@@ -388,7 +390,7 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                   className="block w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <ExternalLink className="w-5 h-5" />
-                  重新打开支付页面
+                  {t('buyStars.reopenPayment')}
                 </a>
 
                 <button
@@ -399,19 +401,19 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                   {isCheckingStatus ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      查询中...
+                      {t('buyStars.checking')}
                     </>
                   ) : (
                     <>
                       <Check className="w-5 h-5" />
-                      我已完成支付
+                      {t('buyStars.iHavePaid')}
                     </>
                   )}
                 </button>
               </div>
 
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                <strong>提示：</strong>支付完成后，系统会自动检测并添加积分。你也可以点击"我已完成支付"按钮手动查询状态。
+                {t('buyStars.paymentTip')}
               </div>
             </div>
           )}
@@ -424,14 +426,14 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
             </div>
           )}
 
-          {/* 操作按钮 */}
+          {/* Action buttons */}
           {!paymentUrl && products && (
             <div className="flex gap-3">
               <button
                 onClick={handleClose}
                 className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
-                取消
+                {t('buyStars.cancel')}
               </button>
               <button
                 onClick={handleCreatePayment}
@@ -441,26 +443,26 @@ export function BuyStarsModal({ isOpen, onClose, onSuccess, currentStars, onRefr
                 {isCreatingPayment ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    创建中...
+                    {t('buyStars.creating')}
                   </>
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    创建支付订单
+                    {t('buyStars.createOrder')}
                   </>
                 )}
               </button>
             </div>
           )}
 
-          {/* 支付说明 */}
+          {/* Payment methods info */}
           <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-            <h4 className="font-semibold text-gray-900 mb-2">💳 支持的支付方式</h4>
+            <h4 className="font-semibold text-gray-900 mb-2">💳 {t('buyStars.paymentMethods')}</h4>
             <ul className="space-y-1">
-              <li>• 支持 BTC、ETH、USDT、USDC 等 300+ 种加密货币</li>
-              <li>• 由 NOWPayments 提供安全支付服务</li>
-              <li>• 支付确认后自动添加积分到账户</li>
-              <li>• 安全可靠，订单实时追踪</li>
+              <li>• {t('buyStars.paymentMethod1')}</li>
+              <li>• {t('buyStars.paymentMethod2')}</li>
+              <li>• {t('buyStars.paymentMethod3')}</li>
+              <li>• {t('buyStars.paymentMethod4')}</li>
             </ul>
           </div>
         </div>

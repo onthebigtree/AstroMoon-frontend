@@ -106,7 +106,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
                 onClick={loadReports}
                 className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                {language === 'zh' ? '重试' : 'Retry'}
+                {t('common.retry')}
               </button>
             </div>
           ) : reports.length === 0 ? (
@@ -151,7 +151,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ isOpen, onClose, onSelect
               onClick={onClose}
               className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-medium"
             >
-              {language === 'zh' ? '关闭' : 'Close'}
+              {t('common.close')}
             </button>
           </div>
         </div>
