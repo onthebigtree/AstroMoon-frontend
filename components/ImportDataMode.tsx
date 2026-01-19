@@ -2585,10 +2585,10 @@ ${chartInfo}
                                 <Share2 className="w-8 h-8 text-white" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                                免费获取完整分析
+                                {t('importData.freeAnalysisTitle')}
                             </h3>
                             <p className="text-gray-600 text-sm">
-                                关注我们的社交媒体，获取更多占星知识与更新通知
+                                {t('importData.freeAnalysisDesc')}
                             </p>
                         </div>
 
@@ -2605,14 +2605,14 @@ ${chartInfo}
                                 {hasClickedTelegramFollow ? (
                                     <>
                                         <CheckCircle className="w-5 h-5" />
-                                        <span>✅ 已关注 Telegram</span>
+                                        <span>✅ {t('importData.followedTelegram')}</span>
                                     </>
                                 ) : (
                                     <>
                                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
                                         </svg>
-                                        <span>① 关注 Telegram 频道</span>
+                                        <span>{t('importData.followTelegram')}</span>
                                     </>
                                 )}
                             </button>
@@ -2629,12 +2629,12 @@ ${chartInfo}
                                 {hasClickedTwitterFollow ? (
                                     <>
                                         <CheckCircle className="w-5 h-5" />
-                                        <span>✅ 已关注 Twitter</span>
+                                        <span>✅ {t('importData.followedTwitter')}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Twitter className="w-5 h-5" />
-                                        <span>② 关注 Twitter</span>
+                                        <span>{t('importData.followTwitter')}</span>
                                     </>
                                 )}
                             </button>
@@ -2648,12 +2648,12 @@ ${chartInfo}
                                 {isVerifying ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>生成中...</span>
+                                        <span>{t('importData.generating')}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Zap className="w-5 h-5" />
-                                        <span>开始生成报告</span>
+                                        <span>{t('importData.startGenerate')}</span>
                                     </>
                                 )}
                             </button>
@@ -2664,13 +2664,13 @@ ${chartInfo}
                                 disabled={isVerifying}
                                 className="w-full text-gray-500 hover:text-gray-700 font-medium py-2 transition-all disabled:opacity-50"
                             >
-                                取消
+                                {t('common.cancel')}
                             </button>
                         </div>
 
                         <div className="mt-6 pt-6 border-t border-gray-200">
                             <p className="text-xs text-gray-500 text-center">
-                                💡 关注后可获取最新占星分析技巧和行运提醒
+                                💡 {t('importData.followTip')}
                             </p>
                         </div>
                     </div>
@@ -2685,7 +2685,7 @@ ${chartInfo}
                         <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-purple-600 p-4 flex items-center justify-between rounded-t-2xl">
                             <div className="flex items-center gap-2 text-white">
                                 <Edit2 className="w-5 h-5" />
-                                <h2 className="text-xl font-bold">编辑档案</h2>
+                                <h2 className="text-xl font-bold">{t('importData.editProfile')}</h2>
                             </div>
                             <button
                                 onClick={() => {
