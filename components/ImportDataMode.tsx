@@ -1508,6 +1508,47 @@ ${chartInfo}
                     }
 
                     console.log('✅ 年运数据解析和转换成功，共', annualResult.chartData.length, '个月数据');
+
+                    // 🔍 检测 JSON 是否被截断/不完整（年运模式）
+                    if ((data as any)._incomplete) {
+                        const strategy = (data as any)._strategy || 'unknown';
+                        const warningMsg = (data as any)._warning || 'JSON 数据被截断，报告可能不完整';
+
+                        console.warn('⚠️ [年运模式] 检测到不完整的 JSON 数据');
+                        console.warn('修复策略:', strategy);
+                        console.warn('警告信息:', warningMsg);
+
+                        // 自动退还星星
+                        try {
+                            console.log('💰 [年运模式] 开始退款流程...');
+                            const refundResult = await refundReport('data_incomplete');
+                            console.log('✅ 退款成功:', refundResult);
+
+                            // 更新星星余额
+                            const newBalance = await getStarBalance();
+                            setStarsBalance(newBalance.stars);
+                            onStarsChange?.(newBalance.stars);
+
+                            // 显示友好的错误提示
+                            const errorMessage = `⚠️ 2026年运报告生成不完整\n\n${warningMsg}\n\n💰 您的星星已自动退回（当前余额：${newBalance.stars} 颗）\n\n💡 建议：请重新生成报告，或稍后再试。`;
+
+                            setError(errorMessage);
+                            setGenerating(false);
+                            setProgress(0);
+
+                            // 停止继续处理
+                            return;
+                        } catch (refundError: any) {
+                            console.error('❌ 退款失败:', refundError);
+                            // 即使退款失败，也要提示用户数据不完整
+                            const errorMessage = `⚠️ 2026年运报告生成不完整\n\n${warningMsg}\n\n⚠️ 自动退款失败：${refundError.message}\n\n💡 请联系客服处理退款，或重新生成报告。`;
+                            setError(errorMessage);
+                            setGenerating(false);
+                            setProgress(0);
+                            return;
+                        }
+                    }
+
                     onDataImport(annualResult);
                     break;
                 }
@@ -1737,6 +1778,47 @@ ${chartInfo}
                 }
 
                 console.log('✅ 数据解析和转换成功');
+
+                // 🔍 检测 JSON 是否被截断/不完整
+                if ((data as any)._incomplete) {
+                    const strategy = (data as any)._strategy || 'unknown';
+                    const warningMsg = (data as any)._warning || 'JSON 数据被截断，报告可能不完整';
+
+                    console.warn('⚠️ 检测到不完整的 JSON 数据');
+                    console.warn('修复策略:', strategy);
+                    console.warn('警告信息:', warningMsg);
+
+                    // 自动退还星星
+                    try {
+                        console.log('💰 开始退款流程...');
+                        const refundResult = await refundReport('data_incomplete');
+                        console.log('✅ 退款成功:', refundResult);
+
+                        // 更新星星余额
+                        const newBalance = await getStarBalance();
+                        setStarsBalance(newBalance.stars);
+                        onStarsChange?.(newBalance.stars);
+
+                        // 显示友好的错误提示
+                        const errorMessage = `⚠️ 报告生成不完整\n\n${warningMsg}\n\n💰 您的星星已自动退回（当前余额：${newBalance.stars} 颗）\n\n💡 建议：请重新生成报告，或稍后再试。`;
+
+                        setError(errorMessage);
+                        setGenerating(false);
+                        setProgress(0);
+
+                        // 停止继续处理
+                        return;
+                    } catch (refundError: any) {
+                        console.error('❌ 退款失败:', refundError);
+                        // 即使退款失败，也要提示用户数据不完整
+                        const errorMessage = `⚠️ 报告生成不完整\n\n${warningMsg}\n\n⚠️ 自动退款失败：${refundError.message}\n\n💡 请联系客服处理退款，或重新生成报告。`;
+                        setError(errorMessage);
+                        setGenerating(false);
+                        setProgress(0);
+                        return;
+                    }
+                }
+
                 onDataImport(result);
 
                 // 成功，跳出重试循环
