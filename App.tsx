@@ -23,6 +23,7 @@ import { Report } from './services/api/types';
 import { getStarBalance } from './services/api/payments';
 import { Sparkles, AlertCircle, Download, Printer, Trophy, FileDown, Moon, History, TrendingUp, LogOut, Star, Plus, Loader2, Flame } from 'lucide-react';
 import { replaceAge100Reason } from './constants/age100';
+import { robustParseJSON } from './utils/jsonParser';
 
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -111,12 +112,45 @@ const App: React.FC = () => {
         report = fullReport;
       }
 
-      // 解析报告内容
-      let reportContent = typeof report.full_report.content === 'string'
-        ? JSON.parse(report.full_report.content)
-        : report.full_report.content;
+      // 解析报告内容（使用健壮的 JSON 解析器）
+      let reportContent: any;
+      let isIncomplete = false;
+      let incompleteWarning = '';
+
+      if (typeof report.full_report.content === 'string') {
+        try {
+          // 使用 robustParseJSON 替代原生 JSON.parse
+          reportContent = robustParseJSON(report.full_report.content);
+
+          // 检测是否使用了降级修复策略（数据不完整）
+          if ((reportContent as any)._incomplete) {
+            isIncomplete = true;
+            incompleteWarning = (reportContent as any)._warning || '历史报告数据可能不完整';
+            console.warn('⚠️ 历史报告数据不完整:', {
+              strategy: (reportContent as any)._strategy,
+              warning: incompleteWarning
+            });
+          }
+        } catch (err: any) {
+          console.error('❌ 报告内容解析失败:', err);
+          throw new Error(language === 'zh'
+            ? `报告数据解析失败：${err.message}`
+            : `Failed to parse report data: ${err.message}`);
+        }
+      } else {
+        reportContent = report.full_report.content;
+      }
 
       console.log('✅ 报告内容已解析:', reportContent);
+
+      // 如果检测到数据不完整，显示警告提示（但不退款，因为是历史记录）
+      if (isIncomplete) {
+        setError(
+          language === 'zh'
+            ? `⚠️ 历史报告数据不完整\n\n${incompleteWarning}\n\n💡 这是一份历史报告，数据可能在存储或传输时被截断。如需完整报告，建议重新生成。`
+            : `⚠️ Historical report data incomplete\n\n${incompleteWarning}\n\n💡 This is a historical report. The data may have been truncated during storage or transmission. Please regenerate for a complete report.`
+        );
+      }
 
       // 兼容旧的导出格式：如果是扁平结构，需要重构为 LifeDestinyResult 格式
       if (reportContent.chartPoints && !reportContent.chartData) {
